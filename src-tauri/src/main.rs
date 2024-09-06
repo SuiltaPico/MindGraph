@@ -10,9 +10,10 @@ use node::{
 };
 use sqlx::{query, query_as, sqlite::*, Database, Pool};
 use std::fs;
-use tauri::{CustomMenuItem, Menu, Submenu};
+// use tauri::{CustomMenuItem, Menu, Submenu};
 
 pub type DBConn = Pool<Sqlite>;
+
 pub struct AppState {
   conn: DBConn,
 }
@@ -89,7 +90,7 @@ async fn get_top_nodes(
     -- Step 3: 选择深度为 `deep` 的节点
     SELECT
       *,
-      
+
 	    (SELECT json_group_array(parent_id)
       FROM node_node_r nnr
       WHERE nnr.child_id = tp.node_id) AS parents,
@@ -118,19 +119,19 @@ async fn get_top_nodes(
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
   let state = init().await?;
 
-  let file_menu = Submenu::new(
-    "文件",
-    Menu::new()
-      .add_item(CustomMenuItem::new("new".to_string(), "新建").accelerator("Ctrl+N"))
-      .add_item(CustomMenuItem::new("open".to_string(), "打开").accelerator("Ctrl+O"))
-      .add_item(CustomMenuItem::new("save".to_string(), "保存").accelerator("Ctrl+S")),
-  );
-  let menu = Menu::new().add_submenu(file_menu);
+  // let file_menu = Submenu::new(
+  //   "文件",
+  //   Menu::new()
+  //     .add_item(CustomMenuItem::new("new".to_string(), "新建").accelerator("Ctrl+N"))
+  //     .add_item(CustomMenuItem::new("open".to_string(), "打开").accelerator("Ctrl+O"))
+  //     .add_item(CustomMenuItem::new("save".to_string(), "保存").accelerator("Ctrl+S")),
+  // );
+  // let menu = Menu::new().add_submenu(file_menu);
 
   tauri::Builder::default()
     .manage(state)
     .invoke_handler(tauri::generate_handler![get_top_nodes])
-    .menu(menu)
+    // .menu(menu)
     .run(tauri::generate_context!())
     .expect("error while running tauri application");
 

@@ -2,20 +2,28 @@
   "build": {
     "beforeDevCommand": "pnpm dev",
     "beforeBuildCommand": "pnpm build",
-    "devPath": "http://localhost:1420",
-    "distDir": "../dist"
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:1420",
+    "beforeBundleCommand": "node script/upx.js"
   },
-  "package": {
-    "productName": "mind-graph",
-    "version": "0.1.0"
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
   },
-  "tauri": {
-    "allowlist": {
-      "all": false,
-      "shell": {
-        "all": false,
-        "open": true
-      }
+  "productName": "mind-graph",
+  "version": "0.1.0",
+  "identifier": "mauchise.mind-graph.app",
+  "plugins": {},
+  "app": {
+    "security": {
+      "csp": null
     },
     "windows": [
       {
@@ -23,21 +31,6 @@
         "width": 800,
         "height": 600
       }
-    ],
-    "security": {
-      "csp": null
-    },
-    "bundle": {
-      "active": true,
-      "targets": "all",
-      "identifier": "mauchise.mind-graph.app",
-      "icon": [
-        "icons/32x32.png",
-        "icons/128x128.png",
-        "icons/128x128@2x.png",
-        "icons/icon.icns",
-        "icons/icon.ico"
-      ]
-    }
+    ]
   }
 }
