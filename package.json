@@ -8,7 +8,8 @@
     "dev": "vite",
     "build": "vite build",
     "serve": "vite preview",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "build:android": "tauri android build --target aarch64"
   },
   "license": "MIT",
   "dependencies": {
@@ -17,7 +18,7 @@
     "solid-js": "^1.7.8"
   },
   "devDependencies": {
-    "@tauri-apps/cli": "2.0.0-rc.12",
+    "@tauri-apps/cli": "2.0.0-rc.11",
     "@types/node": "^22.5.4",
     "typescript": "^5.2.2",
     "unocss": "^0.62.3",
