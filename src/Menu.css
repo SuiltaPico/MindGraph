@@ -1,0 +1,10 @@
+.menubuttom {
+  transition: background-color 0.3s;
+  border-radius: 5px;
+  padding: 10px;
+
+}
+
+.menubuttom:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
