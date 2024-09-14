@@ -42,8 +42,8 @@ export function App() {
     <div
       class="fcol"
       style={{
-        width: "100vw",
-        height: "100vh",
+        width: "100%",
+        height: "100%",
       }}
     >
       <FnBar menuVisible={menuVisible()} setMenuVisible={setMenuVisible} />
@@ -68,7 +68,7 @@ export function App() {
           "pointer-events": menuVisible() ? "auto" : "none",
           transition: "opacity 0.3s ease-in-out, visibility 0.3s ease-in-out",
           background: "white",
-          position: "fixed",
+          position: "absolute",
           top: 0,
           left: 0,
           right: 0,

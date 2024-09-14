@@ -22,9 +22,8 @@ export default function MenuObject() {
       {/* 大标题 */}
       <div class="title">MindGraph</div>
       <div class="menuobjectzone1">
-        <div class="openfile">
-          <div class="indicatrix" />
-          <i class="fa-solid fa-folder-open" style={{ color: "gray" }} />
+        <div class="openfile leftline">
+          <i class="fa-solid fa-folder-open icon" style={{ color: "gray" }} />
           <div class="word">
             <div class="subtitle">打开文件</div>
             <div class="description">
@@ -32,10 +31,9 @@ export default function MenuObject() {
             </div>
           </div>
         </div>
-        <div class="openfile">
-          <div class="indicatrix" />
+        <div class="openfile leftline">
           <i
-            class="fa-solid fa-folder-open"
+            class="fa-solid fa-folder-open icon"
             style={{ color: "gray", "justify-items": "center" }}
           />
           <div class="word">
@@ -45,24 +43,27 @@ export default function MenuObject() {
             </div>
           </div>
         </div>
-        <div class="openfile">
-          <div class="indicatrix" />
+        <div class="openfile leftline">
           <i
-            class="fa-solid fa-folder-open"
+            class="fa-solid fa-gear icon"
             style={{ color: "gray", "justify-items": "center" }}
           />
           <div class="word">
-            <div class="subtitle">打开文件</div>
+            <div class="subtitle">设置</div>
             <div class="description">
-              打开一个文件夹或者文件来查看与制作思维导图
+              更改设置，选择偏好项
             </div>
           </div>
         </div>
       </div>
-      {/* <div class="zone2">
-        <div class="filegraph"></div>
-      </div> */}
-      <div class="copyright">Present by Suilta Pico & Aflocat --2024</div>
+      <div class="menuobjectzone2">
+        <div class="filegraph leftline">
+            <div class="filetop">当前文档</div>
+        </div>
+      </div>
+      <div class="copyright">
+        v0.1.0 | Present by Suilta Pico & Aflocat | 2024
+      </div>
     </div>
   );
 }
