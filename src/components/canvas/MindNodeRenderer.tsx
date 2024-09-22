@@ -5,6 +5,7 @@ import {
   mapArray,
   Match,
   onMount,
+  Show,
   Switch,
   useContext,
 } from "solid-js";
@@ -12,6 +13,7 @@ import { Accordion, AccordionRenderer } from "../base/Accordion";
 import { CanvasStateContext, MindNodeHelper } from "./Canvas";
 import { debounce } from "throttle-debounce";
 import "./MindNodeRenderer.scss";
+import { createSignal } from "@/common/signal";
 
 export const MindNodePendingRenderer: Component<{
   id: number;
@@ -71,9 +73,11 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
   const it = props.it;
   const ctx = useContext(CanvasStateContext)!;
 
+  const folded = createSignal(false);
+
   let container: HTMLDivElement;
   let node: HTMLDivElement & { _id?: number };
-  let svg: SVGElement;
+  let streamline_group: SVGGElement;
   let main_streamline: SVGPathElement;
   let folding_points: SVGCircleElement;
 
@@ -133,7 +137,7 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
       const y1 = container_rect.height / 2;
       const x2 = node.offsetWidth + 32;
       const y2 = child_container.offsetTop + child_container.clientHeight / 2;
-      (svg.childNodes[i] as SVGLineElement).setAttribute(
+      (streamline_group.childNodes[i] as SVGLineElement).setAttribute(
         "d",
         `M ${x1} ${y1} C ${x2 + (x1 - x2)} ${y1 + (y2 - y1) * 1} ${
           x2 + (x1 - x2)
@@ -163,6 +167,10 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
     redraw_subnode_streamline_next_tick();
   }
 
+  function handle_folding_points_click() {
+    folded.set(!folded.get());
+  }
+
   return (
     <div
       class="mind_node"
@@ -173,11 +181,18 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
       <div class="__node" contenteditable ref={(it) => (node = it)}>
         {it.get_prop("content").value}
       </div>
-      <svg class="__diversion" ref={(it) => (svg = it)}>
-        {/* 分流线 */}
-        <For each={props.it.get_prop("children")}>
-          {() => <path stroke="#868686" stroke-width="1" fill="none"></path>}
-        </For>
+      <svg class="__diversion">
+        <g
+          style={{
+            display: folded.get() ? "none" : "block",
+          }}
+          ref={(it) => (streamline_group = it)}
+        >
+          {/* 分流线 */}
+          <For each={props.it.get_prop("children")}>
+            {() => <path stroke="#868686" stroke-width="1" fill="none"></path>}
+          </For>
+        </g>
         {/* 主线 */}
         <path
           stroke="#868686"
@@ -191,18 +206,21 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
           r={6}
           fill="#868686"
           ref={(it) => (folding_points = it)}
+          onClick={handle_folding_points_click}
         ></circle>
       </svg>
-      <div class="__children">
-        <For each={props.it.get_prop("children")}>
-          {(it, i) =>
-            ctx.render_node(it, {
-              onresize: (child_container) =>
-                handle_children_resize(child_container, i()),
-            })
-          }
-        </For>
-      </div>
+      <Show when={!folded.get()}>
+        <div class="__children">
+          <For each={props.it.get_prop("children")}>
+            {(it, i) =>
+              ctx.render_node(it, {
+                onresize: (child_container) =>
+                  handle_children_resize(child_container, i()),
+              })
+            }
+          </For>
+        </div>
+      </Show>
     </div>
   );
 };
