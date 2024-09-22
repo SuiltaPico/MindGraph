@@ -1,5 +1,5 @@
 use crate::node::{
-  entity::NodeWithRoot,
+  entity::Node,
   sql::{create_init_nodes, create_table},
 };
 use dirs::data_dir;
@@ -50,9 +50,9 @@ async fn init() -> Result<AppState, Box<dyn std::error::Error>> {
 async fn get_top_nodes(
   state: tauri::State<'_, AppState>,
   deep: i32,
-) -> Result<Vec<NodeWithRoot>, ()> {
+) -> Result<Vec<Node>, String> {
   // 执行查询以获取没有父节点的节点
-  let nodes_without_parents: Vec<NodeWithRoot> = sqlx::query_as(
+  let nodes_without_parents: Vec<Node> = sqlx::query_as(
     format!(
       r#"
     WITH RECURSIVE TreePaths AS (
@@ -86,7 +86,6 @@ async fn get_top_nodes(
     -- Step 3: 选择深度为 `deep` 的节点
     SELECT
       *,
-
 	    (SELECT json_group_array(parent_id)
       FROM node_node_r nnr
       WHERE nnr.child_id = tp.node_id) AS parents,
@@ -106,9 +105,33 @@ async fn get_top_nodes(
   )
   .fetch_all(&state.conn)
   .await
-  .expect("get_top_nodes error");
+  .map_err(|e| e.to_string())?;
 
   Ok(nodes_without_parents)
+}
+
+#[tauri::command(async)]
+async fn load_node(state: tauri::State<'_, AppState>, id: i32) -> Result<Node, String> {
+  let node: Node = sqlx::query_as(
+    r#"
+    SELECT 
+      n.*,
+      (SELECT json_group_array(parent_id)
+       FROM node_node_r nnr
+       WHERE nnr.child_id = n.id) AS parents,
+      (SELECT json_group_array(child_id)
+       FROM node_node_r nnr
+       WHERE nnr.parent_id = n.id) AS children
+    FROM node n
+    WHERE n.id = ?;
+    "#,
+  )
+  .bind(id)
+  .fetch_one(&state.conn)
+  .await
+  .map_err(|e| e.to_string())?;
+
+  Ok(node)
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -117,7 +140,7 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
 
   tauri::Builder::default()
     .manage(state)
-    .invoke_handler(tauri::generate_handler![get_top_nodes])
+    .invoke_handler(tauri::generate_handler![get_top_nodes, load_node])
     // .menu(menu)
     .run(tauri::generate_context!())
     .expect("error while running tauri application");

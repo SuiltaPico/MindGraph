@@ -1,4 +1,4 @@
-export interface NodeWithRoot {
+export interface IMindNode {
   id: number;
   content: {
     _type: string;

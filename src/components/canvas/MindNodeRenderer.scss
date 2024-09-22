@@ -1,0 +1,51 @@
+@use "@/common/utils.scss" as *;
+
+.mind_node {
+  @include flex(row);
+  @include relative;
+  @include t(0);
+  @include l(0);
+  @include items(center);
+
+  > .__node {
+    @include bg(#eee);
+    @include self(center);
+    @include p(4px);
+    @include radius(4px);
+    @include mr(32px);
+    @include z(1);
+  }
+
+  > .__diversion {
+    @include absolute;
+    @include t(0);
+    @include l(0);
+    @include w(full);
+    @include h(full);
+  }
+
+  > .__children {
+    @include flex(col);
+    @include gap(8px);
+  }
+}
+
+.mind_node_pending {
+  @include flex(row);
+  @include self(center);
+  @include p(4px);
+  @include radius(4px);
+  @include bg(#eee);
+}
+
+.mind_node_error {
+  @include flex(col);
+  @include self(center);
+  @include p(4px);
+  @include radius(4px);
+  @include bg(#eee);
+
+  .__accordion {
+    @include w(200px);
+  }
+}

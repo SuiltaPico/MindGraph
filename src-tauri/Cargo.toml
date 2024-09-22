@@ -14,10 +14,10 @@ tauri-build = { version = "2.0.0-rc", features = [] }
 tauri = { version = "2.0.0-rc", features = [] }
 tauri-plugin-shell = "2.0.0-rc"
 
-rustls-pemfile = { version = "2.0.0-alpha.1" }
-rustls = { version = "0.22.0-alpha.4" }
-tokio-rustls = { version = "0.25.0-alpha.1" }
-webpki-roots = { version = "0.26.0-alpha.1" }
+rustls-pemfile = { version = "2.0.0-alpha" }
+rustls = { version = "0.22.0-alpha" }
+tokio-rustls = { version = "0.25.0-alpha" }
+webpki-roots = { version = "0.26.0-alpha" }
 
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
