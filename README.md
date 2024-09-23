@@ -2,8 +2,18 @@
 
 基于有向无环图的知识库。
 
-## 开发
+## 准备
 
+你需要安装最新稳定版本的 Node.js 和 Rust 工具链。
+
+你可以通过 `rustc -V` 检查当前 Rust 版本。当前开发环境使用
+`rustc 1.81.0 (eeb90cda1 2024-09-04)`。
+
+- Tips：如果你没有安装 Rust，请前往
+  https://www.rust-lang.org/zh-CN/tools/install 下载 Rustup。然后，按照官方提 供
+  的步骤安装。
+
+## 开发
 1. 通过 `rustc -V` 检查当前 Rust 版本。当前开发环境使用
     `rustc 1.80.1 (3f5fd8dd4 2024-08-06)`。如果你没有安装 Rust，请前往
     https://www.rust-lang.org/zh-CN/tools/install 按照官方指示步骤进行安装。
@@ -15,7 +25,21 @@
 4. 执行 `pnpm tauri dev` 启动开发环境。
 ## 构建
 
-1. 执行 `pnpm tauri build` 进行构建。
+### 桌面
+
+#### 当前平台
+
+执行 `pnpm tauri build` 进行构建。
+
+### 安卓
+
+1. 确保你已经在你的开发环境中安装了 Android SDK 和 Android NDK。你可以通过
+   Android Studio 或者直接从
+   [Android 开发者官网](https://developer.android.com/studio) 下载。
+2. 确保环境变量 `ANDROID_HOME` 指向 Android SDK 根目录，确保环境变量 `NDK_HOME`
+   指向 Android NDK 根目录，
+3. 执行 `pnpm build:android` 进行构建，此构建过程生成的安装包仅支持
+   aarch64（ARM64）架构。
 
 ## 推荐 IDE 配置
 

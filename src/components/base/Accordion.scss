@@ -1,0 +1,28 @@
+@use "@/common/utils.scss" as *;
+._m_accordion {
+  @include flex(col);
+  .__title {
+    @include flex(row);
+    @include cursor(pointer);
+    @include p(4px);
+    @include justify(space-between);
+    @include radius(2px);
+    @include transition(background-color);
+
+    .__icon {
+      @include transition(transform);
+    }
+    &:hover {
+      @include bgc(#0001);
+    }
+  }
+  .__content {
+    @include flex(col);
+  }
+
+  &.__open__ {
+    .__icon {
+      @include rotate(180deg);
+    }
+  }
+}
