@@ -1,3 +1,4 @@
+import { createSignal } from "@/common/signal";
 import {
   Component,
   createResource,
@@ -11,9 +12,7 @@ import {
 } from "solid-js";
 import { Accordion, AccordionRenderer } from "../base/Accordion";
 import { CanvasStateContext, MindNodeHelper } from "./Canvas";
-import { debounce } from "throttle-debounce";
 import "./MindNodeRenderer.scss";
-import { createSignal } from "@/common/signal";
 
 export const MindNodePendingRenderer: Component<{
   id: number;
@@ -22,7 +21,7 @@ export const MindNodePendingRenderer: Component<{
   const ctx = useContext(CanvasStateContext)!;
 
   onMount(() => {
-    ctx.get_render_info(props.id).onresize?.(container);
+    ctx.get_render_info(props.id).onresize?.(container, 0);
   });
 
   return (
@@ -46,7 +45,7 @@ export const MindNodeErrorRenderer: Component<{
   const ctx = useContext(CanvasStateContext)!;
 
   onMount(() => {
-    ctx.get_render_info(props.id).onresize?.(container);
+    ctx.get_render_info(props.id).onresize?.(container, 0);
   });
 
   const accordion = new Accordion();
@@ -81,7 +80,6 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
   let main_streamline: SVGPathElement;
   let folding_points: SVGCircleElement;
 
-  let node_rect = new DOMRect();
   let container_rect = new DOMRect();
 
   onMount(() => {
@@ -90,7 +88,7 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
       console.log("on_resize");
 
       redraw_subnode_streamline();
-      it.render_info.onresize?.(container);
+      it.render_info.onresize?.(container, node_y_offset);
     };
     ctx.resize_obs.observe(node);
     handle_redraw_main_line();
@@ -98,11 +96,31 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
     last_container_height = container.offsetHeight;
   });
 
+  let node_y_offset = 0;
   function handle_redraw_main_line() {
     const node_right = node.offsetWidth;
 
-    const center_x = node.offsetWidth + 16;
-    const center_y = container_rect.height / 2;
+    const children_containers = children_container_map();
+    let center_x, center_y;
+
+    center_x = node.offsetWidth + 16;
+    const container_center_y = container_rect.height / 2;
+
+    if (children_containers.length > 1 && children_containers[0].container) {
+      const first_child_container = children_containers[0].container!;
+      const last_child_container =
+        children_containers[children_containers.length - 1].container!;
+      const ft = first_child_container.offsetTop;
+      const fh = first_child_container.offsetHeight;
+      const lt = last_child_container.offsetTop;
+      const lh = last_child_container.offsetHeight;
+
+      center_y = ft + fh / 2 + (lt + lh / 2 - (ft + fh / 2)) / 2;
+      node_y_offset = center_y - container_center_y;
+    } else {
+      center_y = container_center_y;
+      node_y_offset = 0;
+    }
 
     main_streamline?.setAttribute?.(
       "d",
@@ -111,13 +129,18 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
 
     folding_points.setAttribute("cx", center_x + "");
     folding_points.setAttribute("cy", center_y + "");
+
+    node.style.setProperty("top", node_y_offset + "px");
   }
 
-  const container_map = mapArray(
+  const children_container_map = mapArray(
     () => props.it.get_prop("children"),
     () => {
-      return {} as {
+      return {
+        node_y_offset: 0,
+      } as {
         container?: HTMLElement;
+        node_y_offset: number;
       };
     }
   );
@@ -125,18 +148,21 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
   let need_redraw_subnode_streamline = false;
   let last_container_height: number;
   function redraw_subnode_streamline() {
-    node_rect = node.getBoundingClientRect();
     container_rect = container.getBoundingClientRect();
 
     const len = props.it.get_prop("children").length;
     for (let i = 0; i < len; i++) {
-      const child_container = container_map()[i].container;
+      const child_container_data = children_container_map()[i];
+      const child_container = child_container_data.container;
       if (!child_container) continue;
 
       const x1 = node.offsetWidth + 16;
       const y1 = container_rect.height / 2;
       const x2 = node.offsetWidth + 32;
-      const y2 = child_container.offsetTop + child_container.clientHeight / 2;
+      const y2 =
+        child_container.offsetTop +
+        child_container_data.node_y_offset +
+        child_container.clientHeight / 2;
       (streamline_group.childNodes[i] as SVGLineElement).setAttribute(
         "d",
         `M ${x1} ${y1} C ${x2 + (x1 - x2)} ${y1 + (y2 - y1) * 1} ${
@@ -145,11 +171,15 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
       );
     }
 
+    let prev_node_y_offset = node_y_offset;
     handle_redraw_main_line();
 
     need_redraw_subnode_streamline = false;
-    if (last_container_height !== container.offsetHeight) {
-      it.render_info.onresize?.(container);
+    if (
+      last_container_height !== container.offsetHeight ||
+      prev_node_y_offset !== node_y_offset
+    ) {
+      it.render_info.onresize?.(container, node_y_offset);
       last_container_height = container.offsetHeight;
     }
   }
@@ -162,8 +192,14 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
     }
   }
 
-  function handle_children_resize(child_container: HTMLElement, index: number) {
-    container_map()[index].container = child_container;
+  function handle_children_resize(
+    child_container: HTMLElement,
+    node_y_offset: number,
+    index: number
+  ) {
+    const children_container_data = children_container_map()[index];
+    children_container_data.container = child_container;
+    children_container_data.node_y_offset = node_y_offset;
     redraw_subnode_streamline_next_tick();
   }
 
@@ -214,8 +250,8 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
           <For each={props.it.get_prop("children")}>
             {(it, i) =>
               ctx.render_node(it, {
-                onresize: (child_container) =>
-                  handle_children_resize(child_container, i()),
+                onresize: (child_container, node_y_offset) =>
+                  handle_children_resize(child_container, node_y_offset, i()),
               })
             }
           </For>

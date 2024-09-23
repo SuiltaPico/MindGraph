@@ -14,6 +14,7 @@
     @include radius(4px);
     @include mr(32px);
     @include z(1);
+    @include relative;
   }
 
   > .__diversion {

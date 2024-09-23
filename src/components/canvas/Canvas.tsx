@@ -12,7 +12,7 @@ interface RenderInfo {
   /** 路径变更通知表 */
   path_emitter_map: Map<string, EmitterSignal>;
   dom_el?: HTMLElement;
-  onresize?: (container: HTMLElement) => void;
+  onresize?: (container: HTMLElement, node_y_offset: number) => void;
   /** 当节点大小改变时 */
   handle_obs_resize?: () => void;
 }
@@ -81,7 +81,7 @@ export class CanvasState {
 
   render_node(
     id: number,
-    options: { onresize?: (container: HTMLElement) => void }
+    options: { onresize?: (container: HTMLElement, node_y_offset: number) => void }
   ) {
     const render_info = this.get_render_info(id);
     if (render_info.dom_el === undefined) {
