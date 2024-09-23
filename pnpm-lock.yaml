@@ -12,8 +12,8 @@ importers:
         specifier: ^7.4.47
         version: 7.4.47
       '@tauri-apps/api':
-        specifier: 2.0.0-rc.0
-        version: 2.0.0-rc.0
+        specifier: 2.0.0-rc.5
+        version: 2.0.0-rc.5
       '@tauri-apps/plugin-shell':
         specifier: 2.0.0-rc.1
         version: 2.0.0-rc.1
@@ -394,10 +394,6 @@ packages:
     resolution: {integrity: sha512-j8pPKp53/lq9lMXN57S8cFz0MynJk8OWNuUnXct/9KCpKU7DgU3bYMJhwWmcqC0UU29p8Lr0/7KEVcaM6bf47Q==}
     cpu: [x64]
     os: [win32]
-
-  '@tauri-apps/api@2.0.0-rc.0':
-    resolution: {integrity: sha512-v454Qs3REHc3Za59U+/eSmBsdmF+3NE5+76+lFDaitVqN4ZglDHENDaMARYKGJVZuxiSkzyqG0SeG7lLQjVkPA==}
-    engines: {node: '>= 18.18', npm: '>= 6.6.0', yarn: '>= 1.19.1'}
 
   '@tauri-apps/api@2.0.0-rc.5':
     resolution: {integrity: sha512-JWs69pE9NsQdcqTpEVBepAZ08+jgQWuthIiTiaWRq/YlCLgnqq0KfC9sDem55uJ0YpgsytZuyj+m6b6q8oiD2g==}
@@ -1053,8 +1049,6 @@ snapshots:
 
   '@rollup/rollup-win32-x64-msvc@4.22.4':
     optional: true
-
-  '@tauri-apps/api@2.0.0-rc.0': {}
 
   '@tauri-apps/api@2.0.0-rc.5': {}
 
