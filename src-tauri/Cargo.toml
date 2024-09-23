@@ -15,7 +15,7 @@ tauri = { version = "2.0.0-rc", features = [] }
 tauri-plugin-shell = "2.0.0-rc"
 
 rustls-pemfile = { version = "2.0.0-alpha" }
-rustls = { version = "0.22.0-alpha" }
+rustls = { version = "0.23.13" }
 tokio-rustls = { version = "0.25.0-alpha" }
 webpki-roots = { version = "0.26.0-alpha" }
 
