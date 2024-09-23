@@ -237,6 +237,19 @@
   cursor: $value;
 }
 
+// ---- SVG ----
+@mixin stroke($color) {
+  stroke: $color;
+}
+
+@mixin stroke_w($value) {
+  stroke-width: $value;
+}
+
+@mixin fill($color) {
+  fill: $color;
+}
+
 // ---- 特定工具 ----
 @mixin line_label {
   font-size: 14px;

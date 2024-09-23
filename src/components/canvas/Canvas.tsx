@@ -1,4 +1,4 @@
-import { Component, createContext, Show } from "solid-js";
+import { Component, createContext, onMount, Show } from "solid-js";
 import { MindNodeRenderer } from "./MindNodeRenderer";
 import { IMindNode } from "@/api/types/node";
 import {
@@ -6,6 +6,7 @@ import {
   createSignal,
   EmitterSignal,
 } from "@/common/signal";
+import "./Canvas.scss";
 
 /** 渲染时信息 */
 interface RenderInfo {
@@ -15,6 +16,11 @@ interface RenderInfo {
   onresize?: (container: HTMLElement, node_y_offset: number) => void;
   /** 当节点大小改变时 */
   handle_obs_resize?: () => void;
+}
+
+/** 渲染时信息 */
+interface RenderContext {
+  is_root: boolean;
 }
 
 function create_RenderInfo() {
@@ -81,7 +87,9 @@ export class CanvasState {
 
   render_node(
     id: number,
-    options: { onresize?: (container: HTMLElement, node_y_offset: number) => void }
+    options: {
+      onresize?: (container: HTMLElement, node_y_offset: number) => void;
+    }
   ) {
     const render_info = this.get_render_info(id);
     if (render_info.dom_el === undefined) {
@@ -101,16 +109,38 @@ export class CanvasState {
 export const CanvasStateContext = createContext<CanvasState>();
 
 export const Canvas: Component<{ state: CanvasState }> = (props) => {
+  let container: HTMLElement;
+  let field: HTMLElement;
   const { state } = props;
+
+  let curr_node: IMindNode;
+  onMount(() => {
+    field.style.width = "200%";
+    field.style.height = "200%";
+    container.scrollLeft = field.clientWidth / 4;
+    container.scrollTop = field.clientHeight / 4;
+  });
+
   return (
     <CanvasStateContext.Provider value={state}>
-      <div class="mind_node_canvas">
-        <Show
-          when={state.root.get() !== -1}
-          fallback={<div>CanvasState 未设置根节点。</div>}
-        >
-          {state.render_node(state.root.get(), {})}
-        </Show>
+      <div class="mind_node_canvas" ref={(it) => (container = it)}>
+        <div class="__field" ref={(it) => (field = it)}>
+          <Show
+            when={state.root.get() !== -1}
+            fallback={<div>CanvasState 未设置根节点。</div>}
+          >
+            {state.render_node(state.root.get(), {
+              onresize: (child_container) => {
+                child_container.style.left = `${
+                  field.clientWidth / 2 - child_container.clientWidth / 2
+                }px`;
+                child_container.style.top = `${
+                  field.clientHeight / 2 - child_container.clientHeight / 2
+                }px`;
+              },
+            })}
+          </Show>
+        </div>
       </div>
     </CanvasStateContext.Provider>
   );

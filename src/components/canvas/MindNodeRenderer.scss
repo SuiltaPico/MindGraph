@@ -1,6 +1,6 @@
 @use "@/common/utils.scss" as *;
 
-.mind_node {
+.mind_node_canvas .mind_node_renderer {
   @include flex(row);
   @include relative;
   @include t(0);
@@ -23,6 +23,17 @@
     @include l(0);
     @include w(full);
     @include h(full);
+
+    path {
+      @include stroke(var(--mg-line-color));
+      @include stroke_w(1);
+      @include fill(none);
+    }
+
+    > .__folding_point {
+      @include fill(var(--mg-folding-point-color));
+      @include cursor(pointer);
+    }
   }
 
   > .__children {

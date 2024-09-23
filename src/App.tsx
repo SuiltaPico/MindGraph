@@ -1,15 +1,16 @@
+import "@/common/var.scss";
 import { invoke } from "@tauri-apps/api/core";
-import { createContext, onMount, createSignal as solidCreateSignal } from "solid-js";
+import { createContext, onMount } from "solid-js";
 import { IMindNode } from "./api/types/node";
 import { Canvas, CanvasState } from "./components/canvas/Canvas";
-import FnBar from "./components/menu/FnBar";
-import MenuObject from "./components/menu/MenuObject";
-
+import { TopBar } from "./components/menu/TopBar";
+import { createSignal } from "./common/signal";
+import "./App.scss";
 export class AppContext {}
 export const context = createContext<AppContext>();
 
 export function App() {
-  const [menuVisible, setMenuVisible] = solidCreateSignal(false);
+  const menu_visible = createSignal(false);
   const canvas_state = new CanvasState({
     load_node: async (id: number) => {
       const node = await invoke("load_node", { id });
@@ -24,15 +25,13 @@ export function App() {
   return (
     <context.Provider value={{}}>
       <div
-        class="fcol"
-        style={{
-          width: "100%",
-          height: "100%",
-        }}
+        class="fw_container"
       >
-        <FnBar menuVisible={menuVisible()} setMenuVisible={setMenuVisible} />
+        <TopBar
+          // menuVisible={menu_visible}
+        />
         <Canvas state={canvas_state} />
-        <div
+        {/* <div
           style={{
             width: "100%",
             height: "100%",
@@ -50,7 +49,7 @@ export function App() {
           }}
         >
           <MenuObject />
-        </div>
+        </div> */}
       </div>
     </context.Provider>
   );

@@ -1,0 +1,15 @@
+@use "@/common/utils.scss" as *;
+
+.mind_node_canvas {
+  @include w(full);
+  @include h(calc(100% - 51px));
+  overflow: auto;
+
+  .__field {
+    position: relative;
+  }
+
+  .__field > .mind_node_renderer {
+    @include absolute();
+  }
+}

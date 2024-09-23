@@ -72,41 +72,49 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
   const it = props.it;
   const ctx = useContext(CanvasStateContext)!;
 
+  /** 是否已折叠。 */
   const folded = createSignal(false);
 
   let container: HTMLDivElement;
   let node: HTMLDivElement & { _id?: number };
-  let streamline_group: SVGGElement;
+
+  let children_streamline_group: SVGGElement;
   let main_streamline: SVGPathElement;
   let folding_points: SVGCircleElement;
-
-  let container_rect = new DOMRect();
 
   onMount(() => {
     node._id = it.node.id;
     it.render_info.handle_obs_resize = () => {
-      console.log("on_resize");
-
-      redraw_subnode_streamline();
+      full_redraw();
       it.render_info.onresize?.(container, node_y_offset);
     };
     ctx.resize_obs.observe(node);
-    handle_redraw_main_line();
+    redraw_center_related_objects();
 
     last_container_height = container.offsetHeight;
   });
 
+  /** 节点相对于容器中心的偏移量 */
   let node_y_offset = 0;
-  function handle_redraw_main_line() {
+  /**
+   * 重新绘制与中心相关的对象。包含主流线、折叠点、节点等。
+   * 该函数会计算 node_y_offset 
+   */
+  function redraw_center_related_objects() {
     const node_right = node.offsetWidth;
 
     const children_containers = children_container_map();
-    let center_x, center_y;
+    let offseted_center_y;
 
-    center_x = node.offsetWidth + 16;
-    const container_center_y = container_rect.height / 2;
+    const container_center_x = node.offsetWidth + 16;
+    const container_center_y = container.offsetHeight / 2;
 
-    if (children_containers.length > 1 && children_containers[0].container) {
+    // 计算中心位置
+    if (
+      !folded.get() &&
+      children_containers.length > 1 &&
+      children_containers[0].container
+    ) {
       const first_child_container = children_containers[0].container!;
       const last_child_container =
         children_containers[children_containers.length - 1].container!;
@@ -115,24 +123,28 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
       const lt = last_child_container.offsetTop;
       const lh = last_child_container.offsetHeight;
 
-      center_y = ft + fh / 2 + (lt + lh / 2 - (ft + fh / 2)) / 2;
-      node_y_offset = center_y - container_center_y;
+      offseted_center_y = ft + fh / 2 + (lt + lh / 2 - (ft + fh / 2)) / 2;
+      node_y_offset = offseted_center_y - container_center_y;
     } else {
-      center_y = container_center_y;
+      offseted_center_y = container_center_y;
       node_y_offset = 0;
     }
 
+    // 绘制主流线
     main_streamline?.setAttribute?.(
       "d",
-      `M ${node_right} ${center_y} L ${center_x} ${center_y}`
+      `M ${node_right} ${offseted_center_y} L ${container_center_x} ${offseted_center_y}`
     );
 
-    folding_points.setAttribute("cx", center_x + "");
-    folding_points.setAttribute("cy", center_y + "");
+    // 绘制折叠点
+    folding_points.setAttribute("cx", container_center_x + "");
+    folding_points.setAttribute("cy", offseted_center_y + "");
 
+    // 设置节点位置
     node.style.setProperty("top", node_y_offset + "px");
   }
 
+  /** 子节点容器数据。会随着子节点增删而自动变化。 */
   const children_container_map = mapArray(
     () => props.it.get_prop("children"),
     () => {
@@ -145,11 +157,9 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
     }
   );
 
-  let need_redraw_subnode_streamline = false;
+  let need_full_redraw = false;
   let last_container_height: number;
-  function redraw_subnode_streamline() {
-    container_rect = container.getBoundingClientRect();
-
+  function full_redraw() {
     const len = props.it.get_prop("children").length;
     for (let i = 0; i < len; i++) {
       const child_container_data = children_container_map()[i];
@@ -157,13 +167,13 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
       if (!child_container) continue;
 
       const x1 = node.offsetWidth + 16;
-      const y1 = container_rect.height / 2;
+      const y1 = container.offsetHeight / 2;
       const x2 = node.offsetWidth + 32;
       const y2 =
         child_container.offsetTop +
         child_container_data.node_y_offset +
-        child_container.clientHeight / 2;
-      (streamline_group.childNodes[i] as SVGLineElement).setAttribute(
+        child_container.offsetHeight / 2;
+      (children_streamline_group.childNodes[i] as SVGLineElement).setAttribute(
         "d",
         `M ${x1} ${y1} C ${x2 + (x1 - x2)} ${y1 + (y2 - y1) * 1} ${
           x2 + (x1 - x2)
@@ -172,9 +182,9 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
     }
 
     let prev_node_y_offset = node_y_offset;
-    handle_redraw_main_line();
+    redraw_center_related_objects();
 
-    need_redraw_subnode_streamline = false;
+    need_full_redraw = false;
     if (
       last_container_height !== container.offsetHeight ||
       prev_node_y_offset !== node_y_offset
@@ -183,15 +193,18 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
       last_container_height = container.offsetHeight;
     }
   }
-  function redraw_subnode_streamline_next_tick() {
-    if (need_redraw_subnode_streamline === false) {
-      need_redraw_subnode_streamline = true;
+
+  /** 在下一帧绘制子节点流线。 */
+  function full_redraw_next_tick() {
+    if (need_full_redraw === false) {
+      need_full_redraw = true;
       queueMicrotask(() => {
-        redraw_subnode_streamline();
+        full_redraw();
       });
     }
   }
 
+  /** 处理子节点容器大小变化。 */
   function handle_children_resize(
     child_container: HTMLElement,
     node_y_offset: number,
@@ -200,16 +213,18 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
     const children_container_data = children_container_map()[index];
     children_container_data.container = child_container;
     children_container_data.node_y_offset = node_y_offset;
-    redraw_subnode_streamline_next_tick();
+    full_redraw_next_tick();
   }
 
+  /** 处理折叠点点击。 */
   function handle_folding_points_click() {
     folded.set(!folded.get());
+    redraw_center_related_objects();
   }
 
   return (
     <div
-      class="mind_node"
+      class="mind_node_renderer"
       ref={(it) => {
         container = it;
       }}
@@ -222,25 +237,14 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
           style={{
             display: folded.get() ? "none" : "block",
           }}
-          ref={(it) => (streamline_group = it)}
+          ref={(it) => (children_streamline_group = it)}
         >
-          {/* 分流线 */}
-          <For each={props.it.get_prop("children")}>
-            {() => <path stroke="#868686" stroke-width="1" fill="none"></path>}
-          </For>
+          <For each={props.it.get_prop("children")}>{() => <path></path>}</For>
         </g>
-        {/* 主线 */}
-        <path
-          stroke="#868686"
-          stroke-width="1"
-          fill="none"
-          ref={(it) => (main_streamline = it)}
-        ></path>
-        {/* 折叠点 */}
+        <path ref={(it) => (main_streamline = it)}></path>
         <circle
-          class="cursor-pointer"
+          class="__folding_point"
           r={6}
-          fill="#868686"
           ref={(it) => (folding_points = it)}
           onClick={handle_folding_points_click}
         ></circle>
