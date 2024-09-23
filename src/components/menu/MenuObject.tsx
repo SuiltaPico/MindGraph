@@ -1,5 +1,4 @@
 import "./MenuObject.css";
-import "@fortawesome/fontawesome-free/css/all.css";
 export default function MenuObject() {
   /**
    * 哈哈，可能会用来加载文件的函数
