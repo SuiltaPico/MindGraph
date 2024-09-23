@@ -1,6 +1,6 @@
 import { mdiMenu } from "@mdi/js";
 import { Icon } from "../base/Icon";
-import "./Menu.css";
+import "./Menu.scss";
 
 export default function Menu() {
   return (

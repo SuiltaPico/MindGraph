@@ -135,7 +135,7 @@ export const Canvas: Component<{ state: CanvasState }> = (props) => {
                   field.clientWidth / 2 - child_container.clientWidth / 2
                 }px`;
                 child_container.style.top = `${
-                  field.clientHeight / 2 - child_container.clientHeight / 2
+                  field.clientHeight / 2 - child_container.clientHeight / 1.5
                 }px`;
               },
             })}

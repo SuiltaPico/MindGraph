@@ -1,4 +1,4 @@
-import "./MenuObject.css";
+import "./MenuObject.scss";
 export default function MenuObject() {
   /**
    * 哈哈，可能会用来加载文件的函数

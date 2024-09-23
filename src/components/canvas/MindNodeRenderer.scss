@@ -11,7 +11,7 @@
     @include bg(#eee);
     @include self(center);
     @include p(4px);
-    @include radius(4px);
+    @include border_radius(4px);
     @include mr(32px);
     @include z(1);
     @include relative;
@@ -46,7 +46,7 @@
   @include flex(row);
   @include self(center);
   @include p(4px);
-  @include radius(4px);
+  @include border_radius(4px);
   @include bg(#eee);
 }
 
@@ -54,7 +54,7 @@
   @include flex(col);
   @include self(center);
   @include p(4px);
-  @include radius(4px);
+  @include border_radius(4px);
   @include bg(#eee);
 
   .__accordion {

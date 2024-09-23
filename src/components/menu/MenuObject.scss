@@ -1,0 +1,78 @@
+@use "@/common/utils.scss" as *;
+
+.menu {
+  @include bgc(white);
+  @include flex(column);
+  @include items(center);
+  @include size(100%);
+}
+
+.title {
+  @include mt(7.5%);
+  @include size(100px);
+  @include text-align(center);
+}
+
+.menuobjectzone1 {
+  @include flex(row);
+  @include justify(space-between);
+  @include items(center);
+  @include mt(10%);
+  @include w(60%);
+}
+
+.openfile {
+  @include flex(row);
+  @include items(center);
+  @include size(20px);
+  @include ml(10px);
+  @include w(300px);
+}
+
+.leftline {
+  border-left: 5px solid #ddd;
+}
+
+.word {
+  @include ml(10px);
+  @include max-h(60px);
+  @include flex(column);
+}
+
+.subtitle {
+  @include size(20px);
+}
+
+.description {
+  @include size(10px);
+}
+
+.icon {
+  @include ml(10px);
+}
+
+.menuobjectzone2 {
+  @extend .menuobjectzone1;
+}
+
+.filetop {
+  @include ml(10px);
+  @include font-weight(bold);
+  @include size(20px);
+  @include pos(relative);
+  @include top(0);
+  @include left(0);
+}
+
+.filegraph {
+  @include w(500px);
+  @include h(250px);
+  @include overflow-y(auto);
+}
+
+.copyright {
+  @include mt(10%);
+  @include size(10px);
+  @include text-align(center);
+  @include color(#ddd);
+}

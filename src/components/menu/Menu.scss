@@ -1,0 +1,11 @@
+@use "@/common/utils.scss" as *;
+
+.menubuttom {
+  transition: background-color 0.3s;
+  @include border_radius(5px);
+  @include p(10px);
+}
+
+.menubuttom:hover {
+  @include bgc(rgba(0, 0, 0, 0.1));
+}

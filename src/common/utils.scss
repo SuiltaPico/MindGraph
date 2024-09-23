@@ -228,8 +228,8 @@
 }
 
 // ---- 圆角 ----
-@mixin radius($value) {
-  border-radius: to_css_value($value);
+@mixin border_radius($value) {
+  border-border_radius: to_css_value($value);
 }
 
 // ---- 光标 ----
