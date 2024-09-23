@@ -229,7 +229,7 @@
 
 // ---- 圆角 ----
 @mixin border_radius($value) {
-  border-border_radius: to_css_value($value);
+  border-radius: to_css_value($value);
 }
 
 // ---- 光标 ----

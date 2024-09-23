@@ -5,6 +5,7 @@ import {
   createEmitterSignal,
   createSignal,
   EmitterSignal,
+  WrappedSignal,
 } from "@/common/signal";
 import "./Canvas.scss";
 
@@ -16,6 +17,9 @@ interface RenderInfo {
   onresize?: (container: HTMLElement, node_y_offset: number) => void;
   /** 当节点大小改变时 */
   handle_obs_resize?: () => void;
+
+  /** 是否已聚焦 */
+  focused: WrappedSignal<boolean>;
 }
 
 /** 渲染时信息 */
@@ -26,7 +30,8 @@ interface RenderContext {
 function create_RenderInfo() {
   return {
     path_emitter_map: new Map<string, EmitterSignal>(),
-  };
+    focused: createSignal(false),
+  } satisfies RenderInfo;
 }
 
 export class MindNodeHelper {
@@ -58,6 +63,10 @@ export class CanvasState {
   deleted_nodes = new Set<number>();
   /** 修改的节点 */
   modified_nodes = new Set<number>();
+
+  /** 当前聚焦的节点 */
+  focused_node: number = -1;
+
   resize_obs = new ResizeObserver((entries) => {
     for (const entry of entries) {
       const id = (entry.target as any)._id;
@@ -101,8 +110,28 @@ export class CanvasState {
     return render_info.dom_el;
   }
 
+  focus_node(id: number) {
+    if (this.focused_node === id) return;
+
+    // 取消之前的聚焦
+    this.get_render_info(this.focused_node).focused.set(false);
+
+    // 设置新的聚焦
+    this.focused_node = id;
+    if (this.focused_node !== -1) {
+      this.get_render_info(id).focused.set(true);
+    }
+  }
+
   constructor(options: { load_node: (id: number) => Promise<IMindNode> }) {
     this.load_node = options.load_node;
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+      } else if (e.key === "Tab") {
+        if (this.focused_node === -1) return;
+        const node = this.nodes.get(this.focused_node)!;
+      }
+    });
   }
 }
 

@@ -1,6 +1,7 @@
 import { createSignal, WrappedSignal } from "@/common/signal";
 import { useContext, onMount, mapArray, For, Show, Accessor } from "solid-js";
 import { MindNodeHelper, CanvasStateContext } from "./Canvas";
+import clsx from "clsx";
 
 class RedrawHelper {
   node_y_offset = 0;
@@ -122,6 +123,18 @@ class RedrawHelper {
     }
   }
 
+  /** 处理子节点容器大小变化。 */
+  handle_children_resize(
+    child_container: HTMLElement,
+    node_y_offset: number,
+    index: number
+  ) {
+    const children_container_data = this.children_data_map()[index];
+    children_container_data.container = child_container;
+    children_container_data.node_y_offset = node_y_offset;
+    this.full_redraw_next_tick();
+  }
+
   constructor(
     public it: MindNodeHelper,
     public children_data_map: Accessor<
@@ -131,8 +144,7 @@ class RedrawHelper {
       }[]
     >,
     public folded: WrappedSignal<boolean>
-  ) {
-  }
+  ) {}
 }
 
 export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
@@ -175,27 +187,12 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
 
     it.render_info.handle_obs_resize = () => {
       redraw_helper.full_redraw();
-      it.render_info.onresize?.(container, node_y_offset);
+      it.render_info.onresize?.(container, redraw_helper.node_y_offset);
     };
     ctx.resize_obs.observe(node);
     redraw_helper.redraw_center_related_objects();
     redraw_helper.last_container_height = container.offsetHeight;
   });
-
-  /** 节点相对于容器中心的偏移量 */
-  let node_y_offset = 0;
-
-  /** 处理子节点容器大小变化。 */
-  function handle_children_resize(
-    child_container: HTMLElement,
-    node_y_offset: number,
-    index: number
-  ) {
-    const children_container_data = children_data_map()[index];
-    children_container_data.container = child_container;
-    children_container_data.node_y_offset = node_y_offset;
-    redraw_helper.full_redraw_next_tick();
-  }
 
   /** 处理折叠点点击。 */
   function handle_folding_points_click() {
@@ -210,7 +207,11 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
         container = it;
       }}
     >
-      <div class="__node" contenteditable ref={(it) => (node = it)}>
+      <div
+        class={clsx("__node", it.render_info.focused.get() && "__focused")}
+        contenteditable
+        ref={(it) => (node = it)}
+      >
         {it.get_prop("content").value}
       </div>
       <svg class="__diversion">
@@ -236,7 +237,11 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
             {(it, i) =>
               ctx.render_node(it, {
                 onresize: (child_container, node_y_offset) =>
-                  handle_children_resize(child_container, node_y_offset, i()),
+                  redraw_helper.handle_children_resize(
+                    child_container,
+                    node_y_offset,
+                    i()
+                  ),
               })
             }
           </For>
