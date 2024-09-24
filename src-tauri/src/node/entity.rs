@@ -25,10 +25,10 @@ use sqlx::{sqlite::SqliteRow, types::Json, FromRow, Row};
 
 #[derive(Debug, Default, PartialEq, Eq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct Node {
-  id: i32,
+  id: String,
   content: Json<Value>,
-  parents: Json<Vec<i32>>,
-  children: Json<Vec<i32>>,
+  parents: Json<Vec<String>>,
+  children: Json<Vec<String>>,
 }
 
 // impl FromRow<'_, SqliteRow> for NodeWithRoot {

@@ -1,10 +1,9 @@
 export interface IMindNode {
-  id: number;
+  id: string;
   content: {
     _type: string;
     value: string;
   };
-  root_id: number;
-  parents: number[];
-  children: number[];
+  parents: string[];
+  children: string[];
 }

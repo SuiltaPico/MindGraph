@@ -9,14 +9,14 @@ class RedrawHelper {
   last_container_height: number = 0;
 
   container: HTMLDivElement = undefined as any;
-  node: HTMLDivElement & { _id?: number } = undefined as any;
+  node: HTMLDivElement & { _id?: string } = undefined as any;
   children_streamline_group: SVGGElement = undefined as any;
   main_streamline: SVGPathElement = undefined as any;
   folding_points: SVGCircleElement = undefined as any;
 
   onmount(
     container: HTMLDivElement,
-    node: HTMLDivElement & { _id?: number },
+    node: HTMLDivElement & { _id?: string },
     children_streamline_group: SVGGElement,
     main_streamline: SVGPathElement,
     folding_points: SVGCircleElement
@@ -155,7 +155,7 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
   const folded = createSignal(false);
 
   let container: HTMLDivElement;
-  let node: HTMLDivElement & { _id?: number };
+  let node: HTMLDivElement & { _id?: string };
   let children_streamline_group: SVGGElement;
   let main_streamline: SVGPathElement;
   let folding_points: SVGCircleElement;
@@ -200,6 +200,10 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
     redraw_helper.redraw_center_related_objects();
   }
 
+  function handle_node_click() {
+    ctx.focus_node(it.node.id);
+  }
+
   return (
     <div
       class="mind_node_renderer"
@@ -210,6 +214,7 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
       <div
         class={clsx("__node", it.render_info.focused.get() && "__focused")}
         contenteditable
+        onClick={handle_node_click}
         ref={(it) => (node = it)}
       >
         {it.get_prop("content").value}
@@ -223,11 +228,24 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
         >
           <For each={props.it.get_prop("children")}>{() => <path></path>}</For>
         </g>
-        <path ref={(it) => (main_streamline = it)}></path>
+        <path
+          style={{
+            display:
+              props.it.get_prop("children").length > 0 ? "block" : "none",
+          }}
+          ref={(it) => (main_streamline = it)}
+        ></path>
         <circle
           class="__folding_point"
           r={6}
           ref={(it) => (folding_points = it)}
+          style={{
+            display:
+              props.it.get_prop("children").length > 0 &&
+              it.render_info.focused.get()
+                ? "block"
+                : "none",
+          }}
           onClick={handle_folding_points_click}
         ></circle>
       </svg>

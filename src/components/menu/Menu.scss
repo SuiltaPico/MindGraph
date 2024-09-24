@@ -2,7 +2,7 @@
 
 .menubuttom {
   transition: background-color 0.3s;
-  @include border_radius(5px);
+  @include rounded(5px);
   @include p(10px);
 }
 

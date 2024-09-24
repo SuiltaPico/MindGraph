@@ -6,7 +6,7 @@
     @include cursor(pointer);
     @include p(4px);
     @include justify(space-between);
-    @include border_radius(2px);
+    @include rounded(2px);
     @include transition(background-color);
 
     .__icon {

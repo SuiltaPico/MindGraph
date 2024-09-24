@@ -12,23 +12,23 @@ export const context = createContext<AppContext>();
 export function App() {
   const menu_visible = createSignal(false);
   const canvas_state = new CanvasState({
-    load_node: async (id: number) => {
+    load_node: async (id: string) => {
       const node = await invoke("load_node", { id });
       return node as IMindNode;
     },
   });
 
   onMount(async () => {
-    canvas_state.root.set(1);
+    canvas_state.root.set(
+      ((await invoke("get_first_root_node")) as IMindNode).id
+    );
   });
 
   return (
     <context.Provider value={{}}>
-      <div
-        class="fw_container"
-      >
+      <div class="fw_container">
         <TopBar
-          // menuVisible={menu_visible}
+        // menuVisible={menu_visible}
         />
         <Canvas state={canvas_state} />
         {/* <div

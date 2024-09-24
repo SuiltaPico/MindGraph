@@ -199,22 +199,22 @@
 }
 
 // ---- 文本 ----
-@mixin color($color) {
+@mixin tc($color) {
   color: $color;
 }
 
 // 文本对齐
-@mixin text($value) {
+@mixin ta($value) {
   text-align: $value;
 }
 
-// 文本对齐
-@mixin size($value) {
+// 文本大小
+@mixin ts($value) {
   font-size: $value;
 }
 
 // 透明度
-@mixin opacity($value) {
+@mixin op($value) {
   opacity: $value;
 }
 
@@ -228,7 +228,7 @@
 }
 
 // ---- 圆角 ----
-@mixin border_radius($value) {
+@mixin rounded($value) {
   border-radius: to_css_value($value);
 }
 

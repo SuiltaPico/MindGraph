@@ -9,7 +9,7 @@
   border-bottom: 1px solid #0001;
 
   .__file_name {
-    @include size(20px);
+    @include ts(20px);
     @include ml(10px);
     @include items(center);
   }

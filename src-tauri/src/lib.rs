@@ -111,7 +111,33 @@ async fn get_top_nodes(
 }
 
 #[tauri::command(async)]
-async fn load_node(state: tauri::State<'_, AppState>, id: i32) -> Result<Node, String> {
+async fn get_first_root_node(state: tauri::State<'_, AppState>) -> Result<Node, String> {
+  let root_node: Node = sqlx::query_as(
+    r#"
+    SELECT 
+      n.*,
+      (SELECT json_group_array(parent_id)
+       FROM node_node_r nnr
+       WHERE nnr.child_id = n.id) AS parents,
+      (SELECT json_group_array(child_id)
+       FROM node_node_r nnr
+       WHERE nnr.parent_id = n.id) AS children
+    FROM node n
+    LEFT JOIN node_node_r nnr ON n.id = nnr.child_id
+    WHERE nnr.parent_id IS NULL
+    LIMIT 1;
+    "#,
+  )
+  .fetch_one(&state.conn)
+  .await
+  .map_err(|e| e.to_string())?;
+
+  Ok(root_node)
+}
+
+
+#[tauri::command(async)]
+async fn load_node(state: tauri::State<'_, AppState>, id: String) -> Result<Node, String> {
   let node: Node = sqlx::query_as(
     r#"
     SELECT 
@@ -140,7 +166,7 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
 
   tauri::Builder::default()
     .manage(state)
-    .invoke_handler(tauri::generate_handler![get_top_nodes, load_node])
+    .invoke_handler(tauri::generate_handler![get_top_nodes, load_node, get_first_root_node])
     // .menu(menu)
     .run(tauri::generate_context!())
     .expect("error while running tauri application");

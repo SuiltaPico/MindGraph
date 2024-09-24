@@ -4,12 +4,12 @@
   @include bgc(white);
   @include flex(column);
   @include items(center);
-  @include size(100%);
+  @include ts(100%);
 }
 
 .title {
   @include mt(7.5%);
-  @include size(100px);
+  @include ts(100px);
   @include text-align(center);
 }
 
@@ -24,7 +24,7 @@
 .openfile {
   @include flex(row);
   @include items(center);
-  @include size(20px);
+  @include ts(20px);
   @include ml(10px);
   @include w(300px);
 }
@@ -40,11 +40,11 @@
 }
 
 .subtitle {
-  @include size(20px);
+  @include ts(20px);
 }
 
 .description {
-  @include size(10px);
+  @include ts(10px);
 }
 
 .icon {
@@ -58,7 +58,7 @@
 .filetop {
   @include ml(10px);
   @include font-weight(bold);
-  @include size(20px);
+  @include ts(20px);
   @include pos(relative);
   @include top(0);
   @include left(0);
@@ -72,7 +72,7 @@
 
 .copyright {
   @include mt(10%);
-  @include size(10px);
+  @include ts(10px);
   @include text-align(center);
-  @include color(#ddd);
+  @include tc(#ddd);
 }

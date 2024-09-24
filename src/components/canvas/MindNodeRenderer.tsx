@@ -12,7 +12,7 @@ import "./MindNodeRenderer.scss";
 import { MindNodeContentRenderer } from "./MindNodeContentRenderer";
 
 export const MindNodePendingRenderer: Component<{
-  id: number;
+  id: string;
 }> = (props) => {
   let container: HTMLDivElement;
   const ctx = useContext(CanvasStateContext)!;
@@ -36,7 +36,7 @@ export const MindNodePendingRenderer: Component<{
 export const MindNodeErrorRenderer: Component<{
   error: any;
   retry: () => void;
-  id: number;
+  id: string;
 }> = (props) => {
   let container: HTMLDivElement;
   const ctx = useContext(CanvasStateContext)!;
@@ -65,7 +65,7 @@ export const MindNodeErrorRenderer: Component<{
   );
 };
 
-export function MindNodeRenderer(props: { id: number }) {
+export function MindNodeRenderer(props: { id: string }) {
   const node_id = props.id;
   const ctx = useContext(CanvasStateContext);
 
