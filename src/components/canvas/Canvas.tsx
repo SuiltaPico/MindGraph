@@ -11,27 +11,28 @@ import "./Canvas.scss";
 import { ulid } from "ulid";
 
 /** 渲染时信息 */
-interface RenderInfo {
+export interface RenderInfo {
   /** 路径变更通知表 */
   path_emitter_map: Map<string, EmitterSignal>;
-  dom_el?: HTMLElement;
-  onresize?: (container: HTMLElement, node_y_offset: number) => void;
-  /** 当节点大小改变时 */
-  handle_obs_resize?: () => void;
-
-  /** 是否已聚焦 */
-  focused: WrappedSignal<boolean>;
+  /** 是否已聚焦。其中为聚焦节点的所在父节点 id。 */
+  focused: WrappedSignal<string>;
+  context_map: Map<string, RenderContext>;
 }
 
 /** 渲染时信息 */
-interface RenderContext {
-  is_root: boolean;
+export interface RenderContext {
+  parent_id: string;
+  dom_el: HTMLElement;
+  /** 当节点大小改变时 */
+  handle_obs_resize?: () => void;
+  onresize?: (container: HTMLElement, node_y_offset: number) => void;
 }
 
 function create_RenderInfo() {
   return {
-    path_emitter_map: new Map<string, EmitterSignal>(),
-    focused: createSignal(false),
+    path_emitter_map: new Map(),
+    focused: createSignal(""),
+    context_map: new Map(),
   } satisfies RenderInfo;
 }
 
@@ -47,6 +48,8 @@ function set_node_prop(
 }
 
 export class MindNodeHelper {
+  rc: RenderContext;
+
   get_prop<T extends keyof IMindNode>(key: T) {
     let emitter = this.render_info.path_emitter_map.get(key);
     if (emitter === undefined) {
@@ -61,8 +64,16 @@ export class MindNodeHelper {
     set_node_prop(this.node, this.render_info, key, value);
   }
 
-  constructor(public node: IMindNode, public render_info: RenderInfo) {}
+  constructor(
+    public node: IMindNode,
+    public render_info: RenderInfo,
+    public parent_id: string
+  ) {
+    this.rc = render_info.context_map.get(this.parent_id)!;
+  }
 }
+
+const canvas_root_id = "[canvas_root]";
 
 export class CanvasState {
   root = createSignal<string>("");
@@ -77,12 +88,18 @@ export class CanvasState {
   modified_nodes = new Set<string>();
 
   /** 当前聚焦的节点 */
-  focused_node: string = "";
+  readonly focused_node_data: {
+    id: string;
+    parent_id: string;
+  } = {
+    id: "",
+    parent_id: "",
+  };
 
   resize_obs = new ResizeObserver((entries) => {
     for (const entry of entries) {
-      const id = (entry.target as any)._id;
-      this.render_info.get(id)?.handle_obs_resize?.();
+      const render_context = (entry.target as any)._rc as RenderContext;
+      render_context.handle_obs_resize?.();
     }
   });
 
@@ -97,57 +114,59 @@ export class CanvasState {
     return render_info;
   }
 
-
-  async get_node(id: string) {
+  async get_node(id: string, parent_id: string) {
     let node = this.nodes.get(id);
     if (node === undefined) {
       node = await this.load_node(id);
       this.nodes.set(id, node);
     }
-    return new MindNodeHelper(node, this.get_render_info(id));
+    return new MindNodeHelper(node, this.get_render_info(id), parent_id);
   }
 
   render_node(
     id: string,
+    parent_id: string,
     options: {
       onresize?: (container: HTMLElement, node_y_offset: number) => void;
     }
   ) {
     const render_info = this.get_render_info(id);
-    if (render_info.dom_el === undefined) {
-      render_info.dom_el = (
-        <MindNodeRenderer id={id}></MindNodeRenderer>
-      ) as any;
-    }
-    render_info.onresize = options.onresize;
-    return render_info.dom_el;
+    const rc = {
+      parent_id,
+      dom_el: document.createElement("div"),
+      onresize: options.onresize,
+    };
+      render_info.context_map.set(parent_id, rc);
+    return <MindNodeRenderer id={id} rc={rc}></MindNodeRenderer>;
   }
 
-  focus_node(id: string) {
-    if (this.focused_node === id) return;
+  focus_node(id: string, parent_id: string) {
+    if (this.focused_node_data.id === id) return;
 
     // 取消之前的聚焦
-    this.get_render_info(this.focused_node).focused.set(false);
+    this.get_render_info(this.focused_node_data.id).focused.set(parent_id);
 
     // 设置新的聚焦
-    this.focused_node = id;
-    if (this.focused_node !== "") {
-      this.get_render_info(id).focused.set(true);
+    this.focused_node_data.id = id;
+    this.focused_node_data.parent_id = parent_id;
+    if (id !== "") {
+      this.get_render_info(id).focused.set(parent_id);
     }
   }
 
   constructor(options: { load_node: (id: string) => Promise<IMindNode> }) {
+    const focused_node_data = this.focused_node_data;
+
     this.load_node = options.load_node;
     window.addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
-        if (this.focused_node === "") return;
-        if (e.shiftKey || e.metaKey || e.altKey || e.ctrlKey) return;  
-
+        if (focused_node_data.id === "") return;
+        if (e.shiftKey || e.metaKey || e.altKey || e.ctrlKey) return;
       } else if (e.key === "Tab") {
-        e.preventDefault()
-        if (this.focused_node === "") return;
-        const focused_node = this.nodes.get(this.focused_node)!;
-        const focused_node_ri = this.render_info.get(this.focused_node)!;
+        e.preventDefault();
+        if (focused_node_data.id === "") return;
+        const focused_node = this.nodes.get(focused_node_data.id)!;
+        const focused_node_ri = this.render_info.get(focused_node.id)!;
 
         const new_node = {
           id: ulid(),
@@ -167,7 +186,7 @@ export class CanvasState {
         ]);
         this.modified_nodes.add(focused_node.id);
 
-        this.focus_node(new_node.id);        
+        this.focus_node(new_node.id, this.focused_node_data.parent_id);
       }
     });
   }
@@ -196,7 +215,7 @@ export const Canvas: Component<{ state: CanvasState }> = (props) => {
             when={state.root.get() !== ""}
             fallback={<div>CanvasState 未设置根节点。</div>}
           >
-            {state.render_node(state.root.get(), {
+            {state.render_node(state.root.get(), canvas_root_id, {
               onresize: (child_container) => {
                 child_container.style.left = `${
                   field.clientWidth / 2 - child_container.clientWidth / 2

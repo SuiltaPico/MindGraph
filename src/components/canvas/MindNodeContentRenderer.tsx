@@ -1,6 +1,6 @@
 import { createSignal, WrappedSignal } from "@/common/signal";
 import { useContext, onMount, mapArray, For, Show, Accessor } from "solid-js";
-import { MindNodeHelper, CanvasStateContext } from "./Canvas";
+import { MindNodeHelper, CanvasStateContext, RenderContext } from "./Canvas";
 import clsx from "clsx";
 
 class RedrawHelper {
@@ -137,7 +137,7 @@ class RedrawHelper {
       this.last_container_height !== this.container.offsetHeight ||
       prev_node_y_offset !== this.node_y_offset
     ) {
-      this.it.render_info.onresize?.(this.container, this.node_y_offset);
+      this.it.rc.onresize?.(this.container, this.node_y_offset);
       this.last_container_height = this.container.offsetHeight;
     }
   }
@@ -184,7 +184,7 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
   const folded = createSignal(false);
 
   let container: HTMLDivElement;
-  let node: HTMLDivElement & { _id?: string };
+  let node: HTMLDivElement & { _id?: string; _rc?: RenderContext };
   let children_streamline_group: SVGGElement;
   let main_streamline: SVGPathElement;
   let folding_points: SVGCircleElement;
@@ -206,6 +206,7 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
 
   onMount(() => {
     node._id = it.node.id;
+    node._rc = it.rc;
     redraw_helper.onmount(
       container,
       node,
@@ -214,9 +215,9 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
       folding_points
     );
 
-    it.render_info.handle_obs_resize = () => {
+    it.rc.handle_obs_resize = () => {
       redraw_helper.full_redraw();
-      it.render_info.onresize?.(container, redraw_helper.node_y_offset);
+      it.rc.onresize?.(container, redraw_helper.node_y_offset);
     };
     ctx.resize_obs.observe(node);
     redraw_helper.redraw_center_related_objects();
@@ -230,7 +231,7 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
   }
 
   function handle_node_click() {
-    ctx.focus_node(it.node.id);
+    ctx.focus_node(it.node.id, it.rc.parent_id);
   }
 
   return (
@@ -281,8 +282,8 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
       <Show when={!folded.get()}>
         <div class="__children">
           <For each={props.it.get_prop("children")}>
-            {(it, i) =>
-              ctx.render_node(it, {
+            {(child, i) =>
+              ctx.render_node(child, it.rc.parent_id, {
                 onresize: (child_container, node_y_offset) =>
                   redraw_helper.handle_children_resize(
                     child_container,

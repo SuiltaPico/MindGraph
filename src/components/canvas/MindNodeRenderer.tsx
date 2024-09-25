@@ -7,19 +7,18 @@ import {
   useContext,
 } from "solid-js";
 import { Accordion, AccordionRenderer } from "../base/Accordion";
-import { CanvasStateContext } from "./Canvas";
-import "./MindNodeRenderer.scss";
+import { CanvasStateContext, RenderContext } from "./Canvas";
 import { MindNodeContentRenderer } from "./MindNodeContentRenderer";
-import { wait } from "@/common/async";
+import "./MindNodeRenderer.scss";
 
 export const MindNodePendingRenderer: Component<{
   id: string;
+  rc: RenderContext
 }> = (props) => {
   let container: HTMLDivElement;
-  const ctx = useContext(CanvasStateContext)!;
 
   onMount(() => {
-    ctx.get_render_info(props.id).onresize?.(container, 0);
+    props.rc.onresize?.(container, 0);
   });
 
   return (
@@ -38,12 +37,12 @@ export const MindNodeErrorRenderer: Component<{
   error: any;
   retry: () => void;
   id: string;
+  rc: RenderContext
 }> = (props) => {
   let container: HTMLDivElement;
-  const ctx = useContext(CanvasStateContext)!;
 
   onMount(() => {
-    ctx.get_render_info(props.id).onresize?.(container, 0);
+    props.rc.onresize?.(container, 0);
   });
 
   const accordion = new Accordion();
@@ -66,18 +65,18 @@ export const MindNodeErrorRenderer: Component<{
   );
 };
 
-export function MindNodeRenderer(props: { id: string }) {
+export function MindNodeRenderer(props: { id: string; rc: RenderContext }) {
   const node_id = props.id;
   const ctx = useContext(CanvasStateContext);
 
   const [node, { refetch }] = createResource(async () => {
-    return await ctx!.get_node(node_id);
+    return await ctx!.get_node(node_id, props.rc.parent_id);
   });
 
   return (
     <Switch>
       <Match when={node.state === "pending" || node.state === "refreshing"}>
-        <MindNodePendingRenderer id={node_id} />
+        <MindNodePendingRenderer id={node_id} rc={props.rc} />
       </Match>
       <Match when={node.state === "ready"}>
         <MindNodeContentRenderer it={node()!} />
@@ -87,6 +86,7 @@ export function MindNodeRenderer(props: { id: string }) {
           error={node.error}
           retry={refetch}
           id={node_id}
+          rc={props.rc}
         />
       </Match>
     </Switch>
