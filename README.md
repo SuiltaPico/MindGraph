@@ -3,17 +3,6 @@
 基于有向无环图的知识库。
 
 ## 准备
-
-你需要安装最新稳定版本的 Node.js 和 Rust 工具链。
-
-你可以通过 `rustc -V` 检查当前 Rust 版本。当前开发环境使用
-`rustc 1.81.0 (eeb90cda1 2024-09-04)`。
-
-- Tips：如果你没有安装 Rust，请前往
-  https://www.rust-lang.org/zh-CN/tools/install 下载 Rustup。然后，按照官方提 供
-  的步骤安装。
-
-## 开发
 1. 通过 `rustc -V` 检查当前 Rust 版本。当前开发环境使用
     `rustc 1.80.1 (3f5fd8dd4 2024-08-06)`。如果你没有安装 Rust，请前往
     https://www.rust-lang.org/zh-CN/tools/install 按照官方指示步骤进行安装。
@@ -21,6 +10,9 @@
 2. 通过 `node -v` 检查当前 Node.js 版本。当前开发环境使用 `node v22.3.0`。如果你没有安装 Node.js，请前往
     https://nodejs.org/en/download 按照官方指示步骤进行安装。
 
+3. 如果你使用的是 Windows 系统，请确保 cmake 处于环境变量 PATH 中。
+
+## 开发
 3. 执行 `pnpm i` 安装依赖。
 4. 执行 `pnpm tauri dev` 启动开发环境。
 ## 构建
