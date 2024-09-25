@@ -10,6 +10,7 @@ import { Accordion, AccordionRenderer } from "../base/Accordion";
 import { CanvasStateContext } from "./Canvas";
 import "./MindNodeRenderer.scss";
 import { MindNodeContentRenderer } from "./MindNodeContentRenderer";
+import { wait } from "@/common/async";
 
 export const MindNodePendingRenderer: Component<{
   id: string;
@@ -69,7 +70,9 @@ export function MindNodeRenderer(props: { id: string }) {
   const node_id = props.id;
   const ctx = useContext(CanvasStateContext);
 
-  const [node, { refetch }] = createResource(() => ctx!.get_node(node_id));
+  const [node, { refetch }] = createResource(async () => {
+    return await ctx!.get_node(node_id);
+  });
 
   return (
     <Switch>

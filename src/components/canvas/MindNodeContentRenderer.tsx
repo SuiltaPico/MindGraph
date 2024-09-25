@@ -4,6 +4,7 @@ import { MindNodeHelper, CanvasStateContext } from "./Canvas";
 import clsx from "clsx";
 
 class RedrawHelper {
+  /** 节点相对于容器中心的偏移量。来源于去除子项高度去除头尾一半后，再除以2的位置。 */
   node_y_offset = 0;
   need_full_redraw = false;
   last_container_height: number = 0;
@@ -77,31 +78,59 @@ class RedrawHelper {
   }
 
   full_redraw() {
+    let prev_node_y_offset = this.node_y_offset;
+    // 绘制子节点流线依赖最新的 node_y_offset，redraw_center_related_objects 会更新该值，所以必须先调用该函数。
+    this.redraw_center_related_objects();
+
+    // 绘制子节点流线
     const len = this.it.get_prop("children").length;
+
+    const rx = 8;
+    const ry = 8;
+
+    const cx = this.node.offsetWidth + 16;
+    const ccx = this.node.offsetWidth + 32;
+    const cy = this.container.offsetHeight / 2 + this.node_y_offset;
+
     for (let i = 0; i < len; i++) {
       const child_container_data = this.children_data_map()[i];
       const child_container = child_container_data.container;
       if (!child_container) continue;
 
-      const x1 = this.node.offsetWidth + 16;
-      const y1 = this.container.offsetHeight / 2;
-      const x2 = this.node.offsetWidth + 32;
-      const y2 =
+      const ccy =
         child_container.offsetTop +
         child_container_data.node_y_offset +
         child_container.offsetHeight / 2;
-      (
-        this.children_streamline_group.childNodes[i] as SVGLineElement
-      ).setAttribute(
-        "d",
-        `M ${x1} ${y1} C ${x2 + (x1 - x2)} ${y1 + (y2 - y1) * 1} ${
-          x2 + (x1 - x2)
-        } ${y1 + (y2 - y1)} ${x2} ${y2}`
-      );
-    }
 
-    let prev_node_y_offset = this.node_y_offset;
-    this.redraw_center_related_objects();
+      const x_diff = cx - ccx;
+      const y_diff = cy - ccy;
+
+      const children_streamline = this.children_streamline_group.childNodes[
+        i
+      ] as SVGLineElement;
+
+      if (y_diff !== 0) {
+        const ell_start_x = cx;
+        const ell_start_y =
+          cy -
+          y_diff +
+          (y_diff > 0 ? Math.min(y_diff, ry) : Math.max(y_diff, -ry));
+
+        const ell_end_x = ccx + x_diff - (x_diff > 0 ? rx : -rx);
+        const ell_end_y = ccy;
+
+        children_streamline.setAttribute(
+          "d",
+          `
+          M ${cx} ${cy} L ${ell_start_x} ${ell_start_y}
+          A ${rx} ${ry} 0 0 ${y_diff > 0 ? 1 : 0} ${ell_end_x} ${ell_end_y}
+          M ${ell_end_x} ${ell_end_y} L ${ccx} ${ccy}
+        `
+        );
+      } else {
+        children_streamline.setAttribute("d", `M ${cx} ${cy} L ${ccx} ${ccy}`);
+      }
+    }
 
     this.need_full_redraw = false;
     if (
