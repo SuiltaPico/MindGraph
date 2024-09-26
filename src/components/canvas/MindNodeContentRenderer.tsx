@@ -192,8 +192,9 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
   /** 子节点容器数据。会随着子节点增删而自动变化。 */
   const children_data_map = mapArray(
     () => props.it.get_prop("children"),
-    () => {
+    (it) => {
       return {
+        it: it,
         node_y_offset: 0,
       } as {
         container?: HTMLElement;
@@ -214,7 +215,6 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
       main_streamline,
       folding_points
     );
-
     it.rc.handle_obs_resize = () => {
       redraw_helper.full_redraw();
       it.rc.onresize?.(container, redraw_helper.node_y_offset);
@@ -222,6 +222,9 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
     ctx.resize_obs.observe(node);
     redraw_helper.redraw_center_related_objects();
     redraw_helper.last_container_height = container.offsetHeight;
+    it.rc.dispose = () => {
+      ctx.resize_obs.unobserve(node);
+    };
   });
 
   /** 处理折叠点点击。 */
@@ -231,7 +234,7 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
   }
 
   function handle_node_click() {
-    ctx.focus_node(it.node.id, it.rc.parent_id);
+    ctx.focus_node(it.node.id, it.rc.parent_rc.id);
   }
 
   return (
@@ -283,7 +286,7 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
         <div class="__children">
           <For each={props.it.get_prop("children")}>
             {(child, i) =>
-              ctx.render_node(child, it.rc.parent_id, {
+              ctx.render_node(child, it.rc, {
                 onresize: (child_container, node_y_offset) =>
                   redraw_helper.handle_children_resize(
                     child_container,

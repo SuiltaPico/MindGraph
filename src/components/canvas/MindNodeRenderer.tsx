@@ -70,7 +70,7 @@ export function MindNodeRenderer(props: { id: string; rc: RenderContext }) {
   const ctx = useContext(CanvasStateContext);
 
   const [node, { refetch }] = createResource(async () => {
-    return await ctx!.get_node(node_id, props.rc.parent_id);
+    return await ctx!.get_node(node_id, props.rc.parent_rc.id);
   });
 
   return (
