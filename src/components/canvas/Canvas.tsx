@@ -185,6 +185,124 @@ export class CanvasState {
     }
   }
 
+  add_new_child(id: string) {
+    const node = this.nodes.get(id)!;
+    const node_ri = this.render_info.get(id)!;
+
+    const new_node = {
+      id: ulid(),
+      content: {
+        _type: "markdown",
+        value: "",
+      },
+      parents: [id],
+      children: [],
+    };
+    this.nodes.set(new_node.id, new_node);
+    this.added_nodes.add(new_node.id);
+
+    set_node_prop(node, node_ri, "children", [...node.children, new_node.id]);
+    this.mark_modified(node.id);
+    return new_node;
+  }
+
+  add_next_sibling(id: string, parent_id: string) {
+    const parent_node = this.nodes.get(parent_id)!;
+    const parent_ri = this.render_info.get(parent_id)!;
+
+    const new_node = {
+      id: ulid(),
+      content: {
+        _type: "markdown",
+        value: "",
+      },
+      parents: [parent_id],
+      children: [],
+    };
+    this.nodes.set(new_node.id, new_node);
+    this.added_nodes.add(new_node.id);
+
+    const index = parent_node.children.indexOf(id);
+    const new_children = [...parent_node.children];
+    new_children.splice(index + 1, 0, new_node.id);
+
+    set_node_prop(parent_node, parent_ri, "children", new_children);
+    this.mark_modified(parent_id);
+    return new_node;
+  }
+
+  delete_node(id: string, parent_id: string) {
+    const node_to_delete = this.nodes.get(id)!;
+    const node_to_delete_rc = this.render_info
+      .get(id)!
+      .context_map.get(parent_id)!;
+
+    node_to_delete_rc.dispose?.();
+
+    const parent_rc = node_to_delete_rc.parent_rc;
+    const parent_node = this.nodes.get(parent_id)!;
+
+    // 把自己从父节点的 children 中移除
+    const parent_ri = this.render_info.get(parent_node.id)!;
+    set_node_prop(
+      parent_node,
+      parent_ri,
+      "children",
+      parent_node.children.filter((id) => id !== id)
+    );
+    parent_rc.handle_obs_resize?.();
+    this.mark_modified(parent_node.id);
+
+    // 从节点的 parents 中移除当前父节点
+    node_to_delete.parents = node_to_delete.parents.filter(
+      (id) => id !== parent_id
+    );
+
+    if (node_to_delete.parents.length > 0) {
+      // 还有其他父节点，只删除关系
+      const node_ri = this.render_info.get(node_to_delete.id)!;
+      set_node_prop(node_to_delete, node_ri, "parents", node_to_delete.parents);
+      this.mark_modified(node_to_delete.id);
+    } else {
+      // 没有其他父节点，尝试删除节点，和所有后代节点
+      this.nodes.delete(node_to_delete.id);
+      this.render_info.delete(node_to_delete.id);
+      this.mark_deleted(node_to_delete.id);
+
+      // 由于这个应用的节点允许有多个父节点，因此删除节点时，只会向单个父节点的后代节点传播删除命令，一旦传播到多个父节点的后代，则停止传播，只是标记为更改，并从 parent 列表里面删除目标父节点而已。
+      // 因此，这里需要进行一个特殊的递归，遍历删除所有后代节点
+      this.recursiveDeleteDescendants(node_to_delete);
+    }
+
+    // 清理context_map
+    this.render_info.get(parent_id)?.context_map.delete(node_to_delete.id);
+  }
+
+  private recursiveDeleteDescendants(node: IMindNode) {
+    for (const childId of node.children) {
+      const childNode = this.nodes.get(childId);
+      if (childNode) {
+        // 从子节点的parents中移除当前节点
+        childNode.parents = childNode.parents.filter((id) => id !== node.id);
+
+        if (childNode.parents.length === 0) {
+          // 如果子节点没有其他父节点，则删除该子节点
+          this.nodes.delete(childId);
+          this.render_info.delete(childId);
+          this.mark_deleted(childId);
+
+          // 继续递归删除该子节点的后代
+          this.recursiveDeleteDescendants(childNode);
+        } else {
+          // 如果子节点还有其他父节点，只标记为修改
+          const child_ri = this.render_info.get(childId)!;
+          set_node_prop(childNode, child_ri, "parents", childNode.parents);
+          this.mark_modified(childId);
+        }
+      }
+    }
+  }
+
   constructor(options: { load_node: (id: string) => Promise<IMindNode> }) {
     const focused_node_data = this.focused_node_data;
 
@@ -193,85 +311,20 @@ export class CanvasState {
       if (e.key === "Enter") {
         if (focused_node_data.id === "") return;
         if (e.shiftKey || e.metaKey || e.altKey || e.ctrlKey) return;
+        const new_node = this.add_next_sibling(
+          focused_node_data.id,
+          focused_node_data.parent_id
+        );
+        this.focus_node(new_node.id, focused_node_data.parent_id);
       } else if (e.key === "Tab") {
         e.preventDefault();
         if (focused_node_data.id === "") return;
-        const focused_node = this.nodes.get(focused_node_data.id)!;
-        const focused_node_ri = this.render_info.get(focused_node.id)!;
-
-        const new_node = {
-          id: ulid(),
-          content: {
-            _type: "markdown",
-            value: "",
-          },
-          parents: [focused_node.id],
-          children: [],
-        };
-        this.nodes.set(new_node.id, new_node);
-        this.added_nodes.add(new_node.id);
-
-        set_node_prop(focused_node, focused_node_ri, "children", [
-          ...focused_node.children,
-          new_node.id,
-        ]);
-        this.mark_modified(focused_node.id);
-
+        const new_node = this.add_new_child(focused_node_data.id);
         this.focus_node(new_node.id, this.focused_node_data.parent_id);
       } else if (e.key === "Delete") {
+        e.preventDefault();
         if (focused_node_data.id === "") return;
-
-        const node_to_delete = this.nodes.get(focused_node_data.id)!;
-        const node_to_delete_rc = this.render_info
-          .get(node_to_delete.id)!
-          .context_map.get(focused_node_data.parent_id)!;
-
-        console.log(node_to_delete.id, focused_node_data.parent_id);
-
-        node_to_delete_rc.dispose?.();
-
-        const parent_rc = node_to_delete_rc.parent_rc;
-        const parent_node = this.nodes.get(focused_node_data.parent_id)!;
-
-        // 把自己从父节点的 children 中移除
-        const parent_ri = this.render_info.get(parent_node.id)!;
-        set_node_prop(
-          parent_node,
-          parent_ri,
-          "children",
-          parent_node.children.filter((id) => id !== focused_node_data.id)
-        );
-        parent_rc.handle_obs_resize?.();
-        this.mark_modified(parent_node.id);
-
-        // 从节点的 parents 中移除当前父节点
-        node_to_delete.parents = node_to_delete.parents.filter(
-          (id) => id !== focused_node_data.parent_id
-        );
-
-        if (node_to_delete.parents.length > 0) {
-          // 还有其他父节点，只删除关系
-          const node_ri = this.render_info.get(node_to_delete.id)!;
-          set_node_prop(
-            node_to_delete,
-            node_ri,
-            "parents",
-            node_to_delete.parents
-          );
-          this.mark_modified(node_to_delete.id);
-        } else {
-          // 没有其他父节点，删除整个节点
-          this.nodes.delete(node_to_delete.id);
-          this.render_info.delete(node_to_delete.id);
-          this.mark_deleted(node_to_delete.id);
-        }
-
-        // 清理context_map
-        this.render_info
-          .get(focused_node_data.parent_id)
-          ?.context_map.delete(node_to_delete.id);
-
-        // 重置焦点
+        this.delete_node(focused_node_data.id, focused_node_data.parent_id);
         this.focus_node("", "");
       }
     });
