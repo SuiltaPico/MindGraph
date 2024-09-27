@@ -103,6 +103,11 @@
   margin-bottom: to_css_value($value);
 }
 
+// outline
+@mixin outline($color, $width: 1px, $style: solid) {
+  outline: $width $style $color;
+}
+
 // display
 @mixin display($value) {
   display: $value;

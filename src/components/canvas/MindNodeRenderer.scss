@@ -40,6 +40,12 @@
     @include flex(col);
     @include gap(8px);
   }
+
+  &.__focused__ {
+    > .__node {
+      @include outline(#0078d7, 2px);
+    }
+  }
 }
 
 .mind_node_pending {

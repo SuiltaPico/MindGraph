@@ -1,6 +1,20 @@
 import { createSignal, WrappedSignal } from "@/common/signal";
-import { useContext, onMount, mapArray, For, Show, Accessor } from "solid-js";
-import { MindNodeHelper, CanvasStateContext, RenderContext } from "./CanvasState";
+import {
+  useContext,
+  onMount,
+  mapArray,
+  For,
+  Show,
+  Accessor,
+  createMemo,
+  createEffect,
+  on,
+} from "solid-js";
+import {
+  MindNodeHelper,
+  CanvasStateContext,
+  RenderContext,
+} from "./CanvasState";
 import clsx from "clsx";
 
 class RedrawHelper {
@@ -180,6 +194,7 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
   const it = props.it;
   const ctx = useContext(CanvasStateContext)!;
 
+  const focused = createMemo(() => it.ri.focused.get() === it.rc.parent_rc.id);
   /** 是否已折叠。 */
   const folded = createSignal(false);
 
@@ -208,6 +223,7 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
   onMount(() => {
     node._id = it.node.id;
     node._rc = it.rc;
+    
     redraw_helper.onmount(
       container,
       node,
@@ -222,9 +238,13 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
     ctx.resize_obs.observe(node);
     redraw_helper.redraw_center_related_objects();
     redraw_helper.last_container_height = container.offsetHeight;
-    it.rc.dispose = () => {
-      ctx.resize_obs.unobserve(node);
-    };
+    it.rc.dispose = () => ctx.resize_obs.unobserve(node);
+
+    createEffect(
+      on(focused, () => {
+        node.focus();
+      })
+    );
   });
 
   /** 处理折叠点点击。 */
@@ -239,15 +259,15 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
 
   return (
     <div
-      class="mind_node_renderer"
+      class={clsx("mind_node_renderer", focused() && "__focused__")}
       ref={(it) => {
         container = it;
       }}
     >
       <div
-        class={clsx("__node", it.render_info.focused.get() && "__focused")}
-        contenteditable
-        onClick={handle_node_click}
+        class={"__node"}
+        contenteditable={focused()}
+        onMouseDown={handle_node_click}
         ref={(it) => (node = it)}
       >
         {it.get_prop("content").value}
@@ -274,8 +294,7 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
           ref={(it) => (folding_points = it)}
           style={{
             display:
-              props.it.get_prop("children").length > 0 &&
-              it.render_info.focused.get()
+              props.it.get_prop("children").length > 0 && focused()
                 ? "block"
                 : "none",
           }}

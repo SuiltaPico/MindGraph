@@ -52,25 +52,25 @@ export class MindNodeHelper {
   rc: RenderContext;
 
   get_prop<T extends keyof IMindNode>(key: T) {
-    let emitter = this.render_info.path_emitter_map.get(key);
+    let emitter = this.ri.path_emitter_map.get(key);
     if (emitter === undefined) {
       emitter = createEmitterSignal();
-      this.render_info.path_emitter_map.set(key, emitter);
+      this.ri.path_emitter_map.set(key, emitter);
     }
     emitter.use();
     return this.node[key];
   }
 
   set_prop(key: keyof IMindNode, value: any) {
-    set_node_prop(this.node, this.render_info, key, value);
+    set_node_prop(this.node, this.ri, key, value);
   }
 
   constructor(
     public node: IMindNode,
-    public render_info: RenderInfo,
+    public ri: RenderInfo,
     public parent_id: string
   ) {
-    this.rc = render_info.context_map.get(parent_id)!;
+    this.rc = ri.context_map.get(parent_id)!;
     if (!this.rc) {
       debugger;
     }
@@ -155,10 +155,14 @@ export class CanvasState {
   }
 
   focus_node(id: string, parent_id: string) {
-    if (this.focused_node_data.id === id) return;
+    if (
+      this.focused_node_data.id === id &&
+      this.focused_node_data.parent_id === parent_id
+    )
+      return;
 
     // 取消之前的聚焦
-    this.get_render_info(this.focused_node_data.id).focused.set(parent_id);
+    this.get_render_info(this.focused_node_data.id).focused.set("");
 
     // 设置新的聚焦
     this.focused_node_data.id = id;
@@ -305,22 +309,31 @@ export class CanvasState {
 
   constructor(options: { load_node: (id: string) => Promise<IMindNode> }) {
     const focused_node_data = this.focused_node_data;
-
     this.load_node = options.load_node;
+
+    const handle_tab_key = () => {
+      const new_node = this.add_new_child(focused_node_data.id);
+      this.focus_node(new_node.id, this.focused_node_data.id);
+    };
+
     window.addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
         if (focused_node_data.id === "") return;
         if (e.shiftKey || e.metaKey || e.altKey || e.ctrlKey) return;
-        const new_node = this.add_next_sibling(
-          focused_node_data.id,
-          focused_node_data.parent_id
-        );
-        this.focus_node(new_node.id, focused_node_data.parent_id);
+        e.preventDefault();
+        if (focused_node_data.parent_id === canvas_root_id) {
+          handle_tab_key();
+        } else {
+          const new_node = this.add_next_sibling(
+            focused_node_data.id,
+            focused_node_data.parent_id
+          );
+          this.focus_node(new_node.id, focused_node_data.parent_id);
+        }
       } else if (e.key === "Tab") {
         e.preventDefault();
         if (focused_node_data.id === "") return;
-        const new_node = this.add_new_child(focused_node_data.id);
-        this.focus_node(new_node.id, this.focused_node_data.parent_id);
+        handle_tab_key();
       } else if (e.key === "Delete") {
         e.preventDefault();
         if (focused_node_data.id === "") return;
