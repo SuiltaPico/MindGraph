@@ -1,5 +1,5 @@
-import { createContext } from "solid-js";
-import { MindNodeRenderer } from "./MindNodeRenderer";
+import { createContext, createRoot } from "solid-js";
+import { MindNodeRenderer, MindNodeRendererElement } from "./MindNodeRenderer";
 import { IMindNode } from "@/api/types/node";
 import {
   createEmitterSignal,
@@ -25,7 +25,7 @@ export interface RenderContext {
   /** 当节点大小改变时 */
   handle_obs_resize?: () => void;
   onresize?: (container: HTMLElement, node_y_offset: number) => void;
-  dispose?: () => void;
+  disposers: (() => void)[];
   dom_el: HTMLElement;
 }
 
@@ -50,6 +50,7 @@ function set_node_prop(
 
 export class MindNodeHelper {
   rc: RenderContext;
+  id: string;
 
   get_prop<T extends keyof IMindNode>(key: T) {
     let emitter = this.ri.path_emitter_map.get(key);
@@ -71,6 +72,7 @@ export class MindNodeHelper {
     public parent_id: string
   ) {
     this.rc = ri.context_map.get(parent_id)!;
+    this.id = node.id;
     if (!this.rc) {
       debugger;
     }
@@ -102,7 +104,9 @@ export class CanvasState {
 
   resize_obs = new ResizeObserver((entries) => {
     for (const entry of entries) {
-      const render_context = (entry.target as any)._rc as RenderContext;
+      const render_context = (
+        entry.target.closest(".mind_node_renderer") as MindNodeRendererElement
+      )._meta.rc;
       render_context.handle_obs_resize?.();
     }
   });
@@ -144,13 +148,18 @@ export class CanvasState {
         parent_rc,
         dom_el: null as any,
         onresize: options.onresize,
+        disposers: [],
       };
       render_info.context_map.set(parent_rc.id, rc);
       // 创建 dom 元素，会触发 get_node 方法，因此要先设置 rc
-      rc.dom_el = (
-        <MindNodeRenderer id={id} rc={rc}></MindNodeRenderer>
-      ) as any;
+      createRoot((disposer) => {
+        rc!.disposers.push(disposer);
+        rc!.dom_el = (
+          <MindNodeRenderer id={id} rc={rc!}></MindNodeRenderer>
+        ) as any;
+      });
     }
+
     return rc.dom_el;
   }
 
@@ -241,7 +250,7 @@ export class CanvasState {
       .get(id)!
       .context_map.get(parent_id)!;
 
-    node_to_delete_rc.dispose?.();
+    node_to_delete_rc.disposers.map((it) => it());
 
     const parent_rc = node_to_delete_rc.parent_rc;
     const parent_node = this.nodes.get(parent_id)!;

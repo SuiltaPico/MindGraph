@@ -1,21 +1,18 @@
 import { createSignal, WrappedSignal } from "@/common/signal";
-import {
-  useContext,
-  onMount,
-  mapArray,
-  For,
-  Show,
-  Accessor,
-  createMemo,
-  createEffect,
-  on,
-} from "solid-js";
-import {
-  MindNodeHelper,
-  CanvasStateContext,
-  RenderContext,
-} from "./CanvasState";
 import clsx from "clsx";
+import {
+  Accessor,
+  createEffect,
+  createMemo,
+  For,
+  mapArray,
+  on,
+  onMount,
+  Show,
+  useContext,
+} from "solid-js";
+import { CanvasStateContext, MindNodeHelper } from "./CanvasState";
+import { MindNodeRendererElement } from "./MindNodeRenderer";
 
 class RedrawHelper {
   /** 节点相对于容器中心的偏移量。来源于去除子项高度去除头尾一半后，再除以2的位置。 */
@@ -23,15 +20,15 @@ class RedrawHelper {
   need_full_redraw = false;
   last_container_height: number = 0;
 
-  container: HTMLDivElement = undefined as any;
-  node: HTMLDivElement & { _id?: string } = undefined as any;
+  container: MindNodeRendererElement = undefined as any;
+  node: HTMLDivElement = undefined as any;
   children_streamline_group: SVGGElement = undefined as any;
   main_streamline: SVGPathElement = undefined as any;
   folding_points: SVGCircleElement = undefined as any;
 
   onmount(
-    container: HTMLDivElement,
-    node: HTMLDivElement & { _id?: string },
+    container: MindNodeRendererElement,
+    node: HTMLDivElement,
     children_streamline_group: SVGGElement,
     main_streamline: SVGPathElement,
     folding_points: SVGCircleElement
@@ -198,8 +195,8 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
   /** 是否已折叠。 */
   const folded = createSignal(false);
 
-  let container: HTMLDivElement;
-  let node: HTMLDivElement & { _id?: string; _rc?: RenderContext };
+  let container: MindNodeRendererElement;
+  let node: HTMLDivElement;
   let children_streamline_group: SVGGElement;
   let main_streamline: SVGPathElement;
   let folding_points: SVGCircleElement;
@@ -221,9 +218,6 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
   const redraw_helper = new RedrawHelper(props.it, children_data_map, folded);
 
   onMount(() => {
-    node._id = it.node.id;
-    node._rc = it.rc;
-    
     redraw_helper.onmount(
       container,
       node,
@@ -238,10 +232,11 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
     ctx.resize_obs.observe(node);
     redraw_helper.redraw_center_related_objects();
     redraw_helper.last_container_height = container.offsetHeight;
-    it.rc.dispose = () => ctx.resize_obs.unobserve(node);
+    it.rc.disposers.push(() => ctx.resize_obs.unobserve(node));
 
     createEffect(
       on(focused, () => {
+        // console.log(it.node.content, "聚焦了", container);
         node.focus();
       })
     );
@@ -253,22 +248,25 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
     redraw_helper.redraw_center_related_objects();
   }
 
-  function handle_node_click() {
-    ctx.focus_node(it.node.id, it.rc.parent_rc.id);
-  }
-
   return (
     <div
       class={clsx("mind_node_renderer", focused() && "__focused__")}
-      ref={(it) => {
-        container = it;
+      ref={(el) => {
+        container = el as MindNodeRendererElement;
+        container._meta = {
+          state: "ready",
+          id: it.node.id,
+          parent_id: it.parent_id,
+          rc: it.rc,
+        };
       }}
     >
       <div
         class={"__node"}
         contenteditable={focused()}
-        onMouseDown={handle_node_click}
-        ref={(it) => (node = it)}
+        ref={(el) => {
+          node = el as MindNodeRendererElement;
+        }}
       >
         {it.get_prop("content").value}
       </div>

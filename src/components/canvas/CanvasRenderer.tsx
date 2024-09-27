@@ -1,6 +1,7 @@
 import { Component, onMount, Show } from "solid-js";
 import { canvas_root_id, CanvasState, CanvasStateContext } from "./CanvasState";
 import "./CanvasRenderer.scss";
+import { MindNodeRendererElement } from "./MindNodeRenderer";
 
 export const CanvasRenderer: Component<{ state: CanvasState }> = (props) => {
   let container: HTMLElement;
@@ -19,12 +20,29 @@ export const CanvasRenderer: Component<{ state: CanvasState }> = (props) => {
     parent_rc: null as any,
     dom_el: null as any,
     onresize: () => {},
-    dispose: () => {},
+    disposers: [],
   };
+
+  function handle_node_click(e: MouseEvent) {
+    const target = e.target as HTMLElement;
+    const node = target.closest(
+      ".mind_node_renderer"
+    ) as MindNodeRendererElement;
+    console.log(e, node);
+
+    if (node) {
+      const meta = node._meta;
+      state.focus_node(meta.id, meta.parent_id);
+    }
+  }
 
   return (
     <CanvasStateContext.Provider value={state}>
-      <div class="mind_node_canvas" ref={(it) => (container = it)}>
+      <div
+        class="mind_node_canvas"
+        ref={(it) => (container = it)}
+        onMouseDown={handle_node_click}
+      >
         <div class="__field" ref={(it) => (field = it)}>
           <Show
             when={state.root.get() !== ""}
