@@ -16,16 +16,19 @@ export class TauriClient implements IClient {
   }
 
   private wrapApi<T extends object>(obj: T): ConvertToClientApi<T> {
-    return new Proxy(obj, {
-      get: (target: any, prop: string) => {
-        if (typeof target[prop] === "function") {
-          return (args: any) => target[prop](this, args);
+    const wrappedObj: any = {};
+    for (const key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        const value = obj[key];
+        if (typeof value === 'function') {
+          wrappedObj[key] = (args: any) => value(this, args);
+        } else if (typeof value === 'object' && value !== null) {
+          wrappedObj[key] = this.wrapApi(value as object);
+        } else {
+          wrappedObj[key] = value;
         }
-        if (typeof target[prop] === "object" && target[prop] !== null) {
-          return this.wrapApi(target[prop] as object);
-        }
-        return target[prop];
-      },
-    }) as ConvertToClientApi<T>;
+      }
+    }
+    return wrappedObj as ConvertToClientApi<T>;
   }
 }
