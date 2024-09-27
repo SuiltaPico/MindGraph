@@ -1,6 +1,6 @@
 import { createSignal, WrappedSignal } from "@/common/signal";
 import { useContext, onMount, mapArray, For, Show, Accessor } from "solid-js";
-import { MindNodeHelper, CanvasStateContext, RenderContext } from "./Canvas";
+import { MindNodeHelper, CanvasStateContext, RenderContext } from "./CanvasState";
 import clsx from "clsx";
 
 class RedrawHelper {

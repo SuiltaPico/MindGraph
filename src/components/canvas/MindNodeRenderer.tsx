@@ -7,7 +7,7 @@ import {
   useContext,
 } from "solid-js";
 import { Accordion, AccordionRenderer } from "../base/Accordion";
-import { CanvasStateContext, RenderContext } from "./Canvas";
+import { CanvasStateContext, RenderContext } from "./CanvasState";
 import { MindNodeContentRenderer } from "./MindNodeContentRenderer";
 import "./MindNodeRenderer.scss";
 

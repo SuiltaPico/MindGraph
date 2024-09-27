@@ -2,7 +2,7 @@ import "@/common/var.scss";
 import { createContext, onMount } from "solid-js";
 import "./App.scss";
 import { TauriClient } from "./api/client/tauri";
-import { CanvasState } from "./components/canvas/Canvas";
+import { CanvasState } from "./components/canvas/CanvasState";
 import { CanvasRenderer } from "./components/canvas/CanvasRenderer";
 import { TopBar } from "./components/menu/TopBar";
 
@@ -21,6 +21,8 @@ export const context = createContext<AppContext>();
 
 export function App() {
   const ac = new AppContext();
+  console.log("AppContext", ac);
+  
   onMount(async () => {
     await ac.api.app.load_mg(ac.file.url);
     ac.canvas.root.set(await ac.api.mg.node.get_first_root_node());

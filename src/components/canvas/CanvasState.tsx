@@ -7,7 +7,6 @@ import {
   EmitterSignal,
   WrappedSignal,
 } from "@/common/signal";
-import "./Canvas.scss";
 import { ulid } from "ulid";
 
 /** 渲染时信息 */
@@ -152,7 +151,6 @@ export class CanvasState {
         <MindNodeRenderer id={id} rc={rc}></MindNodeRenderer>
       ) as any;
     }
-    console.log(id, rc, parent_rc.id);
     return rc.dom_el;
   }
 
@@ -232,6 +230,8 @@ export class CanvasState {
   }
 
   delete_node(id: string, parent_id: string) {
+    console.log(id, parent_id);
+
     const node_to_delete = this.nodes.get(id)!;
     const node_to_delete_rc = this.render_info
       .get(id)!
@@ -248,7 +248,7 @@ export class CanvasState {
       parent_node,
       parent_ri,
       "children",
-      parent_node.children.filter((id) => id !== id)
+      parent_node.children.filter((child_id) => child_id !== id)
     );
     parent_rc.handle_obs_resize?.();
     this.mark_modified(parent_node.id);
@@ -263,6 +263,9 @@ export class CanvasState {
       const node_ri = this.render_info.get(node_to_delete.id)!;
       set_node_prop(node_to_delete, node_ri, "parents", node_to_delete.parents);
       this.mark_modified(node_to_delete.id);
+
+      // 清理context_map
+      this.render_info.get(node_to_delete.id)?.context_map.delete(parent_id);
     } else {
       // 没有其他父节点，尝试删除节点，和所有后代节点
       this.nodes.delete(node_to_delete.id);
@@ -273,9 +276,6 @@ export class CanvasState {
       // 因此，这里需要进行一个特殊的递归，遍历删除所有后代节点
       this.recursive_delete_descendants(node_to_delete);
     }
-
-    // 清理context_map
-    this.render_info.get(parent_id)?.context_map.delete(node_to_delete.id);
   }
 
   private recursive_delete_descendants(node: IMindNode) {
@@ -302,7 +302,6 @@ export class CanvasState {
       }
     }
   }
-
 
   constructor(options: { load_node: (id: string) => Promise<IMindNode> }) {
     const focused_node_data = this.focused_node_data;
@@ -333,5 +332,3 @@ export class CanvasState {
 }
 
 export const CanvasStateContext = createContext<CanvasState>();
-
-
