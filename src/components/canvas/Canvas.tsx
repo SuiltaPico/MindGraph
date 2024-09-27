@@ -1,4 +1,4 @@
-import { Component, createContext, onMount, Show } from "solid-js";
+import { createContext } from "solid-js";
 import { MindNodeRenderer } from "./MindNodeRenderer";
 import { IMindNode } from "@/api/types/node";
 import {
@@ -78,7 +78,7 @@ export class MindNodeHelper {
   }
 }
 
-const canvas_root_id = "[canvas_root]";
+export const canvas_root_id = "[canvas_root]";
 
 export class CanvasState {
   root = createSignal<string>("");
@@ -271,14 +271,14 @@ export class CanvasState {
 
       // 由于这个应用的节点允许有多个父节点，因此删除节点时，只会向单个父节点的后代节点传播删除命令，一旦传播到多个父节点的后代，则停止传播，只是标记为更改，并从 parent 列表里面删除目标父节点而已。
       // 因此，这里需要进行一个特殊的递归，遍历删除所有后代节点
-      this.recursiveDeleteDescendants(node_to_delete);
+      this.recursive_delete_descendants(node_to_delete);
     }
 
     // 清理context_map
     this.render_info.get(parent_id)?.context_map.delete(node_to_delete.id);
   }
 
-  private recursiveDeleteDescendants(node: IMindNode) {
+  private recursive_delete_descendants(node: IMindNode) {
     for (const childId of node.children) {
       const childNode = this.nodes.get(childId);
       if (childNode) {
@@ -292,7 +292,7 @@ export class CanvasState {
           this.mark_deleted(childId);
 
           // 继续递归删除该子节点的后代
-          this.recursiveDeleteDescendants(childNode);
+          this.recursive_delete_descendants(childNode);
         } else {
           // 如果子节点还有其他父节点，只标记为修改
           const child_ri = this.render_info.get(childId)!;
@@ -302,6 +302,7 @@ export class CanvasState {
       }
     }
   }
+
 
   constructor(options: { load_node: (id: string) => Promise<IMindNode> }) {
     const focused_node_data = this.focused_node_data;
@@ -333,47 +334,4 @@ export class CanvasState {
 
 export const CanvasStateContext = createContext<CanvasState>();
 
-export const Canvas: Component<{ state: CanvasState }> = (props) => {
-  let container: HTMLElement;
-  let field: HTMLElement;
-  const { state } = props;
 
-  onMount(() => {
-    field.style.width = "200%";
-    field.style.height = "200%";
-    container.scrollLeft = field.clientWidth / 4;
-    container.scrollTop = field.clientHeight / 4;
-  });
-
-  const root_rc = {
-    id: canvas_root_id,
-    parent_rc: null as any,
-    dom_el: null as any,
-    onresize: () => {},
-    dispose: () => {},
-  };
-
-  return (
-    <CanvasStateContext.Provider value={state}>
-      <div class="mind_node_canvas" ref={(it) => (container = it)}>
-        <div class="__field" ref={(it) => (field = it)}>
-          <Show
-            when={state.root.get() !== ""}
-            fallback={<div>CanvasState 未设置根节点。</div>}
-          >
-            {state.render_node(state.root.get(), root_rc, {
-              onresize: (child_container) => {
-                child_container.style.left = `${
-                  field.clientWidth / 2 - child_container.clientWidth / 2
-                }px`;
-                child_container.style.top = `${
-                  field.clientHeight / 2 - child_container.clientHeight / 1.5
-                }px`;
-              },
-            })}
-          </Show>
-        </div>
-      </div>
-    </CanvasStateContext.Provider>
-  );
-};

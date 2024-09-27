@@ -1,55 +1,36 @@
 import "@/common/var.scss";
-import { invoke } from "@tauri-apps/api/core";
 import { createContext, onMount } from "solid-js";
-import { IMindNode } from "./api/types/node";
-import { Canvas, CanvasState } from "./components/canvas/Canvas";
-import { TopBar } from "./components/menu/TopBar";
-import { createSignal } from "./common/signal";
 import "./App.scss";
-export class AppContext {}
+import { TauriClient } from "./api/client/tauri";
+import { CanvasState } from "./components/canvas/Canvas";
+import { CanvasRenderer } from "./components/canvas/CanvasRenderer";
+import { TopBar } from "./components/menu/TopBar";
+
+export class AppContext {
+  file = {
+    url: "mindgraph://new",
+    name: "新建知识库",
+  };
+  client = new TauriClient();
+  api = this.client.api;
+  canvas = new CanvasState({
+    load_node: this.api.mg.node.load_node,
+  });
+}
 export const context = createContext<AppContext>();
 
 export function App() {
-  const menu_visible = createSignal(false);
-  const canvas_state = new CanvasState({
-    load_node: async (id: string) => {
-      const node = await invoke("load_node", { id });
-      return node as IMindNode;
-    },
-  });
-
+  const ac = new AppContext();
   onMount(async () => {
-    canvas_state.root.set(
-      ((await invoke("get_first_root_node")) as IMindNode).id
-    );
+    await ac.api.app.load_mg(ac.file.url);
+    ac.canvas.root.set(await ac.api.mg.node.get_first_root_node());
   });
 
   return (
-    <context.Provider value={{}}>
+    <context.Provider value={ac}>
       <div class="fw_container">
-        <TopBar
-        // menuVisible={menu_visible}
-        />
-        <Canvas state={canvas_state} />
-        {/* <div
-          style={{
-            width: "100%",
-            height: "100%",
-            visibility: menuVisible() ? "visible" : "hidden",
-            opacity: menuVisible() ? 1 : 0,
-            "pointer-events": menuVisible() ? "auto" : "none",
-            transition: "opacity 0.3s ease-in-out, visibility 0.3s ease-in-out",
-            background: "white",
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            "z-index": 10,
-          }}
-        >
-          <MenuObject />
-        </div> */}
+        <TopBar />
+        <CanvasRenderer state={ac.canvas} />
       </div>
     </context.Provider>
   );

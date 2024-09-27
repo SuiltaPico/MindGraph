@@ -1,5 +1,7 @@
+import { Id } from "./id";
+
 export interface IMindNode {
-  id: string;
+  id: Id;
   content: {
     _type: string;
     value: string;

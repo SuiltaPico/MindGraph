@@ -1,7 +1,16 @@
-use crate::DBConn;
+use crate::utils::types::DBConn;
 use ulid::Ulid;
 
+pub async fn node_init(conn: &DBConn) -> Result<(), Box<dyn std::error::Error>> {
+  println!("node_init");
+  create_table(conn).await?;
+  create_init_data(conn).await?;
+  println!("node_init end");
+  Ok(())
+}
+
 pub async fn create_table(conn: &DBConn) -> Result<(), Box<dyn std::error::Error>> {
+  println!("create_table");
   // 创建节点表
   sqlx::raw_sql(
     r#"
@@ -20,7 +29,8 @@ pub async fn create_table(conn: &DBConn) -> Result<(), Box<dyn std::error::Error
     r#"
     CREATE TABLE IF NOT EXISTS node_node_r (
       parent_id CHAR(26) NOT NULL,
-      child_id CHAR(26) NOT NULL
+      child_id CHAR(26) NOT NULL,
+      PRIMARY KEY (parent_id, child_id)
     );
 
     CREATE INDEX IF NOT EXISTS idx_node_node_r_parent_id ON node_node_r (parent_id);
@@ -34,8 +44,8 @@ pub async fn create_table(conn: &DBConn) -> Result<(), Box<dyn std::error::Error
   Ok(())
 }
 
-// Start of Selection
-pub async fn create_init_nodes(conn: &DBConn) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn create_init_data(conn: &DBConn) -> Result<(), Box<dyn std::error::Error>> {
+  println!("create_init_data");
   // 创建初始节点
   let nodes = vec![
     ("主题", None),
