@@ -13,16 +13,14 @@ export class AppContext {
   };
   client = new TauriClient();
   api = this.client.api;
-  canvas = new CanvasState({
-    load_node: this.api.mg.node.load_node,
-  });
+  canvas = new CanvasState(this);
 }
 export const context = createContext<AppContext>();
 
 export function App() {
   const ac = new AppContext();
   console.log("AppContext", ac);
-  
+
   onMount(async () => {
     await ac.api.app.load_mg(ac.file.url);
     ac.canvas.root.set(await ac.api.mg.node.get_first_root_node());

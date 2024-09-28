@@ -1,7 +1,8 @@
-use crate::{app::app_state::AppState, utils::types::MutexAppState};
+use crate::{utils::types::MutexAppState};
 use super::entity::MindNode;
 
-#[tauri::command(async)]
+#[tauri::command(async, rename_all = "snake_case")]
+
 pub async fn get_top_nodes(
   state: tauri::State<'_, MutexAppState>,
   deep: i32,
@@ -65,7 +66,7 @@ pub async fn get_top_nodes(
   Ok(nodes_without_parents)
 }
 
-#[tauri::command(async)]
+#[tauri::command(async, rename_all = "snake_case")]
 pub async fn get_first_root_node(state: tauri::State<'_, MutexAppState>) -> Result<MindNode, String> {
   let root_node: MindNode = sqlx::query_as(
     r#"
@@ -91,7 +92,7 @@ pub async fn get_first_root_node(state: tauri::State<'_, MutexAppState>) -> Resu
 }
 
 
-#[tauri::command(async, name = "mg_node_load_node")]
+#[tauri::command(async, rename_all = "snake_case")]
 pub async fn load_node(state: tauri::State<'_, MutexAppState>, id: String) -> Result<MindNode, String> {
   let node: MindNode = sqlx::query_as(
     r#"

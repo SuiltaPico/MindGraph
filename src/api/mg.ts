@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
-import { IMindNode } from "./types/node";
+import { IMindNode } from "./types/mg";
 import { Id } from "./types/id";
 
 export async function save_kb(params: {

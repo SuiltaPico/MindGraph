@@ -264,11 +264,15 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
       <div
         class={"__node"}
         contenteditable={focused()}
+        onInput={(e) => {
+          it.set_prop("content", { value: e.target.textContent });
+          ctx.mark_modified(it.node.id);
+        }}
         ref={(el) => {
           node = el as MindNodeRendererElement;
         }}
       >
-        {it.get_prop("content").value}
+        {it.node.content.value}
       </div>
       <svg class="__diversion">
         <g

@@ -27,6 +27,7 @@ sqlx = { version = "0.8", features = [ "runtime-tokio", "sqlite" ] }
 
 dirs = "5"
 ulid = "1.1.3"
+log = "0.4.22"
 [features]
 # This feature is used for production builds or when a dev server is not specified, DO NOT REMOVE!!
 custom-protocol = ["tauri/custom-protocol"]

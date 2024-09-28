@@ -1,6 +1,6 @@
 import { createContext, createRoot } from "solid-js";
 import { MindNodeRenderer, MindNodeRendererElement } from "./MindNodeRenderer";
-import { IMindNode } from "@/api/types/node";
+import { IMindNode } from "@/api/types/mg";
 import {
   createEmitterSignal,
   createSignal,
@@ -8,6 +8,7 @@ import {
   WrappedSignal,
 } from "@/common/signal";
 import { ulid } from "ulid";
+import { AppContext } from "@/App";
 
 /** 渲染时信息 */
 export interface RenderInfo {
@@ -316,9 +317,9 @@ export class CanvasState {
     }
   }
 
-  constructor(options: { load_node: (id: string) => Promise<IMindNode> }) {
+  constructor(public ac: AppContext) {
     const focused_node_data = this.focused_node_data;
-    this.load_node = options.load_node;
+    this.load_node = ac.api.mg.node.load_node;
 
     const handle_tab_key = () => {
       const new_node = this.add_new_child(focused_node_data.id);
@@ -348,6 +349,17 @@ export class CanvasState {
         if (focused_node_data.id === "") return;
         this.delete_node(focused_node_data.id, focused_node_data.parent_id);
         this.focus_node("", "");
+      } else if (e.key === "s") {
+        e.preventDefault();
+        if (focused_node_data.id === "" || !e.ctrlKey) return;
+        this.ac.api.app.save_mg(
+          Array.from(this.modified_nodes).map((id) => this.nodes.get(id)!),
+          Array.from(this.deleted_nodes),
+          Array.from(this.added_nodes).map((id) => this.nodes.get(id)!),
+          {
+            name: "新建知识库",
+          }
+        );
       }
     });
   }

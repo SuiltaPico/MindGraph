@@ -7,7 +7,6 @@ export class TauriClient implements IClient {
 
   invoke(command: string, args: any): Promise<any> {
     console.log("invoke", command, args);
-    // throw new Error("not implemented");
     return invoke(command.replaceAll("/", "__"), args);
   }
 
@@ -21,7 +20,7 @@ export class TauriClient implements IClient {
       if (Object.prototype.hasOwnProperty.call(obj, key)) {
         const value = obj[key];
         if (typeof value === 'function') {
-          wrappedObj[key] = (args: any) => value(this, args);
+          wrappedObj[key] = (...args: any) => value(this, ...args);
         } else if (typeof value === 'object' && value !== null) {
           wrappedObj[key] = this.wrapApi(value as object);
         } else {

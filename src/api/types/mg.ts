@@ -9,3 +9,7 @@ export interface IMindNode {
   parents: string[];
   children: string[];
 }
+
+export interface IMeta {
+  name: string;
+}

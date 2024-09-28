@@ -4,6 +4,6 @@ use sqlx::types::Json;
 
 #[derive(Debug, Default, PartialEq, Eq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct Meta {
-  key: String,
-  value: Json<Value>,
+  pub key: String,
+  pub value: Json<Value>,
 }

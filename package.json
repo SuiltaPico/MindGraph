@@ -24,7 +24,7 @@
   "devDependencies": {
     "@csstools/postcss-sass": "^5.1.1",
     "@tauri-apps/cli": "2.0.0-rc.16",
-    "@types/node": "^22.7.2",
+    "@types/node": "^22.7.4",
     "@types/throttle-debounce": "^5.0.2",
     "postcss-scss": "^4.0.9",
     "typescript": "^5.6.2",

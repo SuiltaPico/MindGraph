@@ -4,8 +4,8 @@ use sqlx::types::Json;
 
 #[derive(Debug, Default, PartialEq, Eq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct MindNode {
-  id: String,
-  content: Json<Value>,
-  parents: Json<Vec<String>>,
-  children: Json<Vec<String>>,
+  pub id: String,
+  pub content: Json<Value>,
+  pub parents: Json<Vec<String>>,
+  pub children: Json<Vec<String>>,
 }

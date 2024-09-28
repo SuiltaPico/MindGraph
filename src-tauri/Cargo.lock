@@ -2045,6 +2045,7 @@ name = "mind_graph"
 version = "0.1.0"
 dependencies = [
  "dirs",
+ "log",
  "rustls",
  "rustls-pemfile",
  "serde",

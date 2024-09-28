@@ -1,4 +1,4 @@
-import { IMindNode } from "@/api/types/node";
+import { IMindNode } from "../types/mg";
 import { IClient } from "../client/type";
 import { Id } from "../types/id";
 
