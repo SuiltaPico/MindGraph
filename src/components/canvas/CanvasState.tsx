@@ -7,7 +7,7 @@ import {
   EmitterSignal,
   WrappedSignal,
 } from "@/common/signal";
-import { ulid } from "ulid";
+import { monotonicFactory } from "ulid";
 import { AppContext } from "@/App";
 
 /** 渲染时信息 */
@@ -93,6 +93,7 @@ export class CanvasState {
   deleted_nodes = new Set<string>();
   /** 相对于上次保存的状态来说，修改的节点。储存的都是已有的节点。 */
   modified_nodes = new Set<string>();
+  ulid = monotonicFactory();
 
   /** 当前聚焦的节点 */
   readonly focused_node_data: {
@@ -202,7 +203,7 @@ export class CanvasState {
     const node_ri = this.render_info.get(id)!;
 
     const new_node = {
-      id: ulid(),
+      id: this.ulid(),
       content: {
         _type: "markdown",
         value: "",
@@ -223,7 +224,7 @@ export class CanvasState {
     const parent_ri = this.render_info.get(parent_id)!;
 
     const new_node = {
-      id: ulid(),
+      id: this.ulid(),
       content: {
         _type: "markdown",
         value: "",

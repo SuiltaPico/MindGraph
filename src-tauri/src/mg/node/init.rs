@@ -1,5 +1,5 @@
 use crate::utils::types::DBConn;
-use ulid::Ulid;
+use ulid::{Generator, Ulid};
 
 pub async fn node_init(conn: &DBConn) -> Result<(), Box<dyn std::error::Error>> {
   println!("node_init");
@@ -57,9 +57,10 @@ pub async fn create_init_data(conn: &DBConn) -> Result<(), Box<dyn std::error::E
   ];
 
   let mut node_ids: Vec<String> = Vec::new();
+  let mut ulid_gen = Generator::new();
 
   for (_, (value, parent_index)) in nodes.iter().enumerate() {
-    let id = Ulid::new().to_string();
+    let id = ulid_gen.generate().unwrap().to_string();
     node_ids.push(id.clone());
 
     let content = serde_json::json!({
