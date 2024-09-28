@@ -24,7 +24,7 @@ pub async fn create_table(conn: &DBConn) -> Result<(), Box<dyn std::error::Error
 
 pub async fn create_init_data(conn: &DBConn) -> Result<(), Box<dyn std::error::Error>> {
   // 创建初始元信息
-  let metas = vec![("name", r#"知识库"#)];
+  let metas = vec![("name", r#""知识库""#)];
 
   for (key, value) in metas.iter() {
     sqlx::query("INSERT INTO meta (key, value) VALUES (?, ?)")
