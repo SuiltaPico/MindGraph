@@ -317,9 +317,21 @@ export class CanvasState {
     }
   }
 
+  get_save_data() {
+    return {
+      modified_nodes: Array.from(this.modified_nodes).map(
+        (id) => this.nodes.get(id)!
+      ),
+      deleted_nodes: Array.from(this.deleted_nodes),
+      added_nodes: Array.from(this.added_nodes).map(
+        (id) => this.nodes.get(id)!
+      ),
+    };
+  }
+
   constructor(public ac: AppContext) {
     const focused_node_data = this.focused_node_data;
-    this.load_node = ac.api.mg.node.load_node;
+    this.load_node = (id) => ac.api.app.mg.node.load({ id });
 
     const handle_tab_key = () => {
       const new_node = this.add_new_child(focused_node_data.id);
@@ -352,14 +364,7 @@ export class CanvasState {
       } else if (e.key === "s") {
         e.preventDefault();
         if (focused_node_data.id === "" || !e.ctrlKey) return;
-        this.ac.api.app.save_mg(
-          Array.from(this.modified_nodes).map((id) => this.nodes.get(id)!),
-          Array.from(this.deleted_nodes),
-          Array.from(this.added_nodes).map((id) => this.nodes.get(id)!),
-          {
-            name: "新建知识库",
-          }
-        );
+        this.ac.save_mg();
       }
     });
   }

@@ -1,5 +1,5 @@
-use std::path::PathBuf;
 use dirs::data_dir;
+use std::path::PathBuf;
 
 pub fn get_app_path() -> PathBuf {
   let mut app_path =

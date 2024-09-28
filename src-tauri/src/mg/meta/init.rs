@@ -10,7 +10,7 @@ pub async fn create_table(conn: &DBConn) -> Result<(), Box<dyn std::error::Error
   sqlx::raw_sql(
     r#"
     CREATE TABLE IF NOT EXISTS meta (
-      key CHAR(26) PRIMARY KEY NOT NULL,
+      key VARCHAR(1023) PRIMARY KEY NOT NULL,
       value JSON NOT NULL
     );
     "#,
@@ -24,7 +24,7 @@ pub async fn create_table(conn: &DBConn) -> Result<(), Box<dyn std::error::Error
 
 pub async fn create_init_data(conn: &DBConn) -> Result<(), Box<dyn std::error::Error>> {
   // 创建初始元信息
-  let metas = vec![("name", "新建知识库")];
+  let metas = vec![("name", r#"知识库"#)];
 
   for (key, value) in metas.iter() {
     sqlx::query("INSERT INTO meta (key, value) VALUES (?, ?)")

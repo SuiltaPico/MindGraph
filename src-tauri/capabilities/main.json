@@ -1,5 +1,5 @@
 {
-  "identifier": "migrated",
+  "identifier": "main-capability",
   "description": "permissions that were migrated from v1",
   "local": true,
   "windows": [
@@ -7,6 +7,9 @@
   ],
   "permissions": [
     "core:default",
-    "shell:allow-open"
+    "shell:allow-open",
+    "process:default",
+    "dialog:default",
+    "core:window:allow-set-title"
   ]
 }

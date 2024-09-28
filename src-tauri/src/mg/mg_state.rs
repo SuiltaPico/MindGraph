@@ -1,31 +1,62 @@
 use super::{
-  meta::{init::meta_init},
+  meta::init::meta_init,
   node::{entity::MindNode, init::node_init},
 };
 use crate::utils::{path::get_app_path, types::DBConn};
 use log::LevelFilter;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use sqlx::{sqlite::*, ConnectOptions, Row};
 use std::{
   collections::{HashMap, HashSet},
-  path::PathBuf,
   time::Duration,
 };
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct MgInitData {
+  pub root_node_id: String,
+  pub meta: Value,
+}
+
 pub struct MgState {
   pub conn: DBConn,
-  pub path: String,
+  pub uri: String,
 }
 
 impl MgState {
-  pub async fn new(path: String) -> Result<Self, Box<dyn std::error::Error>> {
-    let db_path = if path == String::from("mindgraph://new") {
-      get_app_path().join("data/temp/new.mg")
-    } else {
-      PathBuf::from(path.clone())
-    };
+  pub async fn new(uri: String) -> Result<Self, Box<dyn std::error::Error>> {
+    Ok(MgState::open(uri).await?)
+  }
 
-    let options = format!("sqlite://{}?mode=rwc", db_path.to_str().unwrap())
+  pub fn parse_uri(uri: String) -> Result<String, Box<dyn std::error::Error>> {
+    if uri.starts_with("file://") {
+      Ok(uri.replace("file://", ""))
+    } else if uri.starts_with("mindgraph://") {
+      match uri.as_str() {
+        "mindgraph://new" => Ok(
+          get_app_path()
+            .join("data/temp/new.mg")
+            .to_str()
+            .unwrap()
+            .to_string(),
+        ),
+        _ => Err(Box::new(std::io::Error::new(
+          std::io::ErrorKind::InvalidInput,
+          format!("Invalid uri: {}", uri),
+        ))),
+      }
+    } else {
+      Err(Box::new(std::io::Error::new(
+        std::io::ErrorKind::InvalidInput,
+        format!("Invalid uri: {}", uri),
+      )))
+    }
+  }
+
+  pub async fn open(uri: String) -> Result<Self, Box<dyn std::error::Error>> {
+    let path = Self::parse_uri(uri.clone())?;
+
+    let options = format!("sqlite://{}?mode=rwc", path)
       .as_str()
       .parse::<SqliteConnectOptions>()?
       .log_statements(LevelFilter::Trace)
@@ -49,12 +80,58 @@ impl MgState {
       meta_init(&conn).await?;
     };
 
-    Ok(MgState { conn, path })
+    Ok(MgState { conn, uri })
   }
 
   pub async fn close(&self) -> Result<(), Box<dyn std::error::Error>> {
     self.conn.close().await;
     Ok(())
+  }
+
+  pub async fn get_meta(&self) -> Result<Value, String> {
+    let rows = sqlx::query("SELECT * FROM meta")
+      .fetch_all(&self.conn)
+      .await
+      .map_err(|e| e.to_string())?;
+
+    let mut map = serde_json::Map::new();
+    for row in rows.into_iter() {
+      map.insert(row.get("key"), row.get("value"));
+    }
+    Ok(map.into())
+  }
+
+  pub async fn get_first_root_node(&self) -> Result<MindNode, String> {
+    let root_node: MindNode = sqlx::query_as(
+      r#"
+    SELECT
+      n.*,
+      (SELECT json_group_array(parent_id)
+       FROM node_node_r nnr
+       WHERE nnr.child_id = n.id) AS parents,
+      (SELECT json_group_array(child_id)
+       FROM node_node_r nnr
+       WHERE nnr.parent_id = n.id) AS children
+    FROM node n
+    LEFT JOIN node_node_r nnr ON n.id = nnr.child_id
+    WHERE nnr.parent_id IS NULL
+    LIMIT 1;  
+    "#,
+    )
+    .fetch_one(&self.conn)
+    .await
+    .map_err(|e| e.to_string())?;
+
+    Ok(root_node)
+  }
+
+  pub async fn get_init_data(&self) -> Result<MgInitData, String> {
+    let root_node = self.get_first_root_node().await?;
+    let meta = self.get_meta().await?;
+    Ok(MgInitData {
+      root_node_id: root_node.id,
+      meta,
+    })
   }
 
   pub async fn load_existing_relationships(
@@ -277,6 +354,20 @@ impl MgState {
     // 提交事务
     tx.commit().await?;
 
+    Ok(())
+  }
+
+  pub async fn move_to(&mut self, uri: String) -> Result<(), Box<dyn std::error::Error>> {
+    let self_path = Self::parse_uri(self.uri.clone())?;
+    let new_path = Self::parse_uri(uri.clone())?;
+
+    self.close().await?;
+
+    tokio::fs::rename(self_path.clone(), new_path.clone()).await?;
+
+    let new_state = Self::open(format!("file://{}", new_path.clone())).await?;
+    self.conn = new_state.conn;
+    self.uri = new_state.uri;
     Ok(())
   }
 }
