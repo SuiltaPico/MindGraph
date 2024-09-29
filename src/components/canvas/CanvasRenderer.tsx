@@ -7,10 +7,11 @@ export const CanvasRenderer: Component<{ state: CanvasState }> = (props) => {
   let container: HTMLElement;
   let field: HTMLElement;
   const { state } = props;
+  let moving = false;
 
   onMount(() => {
-    field.style.width = "200%";
-    field.style.height = "200%";
+    field.style.width = "200vw";
+    field.style.height = "200vh";
     container.scrollLeft = field.clientWidth / 4;
     container.scrollTop = field.clientHeight / 4;
   });
@@ -23,7 +24,7 @@ export const CanvasRenderer: Component<{ state: CanvasState }> = (props) => {
     disposers: [],
   };
 
-  function handle_canvas_click(e: MouseEvent) {
+  function handle_canvas_mousedown(e: MouseEvent) {
     const target = e.target as HTMLElement;
     const node = target.closest(
       ".mind_node_renderer .__node"
@@ -40,12 +41,29 @@ export const CanvasRenderer: Component<{ state: CanvasState }> = (props) => {
     }
   }
 
+  function handle_canvas_mousemove(e: MouseEvent) {
+    if (e.buttons & 0b10) {
+      moving = true;
+      container.scrollBy(-e.movementX, -e.movementY);
+    }
+  }
+
+  function handle_canvas_contextmenu(e: MouseEvent) {
+    if (moving) {
+      moving = false;
+      e.preventDefault();
+      return;
+    }
+  }
+
   return (
     <CanvasStateContext.Provider value={state}>
       <div
         class="mind_node_canvas"
         ref={(it) => (container = it)}
-        onMouseDown={handle_canvas_click}
+        onMouseDown={handle_canvas_mousedown}
+        onMouseMove={handle_canvas_mousemove}
+        onContextMenu={handle_canvas_contextmenu}
       >
         <div class="__field" ref={(it) => (field = it)}>
           <Show

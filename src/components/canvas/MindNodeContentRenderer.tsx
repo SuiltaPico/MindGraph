@@ -258,16 +258,23 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
   }
 
   function handle_node_dblclick() {
-    editing.set(true);
-    const selection = window.getSelection();
-    node.focus();
-    if (selection) {
-      selection.removeAllRanges();
-      const range = document.createRange();
-      range.selectNodeContents(node);
-      range.setStart(node, node.childNodes.length);
-      selection.addRange(range);
+    if (!editing.get()) {
+      editing.set(true);
+      const selection = window.getSelection();
+      node.focus();
+      if (selection) {
+        selection.removeAllRanges();
+        const range = document.createRange();
+        range.selectNodeContents(node);
+        range.setStart(node, node.childNodes.length);
+        selection.addRange(range);
+      }
     }
+  }
+
+  function handle_node_input(e: InputEvent & { target: Element }) {
+    it.set_prop("content", { value: e.target.textContent });
+    ctx.mark_modified(it.node.id);
   }
 
   return (
@@ -288,10 +295,7 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
         contenteditable={editing.get()}
         draggable={!editing.get()}
         onDblClick={handle_node_dblclick}
-        onInput={(e) => {
-          it.set_prop("content", { value: e.target.textContent });
-          ctx.mark_modified(it.node.id);
-        }}
+        onInput={handle_node_input}
         ref={(el) => {
           node = el as MindNodeRendererElement;
         }}
