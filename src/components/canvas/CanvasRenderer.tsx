@@ -23,16 +23,20 @@ export const CanvasRenderer: Component<{ state: CanvasState }> = (props) => {
     disposers: [],
   };
 
-  function handle_node_click(e: MouseEvent) {
+  function handle_canvas_click(e: MouseEvent) {
     const target = e.target as HTMLElement;
     const node = target.closest(
-      ".mind_node_renderer"
+      ".mind_node_renderer .__node"
     ) as MindNodeRendererElement;
-    console.log(e, node);
 
     if (node) {
-      const meta = node._meta;
+      const renderer = target.closest(
+        ".mind_node_renderer"
+      ) as MindNodeRendererElement;
+      const meta = renderer._meta;
       state.focus_node(meta.id, meta.parent_id);
+    } else {
+      state.focus_node("", "");
     }
   }
 
@@ -41,7 +45,7 @@ export const CanvasRenderer: Component<{ state: CanvasState }> = (props) => {
       <div
         class="mind_node_canvas"
         ref={(it) => (container = it)}
-        onMouseDown={handle_node_click}
+        onMouseDown={handle_canvas_click}
       >
         <div class="__field" ref={(it) => (field = it)}>
           <Show

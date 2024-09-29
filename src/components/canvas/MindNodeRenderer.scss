@@ -17,6 +17,13 @@
     @include relative;
     @include min_w(0.5em);
     @include min_h(calc(1em + 8px));
+
+    @include outline(#0000, 2px);
+    transition: outline 0.08s;
+
+    &:hover {
+      @include outline(#2f98ee88, 2px);
+    }
   }
 
   > .__diversion {
@@ -43,9 +50,11 @@
     @include gap(8px);
   }
 
+
+
   &.__focused__ {
     > .__node {
-      @include outline(#0078d7, 2px);
+      @include outline(#2f98ee, 2px);
     }
   }
 }

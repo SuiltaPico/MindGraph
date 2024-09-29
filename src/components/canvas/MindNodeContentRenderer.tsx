@@ -192,8 +192,17 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
   const ctx = useContext(CanvasStateContext)!;
 
   const focused = createMemo(() => it.ri.focused.get() === it.rc.parent_rc.id);
+  const editing = createSignal(false);
   /** 是否已折叠。 */
   const folded = createSignal(false);
+
+  createEffect(
+    on(focused, (focused) => {
+      if (!focused) {
+        editing.set(false);
+      }
+    })
+  );
 
   let container: MindNodeRendererElement;
   let node: HTMLDivElement;
@@ -248,6 +257,19 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
     redraw_helper.redraw_center_related_objects();
   }
 
+  function handle_node_dblclick() {
+    editing.set(true);
+    const selection = window.getSelection();
+    node.focus();
+    if (selection) {
+      selection.removeAllRanges();
+      const range = document.createRange();
+      range.selectNodeContents(node);
+      range.setStart(node, node.childNodes.length);
+      selection.addRange(range);
+    }
+  }
+
   return (
     <div
       class={clsx("mind_node_renderer", focused() && "__focused__")}
@@ -263,7 +285,9 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
     >
       <div
         class={"__node"}
-        contenteditable={focused()}
+        contenteditable={editing.get()}
+        draggable={!editing.get()}
+        onDblClick={handle_node_dblclick}
         onInput={(e) => {
           it.set_prop("content", { value: e.target.textContent });
           ctx.mark_modified(it.node.id);
