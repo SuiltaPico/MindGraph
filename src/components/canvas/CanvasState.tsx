@@ -365,7 +365,7 @@ export class CanvasState {
       } else if (e.key === "s") {
         e.preventDefault();
         if (focused_node_data.id === "" || !e.ctrlKey) return;
-        this.ac.save_mg();
+        this.ac.mg_save();
       }
     });
   }
