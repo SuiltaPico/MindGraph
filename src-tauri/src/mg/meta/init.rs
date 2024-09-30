@@ -11,7 +11,7 @@ pub async fn create_table(conn: &DBConn) -> Result<(), Box<dyn std::error::Error
     r#"
     CREATE TABLE IF NOT EXISTS meta (
       key VARCHAR(1023) PRIMARY KEY NOT NULL,
-      value JSON NOT NULL
+      value JSONB NOT NULL
     );
     "#,
   )

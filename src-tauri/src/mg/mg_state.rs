@@ -89,14 +89,18 @@ impl MgState {
   }
 
   pub async fn get_meta(&self) -> Result<Value, String> {
-    let rows = sqlx::query("SELECT * FROM meta")
+    let rows = sqlx::query("SELECT key, cast(value as text) as value FROM meta")
       .fetch_all(&self.conn)
       .await
       .map_err(|e| e.to_string())?;
 
     let mut map = serde_json::Map::new();
     for row in rows.into_iter() {
-      map.insert(row.get("key"), row.get("value"));
+      let key: String = row.get("key");
+      let value = row.get::<sqlx::types::JsonValue, _>("value");
+      let json_value: serde_json::Value =
+        serde_json::from_value(value).map_err(|e| e.to_string())?;
+      map.insert(key, json_value);
     }
     Ok(map.into())
   }

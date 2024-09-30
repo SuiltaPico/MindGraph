@@ -44,7 +44,7 @@ pub async fn save_as(
 
 #[tauri::command(async, rename_all = "snake_case")]
 pub async fn get_init_data(state: tauri::State<'_, MutexAppState>) -> Result<MgInitData, String> {
-  let mut state = state.lock().await;
+  let state = state.lock().await;
   let init_data = state.get_mg_init_data().await.map_err(|e| e.to_string())?;
   Ok(init_data)
 }
