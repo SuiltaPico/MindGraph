@@ -16,7 +16,7 @@ pub async fn create_table(conn: &DBConn) -> Result<(), Box<dyn std::error::Error
     r#"
     CREATE TABLE IF NOT EXISTS node (
       id CHAR(26) PRIMARY KEY,
-      content JSON NOT NULL
+      content JSONB NOT NULL
     );
     "#,
   )
