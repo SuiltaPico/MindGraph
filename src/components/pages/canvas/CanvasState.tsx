@@ -8,7 +8,7 @@ import {
   WrappedSignal,
 } from "@/common/signal";
 import { monotonicFactory } from "ulid";
-import { AppContext } from "@/App";
+import { AppContext } from "@/AppContext";
 
 /** 渲染时信息 */
 export interface RenderInfo {

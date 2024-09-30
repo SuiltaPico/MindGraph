@@ -1,64 +1,12 @@
 import "@/common/var.scss";
-import { createContext, createEffect, on, onMount } from "solid-js";
+import { createEffect, on, onMount, ParentComponent } from "solid-js";
 import "./App.scss";
-import { TauriClient } from "./api/client/tauri";
-import { CanvasState } from "./components/canvas/CanvasState";
-import { CanvasRenderer } from "./components/canvas/CanvasRenderer";
-import { createSignal } from "./common/signal";
-import { MenuContext } from "./components/base/menu/Menu";
+import { app_context, AppContext } from "./AppContext";
 import { Framework } from "./components/framework/Framework";
+import { Router } from "@solidjs/router";
+import { routers } from "./components/pages/router";
 
-export class AppContext {
-  file = createSignal({
-    uri: "mindgraph://new",
-  });
-  meta = createSignal({
-    name: "",
-  });
-
-  client = new TauriClient();
-  api = this.client.api;
-
-  canvas = new CanvasState(this);
-  menu = new MenuContext();
-
-  async mg_save() {
-    const file = this.file.get();
-    const meta = this.meta.get();
-
-    if (file.uri === "mindgraph://new") {
-      this.mg_save_as();
-    } else {
-      await this.api.app.mg.save({
-        ...this.canvas.get_save_data(),
-        meta,
-      });
-      alert("保存成功");
-    }
-  }
-
-  async mg_save_as() {
-    const meta = this.meta.get();
-    const path = await this.api.dialog.save({
-      defaultPath: this.meta.get().name,
-    });
-    if (!path) return;
-
-    await this.api.app.mg.save_as({
-      uri: path!,
-      ...this.canvas.get_save_data(),
-      meta,
-    });
-
-    this.file.set({
-      uri: path!,
-    });
-    alert("保存成功");
-  }
-}
-export const app_context = createContext<AppContext>();
-
-export function App() {
+export const App = () => {
   const ac = new AppContext();
   console.log("AppContext", ac);
 
@@ -77,6 +25,12 @@ export function App() {
     },
     { name: "保存", onclick: () => ac.mg_save() },
     { name: "另存为", onclick: () => ac.mg_save_as() },
+    {
+      name: "退出到主页",
+      onclick: () => {
+        alert("还没做");
+      },
+    },
   ]);
 
   createEffect(
@@ -95,11 +49,11 @@ export function App() {
 
   return (
     <app_context.Provider value={ac}>
-      <Framework>
-        <CanvasRenderer state={ac.canvas} />
-      </Framework>
+      <Router root={Framework}>
+        {routers}
+      </Router>
     </app_context.Provider>
   );
-}
+};
 
 export default App;

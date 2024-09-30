@@ -7,7 +7,7 @@ import {
   Switch,
   useContext,
 } from "solid-js";
-import { Accordion, AccordionRenderer } from "../base/Accordion";
+import { Accordion, AccordionRenderer } from "../../base/Accordion";
 import {
   CanvasStateContext,
   RenderContext

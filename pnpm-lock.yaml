@@ -11,6 +11,9 @@ importers:
       '@mdi/js':
         specifier: ^7.4.47
         version: 7.4.47
+      '@solidjs/router':
+        specifier: ^0.14.7
+        version: 0.14.7(solid-js@1.9.1)
       '@tauri-apps/api':
         specifier: 2.0.0-rc.6
         version: 2.0.0-rc.6
@@ -410,6 +413,11 @@ packages:
 
   '@sinclair/typebox@0.27.8':
     resolution: {integrity: sha512-+Fj43pSMwJs4KRrH/938Uf+uAELIgVBmQzg/q1YG10djyfA3TnrU8N8XzqCh/okZdszqBQTZf96idMfE5lnwTA==}
+
+  '@solidjs/router@0.14.7':
+    resolution: {integrity: sha512-agLf8AUz5XnW6+F64a4Iq+QQQobI5zGHQ/gUYd/WHSwcbnFpavbsiwRLob3YhWMXVX3sQyn4ekUN+uchMCRupw==}
+    peerDependencies:
+      solid-js: ^1.8.6
 
   '@tauri-apps/api@2.0.0-rc.6':
     resolution: {integrity: sha512-oENxL0C5WqHNSXWjZEbjnzoBwFFyn8do5S0elOg0ME1cLvWJOAKmqdCnWPpAwtzHQZ+xAzMU0/k8nPpJq4OQYA==}
@@ -1274,6 +1282,10 @@ snapshots:
     optional: true
 
   '@sinclair/typebox@0.27.8': {}
+
+  '@solidjs/router@0.14.7(solid-js@1.9.1)':
+    dependencies:
+      solid-js: 1.9.1
 
   '@tauri-apps/api@2.0.0-rc.6': {}
 
