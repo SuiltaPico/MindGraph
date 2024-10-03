@@ -3,8 +3,8 @@ import { Id } from "../../types/id";
 import { IInitData, IMeta, IMindNode } from "../../types/mg";
 import * as node from "./node";
 
-async function load(client: IClient, path: string) {
-  return await client.invoke("app/mg/load", { path });
+async function load(client: IClient, uri: string) {
+  return await client.invoke("app/mg/load", { uri });
 }
 
 async function save(

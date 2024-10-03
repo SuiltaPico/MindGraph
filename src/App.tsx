@@ -19,8 +19,8 @@ export const App = () => {
     },
     {
       name: "打开",
-      onclick: () => {
-        alert("还没做");
+      onclick: async () => {
+        await ac.open_mg();
       },
     },
     { name: "保存", onclick: () => ac.mg_save() },
@@ -49,9 +49,7 @@ export const App = () => {
 
   return (
     <app_context.Provider value={ac}>
-      <Router root={Framework}>
-        {routers}
-      </Router>
+      <Router root={Framework}>{routers}</Router>
     </app_context.Provider>
   );
 };

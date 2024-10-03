@@ -1,7 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { ConvertToClientApi, IClient } from "./type";
 import { raw_api } from "..";
-import { save } from "@tauri-apps/plugin-dialog";
+import { open, save } from "@tauri-apps/plugin-dialog";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 
 export class TauriClient implements IClient {
@@ -17,10 +17,20 @@ export class TauriClient implements IClient {
       ...this.wrapApi(raw_api),
       dialog: {
         save: async (options) => {
-          const res = await save(options);
+          const res = await save({
+            ...options,
+            defaultPath: options.default_path,
+          });
           if (res) {
             return "file://" + res;
           }
+        },
+        open: async (options) => {
+          const res = await open(options);
+          if (res) {
+            return "file://" + res;
+          }
+          return undefined as any;
         },
       },
       window: {

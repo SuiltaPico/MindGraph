@@ -83,7 +83,9 @@ export class MindNodeHelper {
 export const canvas_root_id = "[canvas_root]";
 
 export class CanvasState {
-  root = createSignal<string>("");
+  root = createSignal<string>("", {
+    equals: false,
+  });
   /** 需要被渲染的节点 */
   nodes = new Map<string, IMindNode>();
   render_info = new Map<string, RenderInfo>();
@@ -114,6 +116,16 @@ export class CanvasState {
   });
 
   load_node: (id: string) => Promise<IMindNode>;
+
+  clean_catch() {
+    this.render_info.clear();
+    this.nodes.clear();
+    this.added_nodes.clear();
+    this.deleted_nodes.clear();
+    this.modified_nodes.clear();
+    this.focused_node_data.id = "";
+    this.focused_node_data.parent_id = "";
+  }
 
   get_render_info(id: string) {
     let render_info = this.render_info.get(id);

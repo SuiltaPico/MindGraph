@@ -18,6 +18,25 @@ export class AppContext {
   canvas = new CanvasState(this);
   menu = new MenuContext();
 
+  async open_mg() {
+    const uri = await this.api.dialog.open({
+      filters: [
+        {
+          name: "MindGraph 文件",
+          extensions: ["mg"],
+        },
+      ],
+    });
+    if (!uri) return;
+
+    await this.api.app.mg.load(uri as string);
+    this.canvas.clean_catch();
+
+    const init_data = await this.api.app.mg.get_init_data();
+    this.meta.set(init_data.meta);
+    this.canvas.root.set(init_data.root_node_id);
+  }
+
   async mg_save() {
     const file = this.file.get();
     const meta = this.meta.get();
@@ -36,7 +55,13 @@ export class AppContext {
   async mg_save_as() {
     const meta = this.meta.get();
     const path = await this.api.dialog.save({
-      defaultPath: this.meta.get().name,
+      default_path: this.meta.get().name,
+      filters: [
+        {
+          name: "MindGraph 文件",
+          extensions: ["mg"],
+        },
+      ],
     });
     if (!path) return;
 

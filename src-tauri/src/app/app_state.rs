@@ -28,38 +28,6 @@ impl AppState {
     Ok(())
   }
 
-  pub async fn save_mg(
-    &mut self,
-    modified_nodes: Vec<MindNode>,
-    deleted_nodes: Vec<String>,
-    new_nodes: Vec<MindNode>,
-    meta: Value,
-  ) -> Result<(), Box<dyn std::error::Error>> {
-    self
-      .mg
-      .as_mut()
-      .unwrap()
-      .save(modified_nodes, deleted_nodes, new_nodes, meta)
-      .await?;
-    Ok(())
-  }
-
-  pub async fn save_as_mg(
-    &mut self,
-    uri: String,
-    modified_nodes: Vec<MindNode>,
-    deleted_nodes: Vec<String>,
-    new_nodes: Vec<MindNode>,
-    meta: Value,
-  ) -> Result<(), Box<dyn std::error::Error>> {
-    let mg_state = self.mg.as_mut().unwrap();
-    mg_state
-      .save(modified_nodes, deleted_nodes, new_nodes, meta)
-      .await?;
-    mg_state.move_to(uri).await?;
-    Ok(())
-  }
-
   pub async fn get_mg_init_data(&self) -> Result<MgInitData, String> {
     let mg_state = self.mg.as_ref().unwrap();
     let init_data = mg_state.get_init_data().await?;

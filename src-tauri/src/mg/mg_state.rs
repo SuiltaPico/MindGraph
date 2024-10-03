@@ -25,7 +25,7 @@ pub struct MgState {
 
 impl MgState {
   pub async fn new(uri: String) -> Result<Self, Box<dyn std::error::Error>> {
-    Ok(MgState::open(uri).await?)
+    Ok(MgState::open_new_mg_state(uri).await?)
   }
 
   pub fn parse_uri(uri: String) -> Result<String, Box<dyn std::error::Error>> {
@@ -53,7 +53,7 @@ impl MgState {
     }
   }
 
-  pub async fn open(uri: String) -> Result<Self, Box<dyn std::error::Error>> {
+  pub async fn open_new_mg_state(uri: String) -> Result<Self, Box<dyn std::error::Error>> {
     let path = Self::parse_uri(uri.clone())?;
 
     let options = format!("sqlite://{}?mode=rwc", path)
@@ -177,6 +177,14 @@ impl MgState {
     }
 
     Ok(relationships)
+  }
+
+  pub async fn open_uri(&mut self, uri: String) -> Result<(), Box<dyn std::error::Error>> {
+    let new_state = Self::open_new_mg_state(uri).await?;
+    self.conn = new_state.conn;
+    self.uri = new_state.uri;
+
+    Ok(())
   }
 
   pub async fn save(
@@ -369,9 +377,8 @@ impl MgState {
 
     tokio::fs::rename(self_path.clone(), new_path.clone()).await?;
 
-    let new_state = Self::open(format!("file://{}", new_path.clone())).await?;
-    self.conn = new_state.conn;
-    self.uri = new_state.uri;
+    self.open_uri(format!("file://{}", new_path.clone())).await?;
+
     Ok(())
   }
 }

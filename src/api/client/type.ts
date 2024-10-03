@@ -1,3 +1,4 @@
+import { DialogFilter } from "@tauri-apps/plugin-dialog";
 import { raw_api } from "..";
 
 /** 递归去除 client 参数 */
@@ -14,7 +15,14 @@ export interface IClient {
   invoke(command: string, args?: any): Promise<any>;
   api: {
     dialog: {
-      save: (options: {}) => Promise<string | void>;
+      save: (options: {
+        default_path?: string;
+        filters?: DialogFilter[];
+      }) => Promise<string | void>;
+      open: (options: {
+        multiple?: boolean;
+        filters?: DialogFilter[];
+      }) => Promise<string | string[] | void>;
     };
     window: {
       set_title: (title: string) => void;

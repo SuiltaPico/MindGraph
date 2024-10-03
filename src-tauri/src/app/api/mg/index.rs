@@ -1,11 +1,14 @@
 use serde_json::Value;
 
-use crate::{mg::{mg_state::MgInitData, node::entity::MindNode}, utils::types::MutexAppState};
+use crate::{
+  mg::{mg_state::MgInitData, node::entity::MindNode},
+  utils::types::MutexAppState,
+};
 
 #[tauri::command(async, rename_all = "snake_case")]
-pub async fn load(state: tauri::State<'_, MutexAppState>, path: String) -> Result<(), String> {
+pub async fn load(state: tauri::State<'_, MutexAppState>, uri: String) -> Result<(), String> {
   let mut state = state.lock().await;
-  state.load_mg(path).await.map_err(|e| e.to_string())?;
+  state.load_mg(uri).await.map_err(|e| e.to_string())?;
   Ok(())
 }
 
@@ -19,7 +22,10 @@ pub async fn save(
 ) -> Result<(), String> {
   let mut state = state.lock().await;
   state
-    .save_mg(modified_nodes, deleted_nodes, added_nodes, meta)
+    .mg
+    .as_mut()
+    .unwrap()
+    .save(modified_nodes, deleted_nodes, added_nodes, meta)
     .await
     .map_err(|e| e.to_string())?;
   Ok(())
@@ -35,10 +41,12 @@ pub async fn save_as(
   meta: Value,
 ) -> Result<(), String> {
   let mut state = state.lock().await;
-  state
-    .save_as_mg(uri, modified_nodes, deleted_nodes, added_nodes, meta)
+  let mg = state.mg.as_mut().unwrap();
+  mg.save(modified_nodes, deleted_nodes, added_nodes, meta)
     .await
     .map_err(|e| e.to_string())?;
+
+  mg.move_to(uri).await.map_err(|e| e.to_string())?;
   Ok(())
 }
 
