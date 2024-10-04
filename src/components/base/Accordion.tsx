@@ -10,6 +10,13 @@ export class Accordion {
   title = createSignal<JSX.Element>("");
   content = createSignal<JSX.Element>("");
   is_open = createSignal(false);
+
+  open() {
+    this.is_open.set(true);
+  }
+  close() {
+    this.is_open.set(false);
+  }
 }
 
 export const AccordionRenderer: Component<
