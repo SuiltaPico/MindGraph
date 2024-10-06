@@ -1,0 +1,26 @@
+@use "@/common/utils.scss" as *;
+._list {
+    @include flex(col);
+    @include w(100%);
+    .__list_item {
+        @include flex(row);
+        @include items(center);
+        @include ml(5%);
+        @include mr(5%);
+        @include rounded(7px);
+        padding: 5px;
+        @include h(25px);
+        transition: background-color 0.15s;
+
+        &:hover {
+            background-color: #f0f0f0;
+        }
+        &:focus {
+            background-color: #d6d6d6;
+        }
+
+        .__list_text {
+            @include ml(10px);
+        }
+    }
+}

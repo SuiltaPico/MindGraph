@@ -1,0 +1,59 @@
+@use "@/common/utils.scss" as *;
+._portal {
+    @include w(100%);
+    @include h(100%);
+    @include min_h(600px);
+    @include min_w(800px);
+    @include flex(row);
+    @include justify(center);
+    @include items(center);
+
+    ._portal_container {
+        @include w(85%);
+        @include h(85%);
+        @include flex(row);
+
+        .shared_portalzone {
+            @include w(100%);
+            @include h(100%);
+            border: 1px solid #ccc;
+            transition: outline-width 0.1s;
+            @include rounded(7px);
+        }
+
+        .__portal_left {
+            @include w(30%);
+            @include min_w(200px);
+            @include flex(col);
+            @include justify(center);
+
+            .__portal_title {
+                @include mt(20px);
+                @include ta(center);
+                font-size: calc(1rem + 2vw);
+                @include op(0.8);
+            }
+            .__portal_function_container {
+                @include mt(20px);
+                @extend .shared_portalzone;
+                @include h(100%);
+                @include w(100%);
+                @include flex(col);
+                .__portal_function_zone {
+                    @include h(96%); // 为什么总是超出去，不太明白
+                    @include pt(20px);
+                    @include pb(20px);
+                    @include flex(col);
+                    @include justify(space-between);
+                }
+            }
+        }
+        .__portal_right {
+            @include ml(20px);
+            flex-grow: 1;
+            .__portal_displayzone {
+                @extend .shared_portalzone;
+            }
+        }
+    }
+}
