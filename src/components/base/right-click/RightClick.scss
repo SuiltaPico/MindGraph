@@ -1,0 +1,22 @@
+@use "@/common/utils.scss" as *;
+._right_click {
+    @include absolute;
+    @include bg($color: #fff);
+    @include rounded(5px);
+    border: 1px, solid, #e8e8e8;
+    box-shadow: 0 2px 4px rgba($color: #000, $alpha: 0.1);
+    width: auto;
+    z-index: 1000;
+
+    .__right_click_container {
+        @include flex(col);
+        padding: 5px;
+        color: #555;
+        font-size: 12px;
+        @include items(center);
+        ._m_divider_horizontal {
+            @include mt(5px);
+            @include mb(5px);
+        }
+    }
+}

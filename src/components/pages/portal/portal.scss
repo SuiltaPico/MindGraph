@@ -41,6 +41,8 @@
                 @include flex(col);
                 .__portal_function_zone {
                     @include h(96%); // 为什么总是超出去，不太明白
+                    @include ml(5%);
+                    @include mr(5%);
                     @include pt(20px);
                     @include pb(20px);
                     @include flex(col);

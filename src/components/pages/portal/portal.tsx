@@ -1,22 +1,23 @@
 import "./portal.scss";
-import { ListRenderer, ListItem} from "@/components/base/List";
-import { useContext } from "solid-js";
+import { ListRenderer, ListItem } from "@/components/base/List";
+import { useContext, Component } from "solid-js";
 import { useNavigate } from "@solidjs/router";
 
 import { app_context } from "src/AppContext.tsx";
 
-export const Portal = () => {
+export const PortalRenderer = () => {
   const navigate = useNavigate();
   const goToCanvas = () => {
     navigate("/canvas");
   };
 
-  const ac = useContext(app_context);
+  const ac = useContext(app_context)!;
   const function_item: ListItem[] = [
     {
       text: "回到工作",
       icon: "mdiBackburger",
       functions: goToCanvas,
+      description: "这是一个有关于列表的测试啊！",
     },
     {
       text: "新建文件",
@@ -44,21 +45,27 @@ export const Portal = () => {
   ];
 
   return (
-    <div class="_portal">
-      <div class="_portal_container">
-        <div class="__portal_left">
-          <div class="__portal_title">MindGraph</div>
-          <div class="__portal_function_container">
-            <div class="__portal_function_zone">
-              <ListRenderer items={function_item} />
-              <ListRenderer items={setting_item} />
-            </div>
+    <div class="_portal_container">
+      <div class="__portal_left">
+        <div class="__portal_title">MindGraph</div>
+        <div class="__portal_function_container">
+          <div class="__portal_function_zone">
+            <ListRenderer items={function_item} />
+            <ListRenderer items={setting_item} />
           </div>
         </div>
-        <div class="__portal_right">
-          <div class="__portal_displayzone"></div>
-        </div>
       </div>
+      <div class="__portal_right">
+        <div class="__portal_displayzone"></div>
+      </div>
+    </div>
+  );
+};
+
+export const Portal: Component = () => {
+  return (
+    <div class="_portal">
+      <PortalRenderer />
     </div>
   );
 };
