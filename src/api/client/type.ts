@@ -23,6 +23,12 @@ export interface IClient {
         multiple?: boolean;
         filters?: DialogFilter[];
       }) => Promise<string | string[] | void>;
+      confirm: (options: {
+        message: string;
+        cancel_label?: string;
+        confirm_label?: string;
+        title?: string;
+      }) => Promise<boolean>;
     };
     window: {
       set_title: (title: string) => void;

@@ -1,9 +1,9 @@
 import "@/common/var.scss";
-import { createEffect, on, onMount, ParentComponent } from "solid-js";
+import { Router } from "@solidjs/router";
+import { createEffect, on, onMount } from "solid-js";
 import "./App.scss";
 import { app_context, AppContext } from "./AppContext";
 import { Framework } from "./components/framework/Framework";
-import { Router } from "@solidjs/router";
 import { routers } from "./components/pages/router";
 
 export const App = () => {
@@ -19,9 +19,7 @@ export const App = () => {
     },
     {
       name: "打开",
-      onclick: async () => {
-        await ac.open_mg();
-      },
+      onclick: () => ac.open_mg(),
     },
     { name: "保存", onclick: () => ac.mg_save() },
     { name: "另存为", onclick: () => ac.mg_save_as() },

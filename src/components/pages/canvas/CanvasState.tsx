@@ -330,6 +330,15 @@ export class CanvasState {
     }
   }
 
+  /** 当前画布状态是否已修改 */
+  is_modified() {
+    return (
+      this.modified_nodes.size > 0 ||
+      this.deleted_nodes.size > 0 ||
+      this.added_nodes.size > 0
+    );
+  }
+
   get_save_data() {
     return {
       modified_nodes: Array.from(this.modified_nodes).map(

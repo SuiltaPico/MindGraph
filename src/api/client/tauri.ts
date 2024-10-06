@@ -1,7 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { ConvertToClientApi, IClient } from "./type";
 import { raw_api } from "..";
-import { open, save } from "@tauri-apps/plugin-dialog";
+import { confirm, open, save } from "@tauri-apps/plugin-dialog";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 
 export class TauriClient implements IClient {
@@ -31,6 +31,14 @@ export class TauriClient implements IClient {
             return "file://" + res;
           }
           return undefined as any;
+        },
+        confirm: async (options) => {
+          const res = await confirm(options.message, {
+            ...options,
+            cancelLabel: options.cancel_label,
+            okLabel: options.confirm_label,
+          });
+          return res;
         },
       },
       window: {
