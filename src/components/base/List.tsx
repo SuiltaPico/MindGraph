@@ -2,10 +2,12 @@ import { Component } from "solid-js";
 import { Icon } from "./Icon";
 import * as mdiIcons from "@mdi/js";
 import "./List.scss";
+import { Block } from "./Block";
 
 export interface ListItem {
   text: string;
-  icon?: string;
+  description?: string;
+  icon?: keyof typeof mdiIcons;
   functions?: (() => void) | Array<() => void>;
 }
 
@@ -31,10 +33,23 @@ export const ListRenderer: Component<ListProps> = (props) => {
           onClick={() => handleItemClick(item.functions)}
           tabindex="0"
         >
-          {item.icon && (
-            <Icon class="__list_icon" path={mdiIcons[item.icon]}></Icon>
-          )}
-          <div class="__list_text">{item.text}</div>
+          <div class="__list_left">
+            {item.icon && (
+              <>
+                <Icon class="__list_icon" path={mdiIcons[item.icon]} />
+                <Block size={10} />
+              </>
+            )}
+            <div class="__list_text">{item.text}</div>
+          </div>
+          <div class="__list_right">
+            {item.description && (
+              <>
+                <Block size={10} />
+                <div class="__list_description">{item.description}</div>
+              </>
+            )}
+          </div>
         </div>
       ))}
     </div>

@@ -2,14 +2,16 @@
 ._list {
     @include flex(col);
     @include w(100%);
+
     .__list_item {
         @include flex(row);
         @include items(center);
-        @include ml(5%);
-        @include mr(5%);
         @include rounded(7px);
         padding: 5px;
         @include h(25px);
+        @include justify(space-between);
+        flex-wrap: nowrap;
+        overflow: hidden;
         transition: background-color 0.15s;
 
         &:hover {
@@ -18,9 +20,25 @@
         &:focus {
             background-color: #d6d6d6;
         }
-
-        .__list_text {
+        .__list_left {
             @include ml(10px);
+            @include flex(row);
+            @include items(center);
+            .__list_text {
+                @include ts(16px);
+                white-space: nowrap;
+            }
+        }
+        .__list_right {
+            @include mr(10px);
+            @include flex(row);
+            .__list_description {
+                color: #bbb;
+                @include ts(14px);
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
         }
     }
 }
