@@ -11,7 +11,7 @@ edition = "2021"
 tauri-build = { version = "2.0.0-rc.13", features = [] }
 
 [dependencies]
-tauri = { version = "2.0.0-rc.16", features = ["devtools"] }
+tauri = { version = "2.0.0-rc.17", features = ["devtools"] }
 tauri-plugin-shell = "2.0.0-rc"
 
 rustls-pemfile = { version = "2.0.0-alpha" }
