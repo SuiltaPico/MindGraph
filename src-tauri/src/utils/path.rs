@@ -7,3 +7,29 @@ pub fn get_app_path() -> PathBuf {
   app_path.push("MindGraph");
   app_path
 }
+
+
+pub fn parse_uri(uri: String) -> Result<String, Box<dyn std::error::Error>> {
+  if uri.starts_with("file://") {
+    Ok(uri.replace("file://", ""))
+  } else if uri.starts_with("mindgraph://") {
+    match uri.as_str() {
+      "mindgraph://new" => Ok(
+        get_app_path()
+          .join("data/temp/new.mg")
+          .to_str()
+          .unwrap()
+          .to_string(),
+      ),
+      _ => Err(Box::new(std::io::Error::new(
+        std::io::ErrorKind::InvalidInput,
+        format!("Invalid uri: {}", uri),
+      ))),
+    }
+  } else {
+    Err(Box::new(std::io::Error::new(
+      std::io::ErrorKind::InvalidInput,
+      format!("Invalid uri: {}", uri),
+    )))
+  }
+}

@@ -1,21 +1,26 @@
 import "@/common/var.scss";
-import { Router } from "@solidjs/router";
-import { createEffect, on, onMount } from "solid-js";
+import { useNavigate } from "@solidjs/router";
+import {
+  createEffect,
+  on,
+  onMount,
+  ParentComponent,
+  useContext,
+} from "solid-js";
 import "./App.scss";
-import { app_context, AppContext } from "./AppContext";
+import { app_context } from "./AppContext";
 import { Framework } from "./components/framework/Framework";
-import { routers } from "./components/pages/router";
 
-export const App = () => {
-  const ac = new AppContext();
+export const App: ParentComponent = (props) => {
+  const ac = useContext(app_context)!;
   console.log("AppContext", ac);
+
+  const nav = useNavigate();
 
   ac.menu.list.set([
     {
       name: "新建",
-      onclick: () => {
-        alert("还没做");
-      },
+      onclick: () => ac.mg_new(),
     },
     {
       name: "打开",
@@ -26,7 +31,7 @@ export const App = () => {
     {
       name: "退出到主页",
       onclick: () => {
-        alert("还没做");
+        nav("/");
       },
     },
   ]);
@@ -45,11 +50,7 @@ export const App = () => {
     ac.canvas.root.set(init_data.root_node_id);
   });
 
-  return (
-    <app_context.Provider value={ac}>
-      <Router root={Framework}>{routers}</Router>
-    </app_context.Provider>
-  );
+  return <Framework {...props}></Framework>;
 };
 
 export default App;

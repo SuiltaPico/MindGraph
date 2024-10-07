@@ -1,8 +1,8 @@
-use serde_json::Value;
 use sqlx::sqlite::SqlitePoolOptions;
+use tokio::fs;
 
 use crate::mg::mg_state::{MgInitData, MgState};
-use crate::mg::node::entity::MindNode;
+use crate::utils::path::parse_uri;
 use crate::utils::{path::get_app_path, types::DBConn};
 pub struct AppState {
   pub conn: DBConn,
@@ -24,6 +24,21 @@ impl AppState {
 
   pub async fn load_mg(&mut self, path: String) -> Result<(), Box<dyn std::error::Error>> {
     let mg_state = MgState::new(path).await?;
+    self.mg = Some(mg_state);
+    Ok(())
+  }
+
+  pub async fn new_mg(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+    if self.mg.is_some() {
+      self.mg.as_mut().unwrap().close().await?;
+
+      if self.mg.as_ref().unwrap().uri == "mindgraph://new" {
+        let file_path = parse_uri(self.mg.as_ref().unwrap().uri.clone())?;
+        fs::remove_file(file_path).await?;
+      }
+    }
+
+    let mg_state = MgState::new("mindgraph://new".to_string()).await?;
     self.mg = Some(mg_state);
     Ok(())
   }

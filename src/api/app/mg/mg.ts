@@ -1,13 +1,17 @@
 import { IClient } from "../../client/type";
 import { Id } from "../../types/id";
 import { IInitData, IMeta, IMindNode } from "../../types/mg";
-import * as node from "./node";
+export * as node from "./node";
 
-async function load(client: IClient, uri: string) {
+export async function new_mg(client: IClient) {
+  return await client.invoke("app/mg/new");
+}
+
+export async function load(client: IClient, uri: string) {
   return await client.invoke("app/mg/load", { uri });
 }
 
-async function save(
+export async function save(
   client: IClient,
   param: {
     modified_nodes: IMindNode[];
@@ -19,7 +23,7 @@ async function save(
   return await client.invoke("app/mg/save", param);
 }
 
-async function save_as(
+export async function save_as(
   client: IClient,
   param: {
     uri: string;
@@ -32,9 +36,7 @@ async function save_as(
   return await client.invoke("app/mg/save_as", param);
 }
 
-async function get_init_data(client: IClient): Promise<IInitData> {
+export async function get_init_data(client: IClient): Promise<IInitData> {
   const init_data = await client.invoke("app/mg/get_init_data");
   return init_data;
 }
-
-export { load, save, save_as, get_init_data, node };

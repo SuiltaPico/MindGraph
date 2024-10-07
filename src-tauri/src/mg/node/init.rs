@@ -1,5 +1,5 @@
 use crate::utils::types::DBConn;
-use ulid::{Generator, Ulid};
+use ulid::Generator;
 
 pub async fn node_init(conn: &DBConn) -> Result<(), Box<dyn std::error::Error>> {
   println!("node_init");

@@ -23,20 +23,30 @@ export class AppContext {
     return this.canvas.is_modified() || this.file.get().meta_modified;
   }
 
-  async open_mg() {
+  async load_init_data() {
+    const init_data = await this.api.app.mg.get_init_data();
+    this.meta.set(init_data.meta);
+    this.canvas.root.set(init_data.root_node_id);
+  }
+
+  async handle_mg_if_modified() {
     if (this.is_modified()) {
-      const res = await this.api.dialog.confirm({
-        message: "是否保存当前文件？",
+      const save_file = await this.api.dialog.confirm({
+        message: "是否先保存当前文件？",
         confirm_label: "保存",
         cancel_label: "不保存",
         title: "当前文件已修改",
       });
-      console.log("res", res);
-      if (res) {
-        const res = await this.mg_save();
-        if (res === false) return false;
+      if (save_file) {
+        const not_canceled = await this.mg_save();
+        if (not_canceled === false) return false;
       }
     }
+  }
+
+  async open_mg() {
+    const not_canceled = await this.handle_mg_if_modified();
+    if (not_canceled === false) return false;
 
     const uri = await this.api.dialog.open({
       filters: [
@@ -51,9 +61,17 @@ export class AppContext {
     await this.api.app.mg.load(uri as string);
     this.canvas.clean_catch();
 
-    const init_data = await this.api.app.mg.get_init_data();
-    this.meta.set(init_data.meta);
-    this.canvas.root.set(init_data.root_node_id);
+    await this.load_init_data();
+  }
+
+  async mg_new() {
+    const not_canceled = await this.handle_mg_if_modified();
+    if (not_canceled === false) return false;
+
+    await this.api.app.mg.new_mg();
+    this.canvas.clean_catch();
+
+    await this.load_init_data();
   }
 
   async mg_save() {

@@ -2,7 +2,7 @@ use super::{
   meta::init::meta_init,
   node::{entity::MindNode, init::node_init},
 };
-use crate::utils::{path::get_app_path, types::DBConn};
+use crate::utils::{path::parse_uri, types::DBConn};
 use log::LevelFilter;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -28,33 +28,8 @@ impl MgState {
     Ok(MgState::open_new_mg_state(uri).await?)
   }
 
-  pub fn parse_uri(uri: String) -> Result<String, Box<dyn std::error::Error>> {
-    if uri.starts_with("file://") {
-      Ok(uri.replace("file://", ""))
-    } else if uri.starts_with("mindgraph://") {
-      match uri.as_str() {
-        "mindgraph://new" => Ok(
-          get_app_path()
-            .join("data/temp/new.mg")
-            .to_str()
-            .unwrap()
-            .to_string(),
-        ),
-        _ => Err(Box::new(std::io::Error::new(
-          std::io::ErrorKind::InvalidInput,
-          format!("Invalid uri: {}", uri),
-        ))),
-      }
-    } else {
-      Err(Box::new(std::io::Error::new(
-        std::io::ErrorKind::InvalidInput,
-        format!("Invalid uri: {}", uri),
-      )))
-    }
-  }
-
   pub async fn open_new_mg_state(uri: String) -> Result<Self, Box<dyn std::error::Error>> {
-    let path = Self::parse_uri(uri.clone())?;
+    let path = parse_uri(uri.clone())?;
 
     let options = format!("sqlite://{}?mode=rwc", path)
       .as_str()
@@ -370,8 +345,8 @@ impl MgState {
   }
 
   pub async fn move_to(&mut self, uri: String) -> Result<(), Box<dyn std::error::Error>> {
-    let self_path = Self::parse_uri(self.uri.clone())?;
-    let new_path = Self::parse_uri(uri.clone())?;
+    let self_path = parse_uri(self.uri.clone())?;
+    let new_path = parse_uri(uri.clone())?;
 
     self.close().await?;
 

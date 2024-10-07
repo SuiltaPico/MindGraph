@@ -13,6 +13,13 @@ pub async fn load(state: tauri::State<'_, MutexAppState>, uri: String) -> Result
 }
 
 #[tauri::command(async, rename_all = "snake_case")]
+pub async fn new(state: tauri::State<'_, MutexAppState>) -> Result<(), String> {
+  let mut state = state.lock().await;
+  state.new_mg().await.map_err(|e| e.to_string())?;
+  Ok(())
+}
+
+#[tauri::command(async, rename_all = "snake_case")]
 pub async fn save(
   state: tauri::State<'_, MutexAppState>,
   modified_nodes: Vec<MindNode>,
