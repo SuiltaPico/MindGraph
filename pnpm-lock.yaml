@@ -15,8 +15,8 @@ importers:
         specifier: ^0.14.7
         version: 0.14.7(solid-js@1.9.1)
       '@tauri-apps/api':
-        specifier: 2.0.0-rc.6
-        version: 2.0.0-rc.6
+        specifier: 2.0.1
+        version: 2.0.1
       '@tauri-apps/plugin-dialog':
         specifier: 2.0.0-rc.1
         version: 2.0.0-rc.1
@@ -419,8 +419,8 @@ packages:
     peerDependencies:
       solid-js: ^1.8.6
 
-  '@tauri-apps/api@2.0.0-rc.6':
-    resolution: {integrity: sha512-oENxL0C5WqHNSXWjZEbjnzoBwFFyn8do5S0elOg0ME1cLvWJOAKmqdCnWPpAwtzHQZ+xAzMU0/k8nPpJq4OQYA==}
+  '@tauri-apps/api@2.0.1':
+    resolution: {integrity: sha512-eoQWT+Tq1qSwQpHV+nw1eNYe5B/nm1PoRjQCRiEOS12I1b+X4PUcREfXVX8dPcBT6GrzWGDtaecY0+1p0Rfqlw==}
 
   '@tauri-apps/api@2.0.1':
     resolution: {integrity: sha512-eoQWT+Tq1qSwQpHV+nw1eNYe5B/nm1PoRjQCRiEOS12I1b+X4PUcREfXVX8dPcBT6GrzWGDtaecY0+1p0Rfqlw==}
@@ -1290,7 +1290,7 @@ snapshots:
     dependencies:
       solid-js: 1.9.1
 
-  '@tauri-apps/api@2.0.0-rc.6': {}
+  '@tauri-apps/api@2.0.1': {}
 
   '@tauri-apps/api@2.0.1': {}
 
@@ -1339,7 +1339,7 @@ snapshots:
 
   '@tauri-apps/plugin-dialog@2.0.0-rc.1':
     dependencies:
-      '@tauri-apps/api': 2.0.0-rc.6
+      '@tauri-apps/api': 2.0.1
 
   '@tauri-apps/plugin-process@2.0.0':
     dependencies:
