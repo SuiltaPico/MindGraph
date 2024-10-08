@@ -35,7 +35,7 @@
 
     path {
       @include stroke(var(--mg-line-color));
-      @include stroke_w(2);
+      @include stroke_w(var(--mg-line-width));
       @include fill(none);
     }
 

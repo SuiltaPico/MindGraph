@@ -25,7 +25,7 @@ export interface RenderContext {
   parent_rc: RenderContext;
   /** 当节点大小改变时 */
   handle_obs_resize?: () => void;
-  onresize?: (container: HTMLElement, node_y_offset: number) => void;
+  onresize?: (node_y_offset: number) => void;
   disposers: (() => void)[];
   dom_el: HTMLElement;
 }
@@ -136,6 +136,10 @@ export class CanvasState {
     return render_info;
   }
 
+  get_render_context(id: string, parent_id: string) {
+    return this.get_render_info(id).context_map.get(parent_id);
+  }
+
   async get_node(id: string, parent_id: string) {
     let node = this.nodes.get(id);
     if (node === undefined) {
@@ -149,7 +153,7 @@ export class CanvasState {
     id: string,
     parent_rc: RenderContext,
     options: {
-      onresize?: (container: HTMLElement, node_y_offset: number) => void;
+      onresize?: (node_y_offset: number) => void;
     }
   ) {
     const render_info = this.get_render_info(id);
@@ -168,13 +172,14 @@ export class CanvasState {
       // 创建 dom 元素，会触发 get_node 方法，因此要先设置 rc
       createRoot((disposer) => {
         rc!.disposers.push(disposer);
-        rc!.dom_el = (
-          <MindNodeRenderer id={id} rc={rc!}></MindNodeRenderer>
-        ) as any;
+        // rc!.dom_el = (
+        //   <MindNodeRenderer id={id} rc={rc!}></MindNodeRenderer>
+        // ) as any;
       });
     }
 
-    return rc.dom_el;
+    // return rc.dom_el;
+    return <MindNodeRenderer id={id} rc={rc!}></MindNodeRenderer>;
   }
 
   focus_node(id: string, parent_id: string) {

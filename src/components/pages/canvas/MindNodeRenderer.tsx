@@ -8,10 +8,7 @@ import {
   useContext,
 } from "solid-js";
 import { Accordion, AccordionRenderer } from "../../base/Accordion";
-import {
-  CanvasStateContext,
-  RenderContext
-} from "./CanvasState";
+import { CanvasStateContext, RenderContext } from "./CanvasState";
 import { MindNodeContentRenderer } from "./MindNodeContentRenderer";
 import "./MindNodeRenderer.scss";
 
@@ -33,11 +30,12 @@ export const MindNodePendingRenderer: Component<{
   rc: RenderContext;
   state: MindNodeContentState;
 }> = (props) => {
+  const ctx = useContext(CanvasStateContext)!;
   let container: MindNodeRendererElement;
 
   onMount(() => {
-    props;
-    props.rc.onresize?.(container, 0);
+    ctx.get_render_context(props.id, props.rc.parent_rc.id)!.dom_el = container;
+    props.rc.onresize?.(0);
   });
 
   return (
@@ -64,10 +62,12 @@ export const MindNodeErrorRenderer: Component<{
   id: string;
   rc: RenderContext;
 }> = (props) => {
+  const ctx = useContext(CanvasStateContext)!;
   let container: MindNodeRendererElement;
 
   onMount(() => {
-    props.rc.onresize?.(container, 0);
+    ctx.get_render_context(props.id, props.rc.parent_rc.id)!.dom_el = container;
+    props.rc.onresize?.(0);
   });
 
   const accordion = new Accordion();

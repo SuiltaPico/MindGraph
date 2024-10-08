@@ -11,7 +11,7 @@
     "tauri": "tauri",
     "build:android": "tauri android build --target aarch64"
   },
-  "license": "MIT",
+  "license": "BSD-3-Clause",
   "dependencies": {
     "@mdi/js": "^7.4.47",
     "@solidjs/router": "^0.14.7",

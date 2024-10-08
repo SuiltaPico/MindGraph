@@ -11,13 +11,19 @@ import {
   Show,
   useContext,
 } from "solid-js";
-import { CanvasStateContext, MindNodeHelper } from "./CanvasState";
+import { CanvasState, CanvasStateContext, MindNodeHelper } from "./CanvasState";
 import { MindNodeRendererElement } from "./MindNodeRenderer";
 
 class RedrawHelper {
-  /** 节点相对于容器中心的偏移量。来源于去除子项高度去除头尾一半后，再除以2的位置。 */
+  /** 节点相对于容器中心的偏移量。
+   * * 计算公式：去除子项高度去除头尾一半后，再除以2的位置。
+   * * 存在原因：为了让父节点的展示位置相对子节点在视觉上更加居中。
+   * * 影响：让当前节点的中心位置产生偏移。
+   */
   node_y_offset = 0;
-  need_full_redraw = false;
+  /** 全量重绘是否会在下一 tick 执行。 */
+  full_redraw_required = false;
+  /** 容器高度。 */
   last_container_height: number = 0;
 
   container: MindNodeRendererElement = undefined as any;
@@ -47,21 +53,30 @@ class RedrawHelper {
   redraw_center_related_objects() {
     const node_right = this.node.offsetWidth;
 
-    const children_containers = this.children_data_map();
+    const children_data = this.children_data_map();
+
     let offseted_center_y;
 
     const container_center_x = this.node.offsetWidth + 16;
     const container_center_y = this.container.offsetHeight / 2;
 
+    let first_child_container;
+    let last_child_container;
+
     // 计算中心位置
     if (
       !this.folded.get() &&
-      children_containers.length > 1 &&
-      children_containers[0].container
+      children_data.length > 1 &&
+      (first_child_container = this.ctx.get_render_context(
+        children_data[0].id,
+        this.it.id
+      )?.dom_el) &&
+      (last_child_container = this.ctx.get_render_context(
+        children_data[children_data.length - 1].id,
+        this.it.id
+      )?.dom_el)
     ) {
-      const first_child_container = children_containers[0].container!;
-      const last_child_container =
-        children_containers[children_containers.length - 1].container!;
+      console.log(first_child_container, last_child_container);
       const ft = first_child_container.offsetTop;
       const fh = first_child_container.offsetHeight;
       const lt = last_child_container.offsetTop;
@@ -69,6 +84,20 @@ class RedrawHelper {
 
       offseted_center_y = ft + fh / 2 + (lt + lh / 2 - (ft + fh / 2)) / 2;
       this.node_y_offset = offseted_center_y - container_center_y;
+
+      console.log(
+        "new node_y_offset",
+        this.it.node.content.value,
+        this.node_y_offset,
+        {
+          container_center_y,
+          offseted_center_y,
+          ft,
+          fh,
+          lt,
+          lh,
+        }
+      );
     } else {
       offseted_center_y = container_center_y;
       this.node_y_offset = 0;
@@ -105,7 +134,10 @@ class RedrawHelper {
 
     for (let i = 0; i < len; i++) {
       const child_container_data = this.children_data_map()[i];
-      const child_container = child_container_data.container;
+      const child_container = this.ctx.get_render_context(
+        child_container_data.id,
+        this.it.id
+      )?.dom_el;
       if (!child_container) continue;
 
       const ccy =
@@ -143,20 +175,20 @@ class RedrawHelper {
       }
     }
 
-    this.need_full_redraw = false;
+    this.full_redraw_required = false;
     if (
       this.last_container_height !== this.container.offsetHeight ||
       prev_node_y_offset !== this.node_y_offset
     ) {
-      this.it.rc.onresize?.(this.container, this.node_y_offset);
+      this.it.rc.onresize?.(this.node_y_offset);
       this.last_container_height = this.container.offsetHeight;
     }
   }
 
   /** 在下一帧绘制子节点流线。 */
   async full_redraw_next_tick() {
-    if (this.need_full_redraw === false) {
-      this.need_full_redraw = true;
+    if (this.full_redraw_required === false) {
+      this.full_redraw_required = true;
       queueMicrotask(() => {
         this.full_redraw();
       });
@@ -164,22 +196,19 @@ class RedrawHelper {
   }
 
   /** 处理子节点容器大小变化。 */
-  handle_children_resize(
-    child_container: HTMLElement,
-    node_y_offset: number,
-    index: number
-  ) {
+  handle_children_resize(node_y_offset: number, index: number) {
     const children_container_data = this.children_data_map()[index];
-    children_container_data.container = child_container;
+    // children_container_data.container = child_container;
     children_container_data.node_y_offset = node_y_offset;
     this.full_redraw_next_tick();
   }
 
   constructor(
+    public ctx: CanvasState,
     public it: MindNodeHelper,
     public children_data_map: Accessor<
       {
-        container?: HTMLElement;
+        id: string;
         node_y_offset: number;
       }[]
     >,
@@ -213,20 +242,29 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
   /** 子节点容器数据。会随着子节点增删而自动变化。 */
   const children_data_map = mapArray(
     () => props.it.get_prop("children"),
-    (it) => {
+    (id) => {
       return {
-        it: it,
+        id: id,
         node_y_offset: 0,
       } as {
+        id: string;
         container?: HTMLElement;
         node_y_offset: number;
       };
     }
   );
 
-  const redraw_helper = new RedrawHelper(props.it, children_data_map, folded);
+  const redraw_helper = new RedrawHelper(
+    ctx,
+    props.it,
+    children_data_map,
+    folded
+  );
 
   onMount(() => {
+    ctx.get_render_context(it.node.id, it.parent_id)!.dom_el = container;
+    console.log(props.it.node.content.value, "onmount");
+
     redraw_helper.onmount(
       container,
       node,
@@ -236,7 +274,7 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
     );
     it.rc.handle_obs_resize = () => {
       redraw_helper.full_redraw();
-      it.rc.onresize?.(container, redraw_helper.node_y_offset);
+      it.rc.onresize?.(redraw_helper.node_y_offset);
     };
     ctx.resize_obs.observe(node);
     redraw_helper.redraw_center_related_objects();
@@ -328,7 +366,7 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
                 ? "block"
                 : "none",
           }}
-          onClick={handle_folding_points_click}
+          onMouseDown={handle_folding_points_click}
         ></circle>
       </svg>
       <Show when={!folded.get()}>
@@ -336,12 +374,8 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
           <For each={props.it.get_prop("children")}>
             {(child, i) =>
               ctx.render_node(child, it.rc, {
-                onresize: (child_container, node_y_offset) =>
-                  redraw_helper.handle_children_resize(
-                    child_container,
-                    node_y_offset,
-                    i()
-                  ),
+                onresize: (node_y_offset) =>
+                  redraw_helper.handle_children_resize(node_y_offset, i()),
               })
             }
           </For>

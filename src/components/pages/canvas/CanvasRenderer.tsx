@@ -71,7 +71,13 @@ export const CanvasRenderer: Component<{ state: CanvasState }> = (props) => {
             fallback={<div>CanvasState 未设置根节点。</div>}
           >
             {state.render_node(state.root.get(), root_rc, {
-              onresize: (child_container) => {
+              onresize: () => {
+                const child_container = state.get_render_context(
+                  state.root.get(),
+                  canvas_root_id
+                )!.dom_el;
+                console.log(child_container);
+
                 child_container.style.left = `${
                   field.clientWidth / 2 - child_container.clientWidth / 2
                 }px`;
