@@ -120,6 +120,7 @@ export class CanvasState {
     }
   ) {
     let rc: RenderContext | undefined = parent_rc.children_rc.get(id);
+    let el: any = rc?.dom_el;
     if (!rc) {
       rc = {
         node_id: id,
@@ -133,10 +134,11 @@ export class CanvasState {
       parent_rc.children_rc.set(id, rc);
       createRoot((disposer) => {
         rc!.disposers.push(disposer);
+        el = <MindNodeRenderer id={id} rc={rc!}></MindNodeRenderer>;
       });
     }
 
-    return <MindNodeRenderer id={id} rc={rc!}></MindNodeRenderer>;
+    return el;
   }
 
   focus_node(rc: RenderContext | undefined) {
@@ -310,115 +312,7 @@ export class CanvasState {
   }
 
   constructor(public ac: AppContext) {
-    const focused_node_data = this.focused_node_data;
     this.load_node = (id) => ac.api.app.mg.node.load({ id });
-
-    const handle_tab_key = () => {
-      const new_node = this.add_new_child(focused_node_data.rc!.node_id);
-      this.focus_node(focused_node_data.rc!.children_rc.get(new_node.id)!);
-    };
-
-    window.addEventListener("keydown", (e) => {
-      const handler_map: Record<string, () => void> = {
-        Enter: () => {
-          if (focused_node_data.rc === undefined) return;
-          if (e.shiftKey || e.metaKey || e.altKey || e.ctrlKey) return;
-          e.preventDefault();
-
-          // 添加同级节点
-          if (focused_node_data.rc.parent_rc.node_id === canvas_root_id) {
-            handle_tab_key();
-          } else {
-            const curr_rc = focused_node_data.rc;
-            const new_node = this.add_next_sibling(curr_rc);
-            this.focus_node(curr_rc.parent_rc.children_rc.get(new_node.id)!);
-          }
-        },
-        Tab: () => {
-          e.preventDefault();
-          if (focused_node_data.rc === undefined) return;
-          // 添加下级节点
-          handle_tab_key();
-        },
-        Delete: () => {
-          e.preventDefault();
-          if (focused_node_data.rc === undefined) return;
-          const parent_rc = focused_node_data.rc.parent_rc;
-          const parent_node = this.nodes.get(parent_rc.node_id)!;
-          const node_to_delete_index = parent_node.children.indexOf(
-            focused_node_data.rc.node_id
-          );
-          this.delete_node(focused_node_data.rc);
-          // [处理聚焦]
-          // 如果删除的是最后一个子节点，则聚焦到父节点，否则聚焦到下一个同级节点
-          // 如果下一个同级节点不存在，则聚焦到上一个同级节点
-          if (parent_node.children.length === 0) {
-            this.focus_node(parent_rc);
-          } else {
-            const node_to_focus_id =
-              parent_node.children[node_to_delete_index - 1] ??
-              parent_node.children[node_to_delete_index];
-            const next_rc = parent_rc.children_rc.get(node_to_focus_id);
-            this.focus_node(next_rc);
-          }
-        },
-        ArrowUp: () => {
-          e.preventDefault();
-          if (focused_node_data.rc === undefined) return;
-
-          const parent_rc = focused_node_data.rc.parent_rc;
-          if (parent_rc.node_id === canvas_root_id) return;
-
-          const parent_node = this.nodes.get(parent_rc.node_id)!;
-          const focused_node_index = parent_node.children.indexOf(
-            focused_node_data.rc.node_id
-          );
-          const prev_node_id = parent_node.children[focused_node_index - 1];
-          if (prev_node_id) {
-            this.focus_node(parent_rc.children_rc.get(prev_node_id)!);
-          }
-        },
-        ArrowDown: () => {
-          e.preventDefault();
-          if (focused_node_data.rc === undefined) return;
-
-          const parent_rc = focused_node_data.rc.parent_rc;
-          if (parent_rc.node_id === canvas_root_id) return;
-
-          const parent_node = this.nodes.get(parent_rc.node_id)!;
-          const focused_node_index = parent_node.children.indexOf(
-            focused_node_data.rc.node_id
-          );
-          const next_node_id = parent_node.children[focused_node_index + 1];
-          if (next_node_id) {
-            this.focus_node(parent_rc.children_rc.get(next_node_id)!);
-          }
-        },
-        ArrowLeft: () => {
-          e.preventDefault();
-          if (focused_node_data.rc === undefined) return;
-          const parent_rc = focused_node_data.rc.parent_rc;
-          if (parent_rc.node_id !== canvas_root_id) {
-            this.focus_node(parent_rc);
-          }
-        },
-        ArrowRight: () => {
-          e.preventDefault();
-          if (focused_node_data.rc === undefined) return;
-          const rc = focused_node_data.rc;
-          const node = this.nodes.get(rc.node_id)!;
-          if (node.children.length > 0) {
-            this.focus_node(rc.children_rc.get(node.children[0])!);
-          }
-        },
-        s: () => {
-          e.preventDefault();
-          if (!e.ctrlKey) return;
-          this.ac.mg_save();
-        },
-      };
-      handler_map[e.key]?.();
-    });
   }
 }
 

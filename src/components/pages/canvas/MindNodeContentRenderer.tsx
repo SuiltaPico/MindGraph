@@ -75,7 +75,6 @@ class RedrawHelper {
         children_data[children_data.length - 1].id
       )?.dom_el)
     ) {
-      console.log(first_child_container, last_child_container);
       const ft = first_child_container.offsetTop;
       const fh = first_child_container.offsetHeight;
       const lt = last_child_container.offsetTop;
