@@ -362,9 +362,58 @@ export class CanvasState {
             this.focus_node(next_rc);
           }
         },
+        ArrowUp: () => {
+          e.preventDefault();
+          if (focused_node_data.rc === undefined) return;
+
+          const parent_rc = focused_node_data.rc.parent_rc;
+          if (parent_rc.node_id === canvas_root_id) return;
+
+          const parent_node = this.nodes.get(parent_rc.node_id)!;
+          const focused_node_index = parent_node.children.indexOf(
+            focused_node_data.rc.node_id
+          );
+          const prev_node_id = parent_node.children[focused_node_index - 1];
+          if (prev_node_id) {
+            this.focus_node(parent_rc.children_rc.get(prev_node_id)!);
+          }
+        },
+        ArrowDown: () => {
+          e.preventDefault();
+          if (focused_node_data.rc === undefined) return;
+
+          const parent_rc = focused_node_data.rc.parent_rc;
+          if (parent_rc.node_id === canvas_root_id) return;
+
+          const parent_node = this.nodes.get(parent_rc.node_id)!;
+          const focused_node_index = parent_node.children.indexOf(
+            focused_node_data.rc.node_id
+          );
+          const next_node_id = parent_node.children[focused_node_index + 1];
+          if (next_node_id) {
+            this.focus_node(parent_rc.children_rc.get(next_node_id)!);
+          }
+        },
+        ArrowLeft: () => {
+          e.preventDefault();
+          if (focused_node_data.rc === undefined) return;
+          const parent_rc = focused_node_data.rc.parent_rc;
+          if (parent_rc.node_id !== canvas_root_id) {
+            this.focus_node(parent_rc);
+          }
+        },
+        ArrowRight: () => {
+          e.preventDefault();
+          if (focused_node_data.rc === undefined) return;
+          const rc = focused_node_data.rc;
+          const node = this.nodes.get(rc.node_id)!;
+          if (node.children.length > 0) {
+            this.focus_node(rc.children_rc.get(node.children[0])!);
+          }
+        },
         s: () => {
           e.preventDefault();
-          if (focused_node_data.rc === undefined || !e.ctrlKey) return;
+          if (!e.ctrlKey) return;
           this.ac.mg_save();
         },
       };
