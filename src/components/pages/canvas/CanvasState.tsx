@@ -1,44 +1,44 @@
 import { createContext, createRoot } from "solid-js";
 import { MindNodeRenderer, MindNodeRendererElement } from "./MindNodeRenderer";
 import { IMindNode } from "@/api/types/mg";
-import {
-  createEmitterSignal,
-  createSignal,
-  EmitterSignal,
-  WrappedSignal,
-} from "@/common/signal";
+import { createSignal, EmitterSignal, WrappedSignal } from "@/common/signal";
 import { monotonicFactory } from "ulid";
 import { AppContext } from "@/AppContext";
+import { MindNodeHelper } from "./MindNodeHelper";
 
 /** 渲染时信息 */
 export interface RenderInfo {
   /** 路径变更通知表 */
-  path_emitter_map: Map<string, EmitterSignal>;
-  /** 是否已聚焦。其中为聚焦节点的所在父节点 id。 */
-  focused: WrappedSignal<string>;
-  context_map: Map<string, RenderContext>;
+  readonly path_emitter_map: Map<string, EmitterSignal>;
+  /** 是否已聚焦。其中为聚焦节点的渲染上下文。 */
+  readonly focused: WrappedSignal<RenderContext | undefined>;
 }
 
-/** 渲染时信息 */
+/** 渲染时信息。
+ * 渲染时信息储存渲染器的状态。
+ */
 export interface RenderContext {
-  id: string;
-  parent_rc: RenderContext;
+  /** 节点 id。因为渲染时信息可能会先于节点加载前创建，因此需要先记录节点 id，后续再通过节点 id 获取节点。 */
+  readonly node_id: string;
+  readonly parent_rc: RenderContext;
+  /** 子节点的渲染上下文。子节点变动的时候，需要手动维护。 */
+  readonly children_rc: Map<string, RenderContext>;
   /** 当节点大小改变时 */
   handle_obs_resize?: () => void;
   onresize?: (node_y_offset: number) => void;
   disposers: (() => void)[];
+  /** 节点渲染的 dom 元素 */
   dom_el: HTMLElement;
 }
 
 function create_RenderInfo() {
   return {
     path_emitter_map: new Map(),
-    focused: createSignal(""),
-    context_map: new Map(),
+    focused: createSignal<RenderContext | undefined>(undefined),
   } satisfies RenderInfo;
 }
 
-function set_node_prop(
+export function set_node_prop(
   node: IMindNode,
   render_info: RenderInfo,
   key: keyof IMindNode,
@@ -47,37 +47,6 @@ function set_node_prop(
   node[key] = value;
   const emitter = render_info.path_emitter_map.get(key);
   emitter?.emit();
-}
-
-export class MindNodeHelper {
-  rc: RenderContext;
-  id: string;
-
-  get_prop<T extends keyof IMindNode>(key: T) {
-    let emitter = this.ri.path_emitter_map.get(key);
-    if (emitter === undefined) {
-      emitter = createEmitterSignal();
-      this.ri.path_emitter_map.set(key, emitter);
-    }
-    emitter.use();
-    return this.node[key];
-  }
-
-  set_prop(key: keyof IMindNode, value: any) {
-    set_node_prop(this.node, this.ri, key, value);
-  }
-
-  constructor(
-    public node: IMindNode,
-    public ri: RenderInfo,
-    public parent_id: string
-  ) {
-    this.rc = ri.context_map.get(parent_id)!;
-    this.id = node.id;
-    if (!this.rc) {
-      debugger;
-    }
-  }
 }
 
 export const canvas_root_id = "[canvas_root]";
@@ -99,11 +68,9 @@ export class CanvasState {
 
   /** 当前聚焦的节点 */
   readonly focused_node_data: {
-    id: string;
-    parent_id: string;
+    rc: RenderContext | undefined;
   } = {
-    id: "",
-    parent_id: "",
+    rc: undefined,
   };
 
   resize_obs = new ResizeObserver((entries) => {
@@ -123,8 +90,7 @@ export class CanvasState {
     this.added_nodes.clear();
     this.deleted_nodes.clear();
     this.modified_nodes.clear();
-    this.focused_node_data.id = "";
-    this.focused_node_data.parent_id = "";
+    this.focused_node_data.rc = undefined;
   }
 
   get_render_info(id: string) {
@@ -136,19 +102,16 @@ export class CanvasState {
     return render_info;
   }
 
-  get_render_context(id: string, parent_id: string) {
-    return this.get_render_info(id).context_map.get(parent_id);
-  }
-
-  async get_node(id: string, parent_id: string) {
+  async get_node_helper(id: string, rc: RenderContext) {
     let node = this.nodes.get(id);
     if (node === undefined) {
       node = await this.load_node(id);
       this.nodes.set(id, node);
     }
-    return new MindNodeHelper(node, this.get_render_info(id), parent_id);
+    return new MindNodeHelper(node, this.get_render_info(id), rc);
   }
 
+  /** 渲染节点。尝试使用 `parent_rc` 的缓存渲染上下文，如果缓存不存在，则创建新的渲染上下文。 */
   render_node(
     id: string,
     parent_rc: RenderContext,
@@ -156,47 +119,41 @@ export class CanvasState {
       onresize?: (node_y_offset: number) => void;
     }
   ) {
-    const render_info = this.get_render_info(id);
-    let rc: RenderContext | undefined = render_info.context_map.get(
-      parent_rc.id
-    );
+    let rc: RenderContext | undefined = parent_rc.children_rc.get(id);
     if (!rc) {
       rc = {
-        id,
+        node_id: id,
         parent_rc,
+        children_rc: new Map(),
         dom_el: null as any,
         onresize: options.onresize,
         disposers: [],
       };
-      render_info.context_map.set(parent_rc.id, rc);
       // 创建 dom 元素，会触发 get_node 方法，因此要先设置 rc
+      parent_rc.children_rc.set(id, rc);
       createRoot((disposer) => {
         rc!.disposers.push(disposer);
-        // rc!.dom_el = (
-        //   <MindNodeRenderer id={id} rc={rc!}></MindNodeRenderer>
-        // ) as any;
       });
     }
 
-    // return rc.dom_el;
     return <MindNodeRenderer id={id} rc={rc!}></MindNodeRenderer>;
   }
 
-  focus_node(id: string, parent_id: string) {
-    if (
-      this.focused_node_data.id === id &&
-      this.focused_node_data.parent_id === parent_id
-    )
-      return;
+  focus_node(rc: RenderContext | undefined) {
+    // 如果已经是聚焦的节点，则不重复聚焦
+    if (this.focused_node_data.rc === rc) return;
 
-    // 取消之前的聚焦
-    this.get_render_info(this.focused_node_data.id).focused.set("");
+    if (this.focused_node_data.rc) {
+      // 取消之前的聚焦
+      this.get_render_info(this.focused_node_data.rc!.node_id).focused.set(
+        undefined
+      );
+    }
 
     // 设置新的聚焦
-    this.focused_node_data.id = id;
-    this.focused_node_data.parent_id = parent_id;
-    if (id !== "") {
-      this.get_render_info(id).focused.set(parent_id);
+    this.focused_node_data.rc = rc;
+    if (rc !== undefined) {
+      this.get_render_info(rc.node_id).focused.set(rc);
     }
   }
 
@@ -215,6 +172,7 @@ export class CanvasState {
     }
   }
 
+  /** 为指定节点添加一个子节点 */
   add_new_child(id: string) {
     const node = this.nodes.get(id)!;
     const node_ri = this.render_info.get(id)!;
@@ -236,9 +194,10 @@ export class CanvasState {
     return new_node;
   }
 
-  add_next_sibling(id: string, parent_id: string) {
-    const parent_node = this.nodes.get(parent_id)!;
-    const parent_ri = this.render_info.get(parent_id)!;
+  /** 为指定渲染上下文添加一个同级节点 */
+  add_next_sibling(rc: RenderContext) {
+    const parent_node = this.nodes.get(rc.parent_rc.node_id)!;
+    const parent_ri = this.render_info.get(parent_node.id)!;
 
     const new_node = {
       id: this.ulid(),
@@ -246,33 +205,29 @@ export class CanvasState {
         _type: "markdown",
         value: "",
       },
-      parents: [parent_id],
+      parents: [parent_node.id],
       children: [],
     };
     this.nodes.set(new_node.id, new_node);
     this.added_nodes.add(new_node.id);
 
-    const index = parent_node.children.indexOf(id);
+    const index = parent_node.children.indexOf(rc.node_id);
     const new_children = [...parent_node.children];
     new_children.splice(index + 1, 0, new_node.id);
 
     set_node_prop(parent_node, parent_ri, "children", new_children);
-    this.mark_modified(parent_id);
+    this.mark_modified(parent_node.id);
     return new_node;
   }
 
-  delete_node(id: string, parent_id: string) {
-    console.log(id, parent_id);
+  /** 删除指定节点 */
+  delete_node(rc: RenderContext) {
+    const node_to_delete = this.nodes.get(rc.node_id)!;
 
-    const node_to_delete = this.nodes.get(id)!;
-    const node_to_delete_rc = this.render_info
-      .get(id)!
-      .context_map.get(parent_id)!;
+    rc.disposers.map((it) => it());
 
-    node_to_delete_rc.disposers.map((it) => it());
-
-    const parent_rc = node_to_delete_rc.parent_rc;
-    const parent_node = this.nodes.get(parent_id)!;
+    const parent_rc = rc.parent_rc;
+    const parent_node = this.nodes.get(parent_rc.node_id)!;
 
     // 把自己从父节点的 children 中移除
     const parent_ri = this.render_info.get(parent_node.id)!;
@@ -280,14 +235,14 @@ export class CanvasState {
       parent_node,
       parent_ri,
       "children",
-      parent_node.children.filter((child_id) => child_id !== id)
+      parent_node.children.filter((child_id) => child_id !== rc.node_id)
     );
     parent_rc.handle_obs_resize?.();
     this.mark_modified(parent_node.id);
 
     // 从节点的 parents 中移除当前父节点
     node_to_delete.parents = node_to_delete.parents.filter(
-      (id) => id !== parent_id
+      (id) => id !== parent_rc.node_id
     );
 
     if (node_to_delete.parents.length > 0) {
@@ -295,9 +250,6 @@ export class CanvasState {
       const node_ri = this.render_info.get(node_to_delete.id)!;
       set_node_prop(node_to_delete, node_ri, "parents", node_to_delete.parents);
       this.mark_modified(node_to_delete.id);
-
-      // 清理context_map
-      this.render_info.get(node_to_delete.id)?.context_map.delete(parent_id);
     } else {
       // 没有其他父节点，尝试删除节点，和所有后代节点
       this.nodes.delete(node_to_delete.id);
@@ -310,6 +262,7 @@ export class CanvasState {
     }
   }
 
+  /** 递归删除指定节点的所有后代节点 */
   private recursive_delete_descendants(node: IMindNode) {
     for (const childId of node.children) {
       const childNode = this.nodes.get(childId);
@@ -361,38 +314,61 @@ export class CanvasState {
     this.load_node = (id) => ac.api.app.mg.node.load({ id });
 
     const handle_tab_key = () => {
-      const new_node = this.add_new_child(focused_node_data.id);
-      this.focus_node(new_node.id, this.focused_node_data.id);
+      const new_node = this.add_new_child(focused_node_data.rc!.node_id);
+      this.focus_node(focused_node_data.rc!.children_rc.get(new_node.id)!);
     };
 
     window.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {
-        if (focused_node_data.id === "") return;
-        if (e.shiftKey || e.metaKey || e.altKey || e.ctrlKey) return;
-        e.preventDefault();
-        if (focused_node_data.parent_id === canvas_root_id) {
+      const handler_map: Record<string, () => void> = {
+        Enter: () => {
+          if (focused_node_data.rc === undefined) return;
+          if (e.shiftKey || e.metaKey || e.altKey || e.ctrlKey) return;
+          e.preventDefault();
+
+          // 添加同级节点
+          if (focused_node_data.rc.parent_rc.node_id === canvas_root_id) {
+            handle_tab_key();
+          } else {
+            const curr_rc = focused_node_data.rc;
+            const new_node = this.add_next_sibling(curr_rc);
+            this.focus_node(curr_rc.parent_rc.children_rc.get(new_node.id)!);
+          }
+        },
+        Tab: () => {
+          e.preventDefault();
+          if (focused_node_data.rc === undefined) return;
+          // 添加下级节点
           handle_tab_key();
-        } else {
-          const new_node = this.add_next_sibling(
-            focused_node_data.id,
-            focused_node_data.parent_id
+        },
+        Delete: () => {
+          e.preventDefault();
+          if (focused_node_data.rc === undefined) return;
+          const parent_rc = focused_node_data.rc.parent_rc;
+          const parent_node = this.nodes.get(parent_rc.node_id)!;
+          const node_to_delete_index = parent_node.children.indexOf(
+            focused_node_data.rc.node_id
           );
-          this.focus_node(new_node.id, focused_node_data.parent_id);
-        }
-      } else if (e.key === "Tab") {
-        e.preventDefault();
-        if (focused_node_data.id === "") return;
-        handle_tab_key();
-      } else if (e.key === "Delete") {
-        e.preventDefault();
-        if (focused_node_data.id === "") return;
-        this.delete_node(focused_node_data.id, focused_node_data.parent_id);
-        this.focus_node("", "");
-      } else if (e.key === "s") {
-        e.preventDefault();
-        if (focused_node_data.id === "" || !e.ctrlKey) return;
-        this.ac.mg_save();
-      }
+          this.delete_node(focused_node_data.rc);
+          // [处理聚焦]
+          // 如果删除的是最后一个子节点，则聚焦到父节点，否则聚焦到下一个同级节点
+          // 如果下一个同级节点不存在，则聚焦到上一个同级节点
+          if (parent_node.children.length === 0) {
+            this.focus_node(parent_rc);
+          } else {
+            const node_to_focus_id =
+              parent_node.children[node_to_delete_index - 1] ??
+              parent_node.children[node_to_delete_index];
+            const next_rc = parent_rc.children_rc.get(node_to_focus_id);
+            this.focus_node(next_rc);
+          }
+        },
+        s: () => {
+          e.preventDefault();
+          if (focused_node_data.rc === undefined || !e.ctrlKey) return;
+          this.ac.mg_save();
+        },
+      };
+      handler_map[e.key]?.();
     });
   }
 }

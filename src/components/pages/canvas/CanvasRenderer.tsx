@@ -1,5 +1,10 @@
 import { Component, onMount, Show } from "solid-js";
-import { canvas_root_id, CanvasState, CanvasStateContext } from "./CanvasState";
+import {
+  canvas_root_id,
+  CanvasState,
+  CanvasStateContext,
+  RenderContext,
+} from "./CanvasState";
 import "./CanvasRenderer.scss";
 import { MindNodeRendererElement } from "./MindNodeRenderer";
 
@@ -16,9 +21,10 @@ export const CanvasRenderer: Component<{ state: CanvasState }> = (props) => {
     container.scrollTop = field.clientHeight / 4;
   });
 
-  const root_rc = {
-    id: canvas_root_id,
+  const root_rc: RenderContext = {
+    node_id: canvas_root_id,
     parent_rc: null as any,
+    children_rc: new Map(),
     dom_el: null as any,
     onresize: () => {},
     disposers: [],
@@ -35,9 +41,9 @@ export const CanvasRenderer: Component<{ state: CanvasState }> = (props) => {
         ".mind_node_renderer"
       ) as MindNodeRendererElement;
       const meta = renderer._meta;
-      state.focus_node(meta.id, meta.parent_id);
+      state.focus_node(meta.rc);
     } else {
-      state.focus_node("", "");
+      state.focus_node(undefined);
     }
   }
 
@@ -72,11 +78,9 @@ export const CanvasRenderer: Component<{ state: CanvasState }> = (props) => {
           >
             {state.render_node(state.root.get(), root_rc, {
               onresize: () => {
-                const child_container = state.get_render_context(
-                  state.root.get(),
-                  canvas_root_id
+                const child_container = root_rc.children_rc.get(
+                  root_rc.children_rc.keys().next().value
                 )!.dom_el;
-                console.log(child_container);
 
                 child_container.style.left = `${
                   field.clientWidth / 2 - child_container.clientWidth / 2

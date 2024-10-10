@@ -11,7 +11,8 @@ import {
   Show,
   useContext,
 } from "solid-js";
-import { CanvasState, CanvasStateContext, MindNodeHelper } from "./CanvasState";
+import { CanvasState, CanvasStateContext } from "./CanvasState";
+import { MindNodeHelper } from "./MindNodeHelper";
 import { MindNodeRendererElement } from "./MindNodeRenderer";
 
 class RedrawHelper {
@@ -67,13 +68,11 @@ class RedrawHelper {
     if (
       !this.folded.get() &&
       children_data.length > 1 &&
-      (first_child_container = this.ctx.get_render_context(
-        children_data[0].id,
-        this.it.id
+      (first_child_container = this.it.rc.children_rc.get(
+        children_data[0].id
       )?.dom_el) &&
-      (last_child_container = this.ctx.get_render_context(
-        children_data[children_data.length - 1].id,
-        this.it.id
+      (last_child_container = this.it.rc.children_rc.get(
+        children_data[children_data.length - 1].id
       )?.dom_el)
     ) {
       console.log(first_child_container, last_child_container);
@@ -134,9 +133,8 @@ class RedrawHelper {
 
     for (let i = 0; i < len; i++) {
       const child_container_data = this.children_data_map()[i];
-      const child_container = this.ctx.get_render_context(
-        child_container_data.id,
-        this.it.id
+      const child_container = this.it.rc.children_rc.get(
+        child_container_data.id
       )?.dom_el;
       if (!child_container) continue;
 
@@ -220,7 +218,7 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
   const it = props.it;
   const ctx = useContext(CanvasStateContext)!;
 
-  const focused = createMemo(() => it.ri.focused.get() === it.rc.parent_rc.id);
+  const focused = createMemo(() => it.ri.focused.get() === it.rc);
   const editing = createSignal(false);
   /** 是否已折叠。 */
   const folded = createSignal(false);
@@ -262,7 +260,7 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
   );
 
   onMount(() => {
-    ctx.get_render_context(it.node.id, it.parent_id)!.dom_el = container;
+    it.rc!.dom_el = container;
     console.log(props.it.node.content.value, "onmount");
 
     redraw_helper.onmount(
@@ -323,7 +321,7 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
         container._meta = {
           state: "ready",
           id: it.node.id,
-          parent_id: it.parent_id,
+          parent_id: it.rc.parent_rc.node_id,
           rc: it.rc,
         };
       }}

@@ -2,6 +2,7 @@ import {
   Component,
   createResource,
   Match,
+  onCleanup,
   onMount,
   Resource,
   Switch,
@@ -30,11 +31,10 @@ export const MindNodePendingRenderer: Component<{
   rc: RenderContext;
   state: MindNodeContentState;
 }> = (props) => {
-  const ctx = useContext(CanvasStateContext)!;
   let container: MindNodeRendererElement;
 
   onMount(() => {
-    ctx.get_render_context(props.id, props.rc.parent_rc.id)!.dom_el = container;
+    props.rc.dom_el = container;
     props.rc.onresize?.(0);
   });
 
@@ -46,7 +46,7 @@ export const MindNodePendingRenderer: Component<{
         container._meta = {
           state: props.state,
           id: props.id,
-          parent_id: props.rc.parent_rc.id,
+          parent_id: props.rc.parent_rc.node_id,
           rc: props.rc,
         };
       }}
@@ -62,11 +62,10 @@ export const MindNodeErrorRenderer: Component<{
   id: string;
   rc: RenderContext;
 }> = (props) => {
-  const ctx = useContext(CanvasStateContext)!;
   let container: MindNodeRendererElement;
 
   onMount(() => {
-    ctx.get_render_context(props.id, props.rc.parent_rc.id)!.dom_el = container;
+    props.rc.dom_el = container;
     props.rc.onresize?.(0);
   });
 
@@ -79,7 +78,7 @@ export const MindNodeErrorRenderer: Component<{
         container._meta = {
           state: "errored",
           id: props.id,
-          parent_id: props.rc.parent_rc.id,
+          parent_id: props.rc.parent_rc.node_id,
           rc: props.rc,
         };
       }}
@@ -99,9 +98,18 @@ export const MindNodeErrorRenderer: Component<{
 export function MindNodeRenderer(props: { id: string; rc: RenderContext }) {
   const node_id = props.id;
   const ctx = useContext(CanvasStateContext);
+  const rc = props.rc;
+
+  onMount(() => {
+    rc.children_rc.set(node_id, rc);
+  });
+
+  onCleanup(() => {
+    rc.children_rc.delete(node_id);
+  });
 
   const [node, { refetch }] = createResource(async () => {
-    return await ctx!.get_node(node_id, props.rc.parent_rc.id);
+    return await ctx!.get_node_helper(node_id, rc);
   });
 
   return (
