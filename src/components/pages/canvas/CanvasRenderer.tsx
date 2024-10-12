@@ -143,40 +143,6 @@ export const CanvasRenderer: Component<{ state: CanvasState }> = (props) => {
     handler_map[e.key]?.();
   }
 
-  // function handle_wheel(e: WheelEvent) {
-  //   if (e.ctrlKey) {
-  //     let scale = parseFloat(field.style.scale) || 1;
-  //     const zoomFactor = 1.09;
-  //     const delta = e.deltaY > 0 ? 1 / zoomFactor : zoomFactor;
-  //     const newScale = scale * delta;
-
-  //     const field_rect = field.getBoundingClientRect();
-  //     // 计算 mouse 相对于 field 的位置
-  //     const mfdx = e.clientX - field_rect.left;
-  //     const mfdy = e.clientY - field_rect.top;
-
-  //     // 计算 field 当前的中心点
-  //     const fcx = field_rect.left + field_rect.width / 2
-  //     const fcy = field_rect.top + field_rect.height / 2
-
-  //     // 计算 field 缩放后的 x,y 坐标
-  //     const scaled_fx = fcx - field_rect.width / 2 * scale
-
-  //     // 计算缩放前后的差值
-  //     const scaleChange = newScale - scale;
-  //     const moveX = (mfdx * scaleChange) / newScale;
-  //     const moveY = (mfdy * scaleChange) / newScale;
-  //     console.log(moveX, moveY);
-
-  //     // 应用新的缩放比例，这里仅相对 field 缩放
-  //     field.style.zoom = newScale.toString();
-
-  //     // 调整滚动位置以保持鼠标位置不变
-  //     // container.scrollLeft = mfdx * delta;
-  //     // container.scrollTop += moveY / 8;
-  //   }
-  // }
-
   function handle_wheel(e: WheelEvent) {
     if (e.ctrlKey) {
       let scale = parseFloat(field.style.zoom);
