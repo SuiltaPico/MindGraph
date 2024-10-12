@@ -14,7 +14,7 @@
   "license": "BSD-3-Clause",
   "dependencies": {
     "@mdi/js": "^7.4.47",
-    "@solidjs/router": "^0.14.7",
+    "@solidjs/router": "^0.14.8",
     "@tauri-apps/api": "^2.0.2",
     "@tauri-apps/plugin-dialog": "^2.0.0",
     "@tauri-apps/plugin-process": "^2.0.0",
@@ -30,7 +30,7 @@
     "@types/node": "^22.7.5",
     "@types/throttle-debounce": "^5.0.2",
     "postcss-scss": "^4.0.9",
-    "typescript": "^5.6.2",
+    "typescript": "^5.6.3",
     "vite": "^5.4.8",
     "vite-plugin-solid": "^2.10.2",
     "vite-tsconfig-paths": "^5.0.1"

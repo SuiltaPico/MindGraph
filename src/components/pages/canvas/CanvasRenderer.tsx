@@ -193,7 +193,7 @@ export const CanvasRenderer: Component<{ state: CanvasState }> = (props) => {
             {state.render_node(state.root.get(), root_rc, {
               onresize: () => {
                 const child_container = root_rc.children_rc.get(
-                  root_rc.children_rc.keys().next().value
+                  root_rc.children_rc.keys().next()!.value!
                 )!.dom_el;
 
                 child_container.style.left = `${

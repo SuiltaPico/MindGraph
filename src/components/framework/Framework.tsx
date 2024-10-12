@@ -1,7 +1,7 @@
-import { Component, ParentComponent, useContext } from "solid-js";
-import { Header } from "./header/Header";
-import { MenuRenderer } from "../base/menu/Menu";
 import { app_context } from "@/AppContext";
+import { MenuRenderer } from "@/components/base/menu/Menu";
+import { Header } from "@/components/framework/header/Header";
+import { ParentComponent, useContext } from "solid-js";
 
 export const Framework: ParentComponent = (props) => {
   const ac = useContext(app_context)!;

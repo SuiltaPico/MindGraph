@@ -8,7 +8,7 @@ import {
   Switch,
   useContext,
 } from "solid-js";
-import { Accordion, AccordionRenderer } from "../../base/Accordion";
+import { Accordion, AccordionRenderer } from "../../base/accordion/Accordion";
 import { CanvasStateContext, RenderContext } from "./CanvasState";
 import { MindNodeContentRenderer } from "./MindNodeContentRenderer";
 import "./MindNodeRenderer.scss";

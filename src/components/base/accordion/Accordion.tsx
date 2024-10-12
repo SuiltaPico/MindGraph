@@ -1,7 +1,7 @@
 import { createSignal } from "@/common/signal";
 import { Component, Show, splitProps } from "solid-js";
 import { JSX } from "solid-js";
-import { Icon } from "./Icon";
+import { Icon } from "../icon/Icon";
 import { mdiChevronDown } from "@mdi/js";
 import "./Accordion.scss";
 import clsx from "clsx";

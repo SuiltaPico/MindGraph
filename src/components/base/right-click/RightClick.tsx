@@ -1,5 +1,5 @@
-import { ListRenderer, ListItem } from "../List";
-import { Divider } from "../Divider";
+import { ListRenderer, ListItem } from "@/components/base/list/List";
+import { Divider } from "@/components/base/divider/Divider";
 import { createSignal, onMount, onCleanup, Component } from "solid-js";
 import "./RightClick.scss";
 

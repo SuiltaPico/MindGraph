@@ -1,11 +1,11 @@
 import { app_context } from "@/AppContext";
-import { Button } from "@/components/base/Button";
-import { Icon } from "@/components/base/Icon";
+import { Button } from "@/components/base/button/Button";
+import { Icon } from "@/components/base/icon/Icon";
 import { mdiMenu } from "@mdi/js";
 import { Component, useContext } from "solid-js";
 import "./Header.scss";
 
-export const Header: Component<{}> = (props) => {
+export const Header: Component<{}> = () => {
   const ac = useContext(app_context)!;
   return (
     <div class="fw_top_bar">

@@ -1,5 +1,5 @@
 import "./portal.scss";
-import { ListRenderer, ListItem } from "@/components/base/List";
+import { ListRenderer, ListItem } from "@/components/base/list/List";
 import { useContext, Component } from "solid-js";
 import { useNavigate } from "@solidjs/router";
 

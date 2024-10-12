@@ -15,6 +15,12 @@ import { CanvasState, CanvasStateContext } from "./CanvasState";
 import { MindNodeHelper } from "./MindNodeHelper";
 import { MindNodeRendererElement } from "./MindNodeRenderer";
 
+interface IChildData {
+  id: string;
+  container?: HTMLElement;
+  node_y_offset: number;
+}
+
 class RedrawHelper {
   /** 节点相对于容器中心的偏移量。
    * * 计算公式：去除子项高度去除头尾一半后，再除以2的位置。
@@ -203,12 +209,7 @@ class RedrawHelper {
   constructor(
     public ctx: CanvasState,
     public it: MindNodeHelper,
-    public children_data_map: Accessor<
-      {
-        id: string;
-        node_y_offset: number;
-      }[]
-    >,
+    public children_data_map: Accessor<IChildData[]>,
     public folded: WrappedSignal<boolean>
   ) {}
 }
@@ -237,16 +238,12 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
   let folding_points: SVGCircleElement;
 
   /** 子节点容器数据。会随着子节点增删而自动变化。 */
-  const children_data_map = mapArray(
+  const children_data_map = mapArray<string, IChildData>(
     () => props.it.get_prop("children"),
     (id) => {
       return {
         id: id,
         node_y_offset: 0,
-      } as {
-        id: string;
-        container?: HTMLElement;
-        node_y_offset: number;
       };
     }
   );
@@ -280,7 +277,6 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
 
     createEffect(
       on(focused, () => {
-        // console.log(it.node.content, "聚焦了", container);
         node.focus();
       })
     );

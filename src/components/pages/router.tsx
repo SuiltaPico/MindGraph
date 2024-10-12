@@ -18,7 +18,6 @@ export const routers = (
     <Route
       path="/portal"
       component={() => {
-        const ac = useContext(app_context)!;
         return <Portal />;
       }}
     />
