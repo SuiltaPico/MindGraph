@@ -9,7 +9,8 @@ import {
   useContext,
 } from "solid-js";
 import { Accordion, AccordionRenderer } from "../../base/accordion/Accordion";
-import { CanvasStateContext, RenderContext } from "./CanvasState";
+import { CanvasStateContext } from "./CanvasState";
+import { RendererContext } from "./RendererContext";
 import { MindNodeContentRenderer } from "./MindNodeContentRenderer";
 import "./MindNodeRenderer.scss";
 
@@ -18,7 +19,7 @@ export type MindNodeContentState = Resource<any>["state"];
 export type MindNodeRendererMeta = {
   id: string;
   parent_id: string;
-  rc: RenderContext;
+  rc: RendererContext;
   state: MindNodeContentState;
 };
 
@@ -28,7 +29,7 @@ export type MindNodeRendererElement = HTMLDivElement & {
 
 export const MindNodePendingRenderer: Component<{
   id: string;
-  rc: RenderContext;
+  rc: RendererContext;
   state: MindNodeContentState;
 }> = (props) => {
   let container: MindNodeRendererElement;
@@ -60,7 +61,7 @@ export const MindNodeErrorRenderer: Component<{
   error: any;
   retry: () => void;
   id: string;
-  rc: RenderContext;
+  rc: RendererContext;
 }> = (props) => {
   let container: MindNodeRendererElement;
 
@@ -95,7 +96,7 @@ export const MindNodeErrorRenderer: Component<{
   );
 };
 
-export function MindNodeRenderer(props: { id: string; rc: RenderContext }) {
+export function MindNodeRenderer(props: { id: string; rc: RendererContext }) {
   const node_id = props.id;
   const ctx = useContext(CanvasStateContext);
   const rc = props.rc;

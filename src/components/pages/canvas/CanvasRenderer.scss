@@ -7,9 +7,19 @@
 
   .__field {
     position: relative;
-  }
 
-  .__field > .mind_node_renderer {
-    @include absolute();
+    > .mind_node_renderer {
+      @include absolute();
+    }
+
+    > .__dragging_layer {
+      @include absolute();
+      @include w(full);
+      @include h(full);
+
+      > .__rect {
+        @include absolute();
+      }
+    }
   }
 }

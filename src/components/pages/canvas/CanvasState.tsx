@@ -1,51 +1,21 @@
-import { createContext, createRoot } from "solid-js";
-import { MindNodeRenderer, MindNodeRendererElement } from "./MindNodeRenderer";
 import { IMindNode } from "@/api/types/mg";
-import { createSignal, EmitterSignal, WrappedSignal } from "@/common/signal";
-import { monotonicFactory } from "ulid";
 import { AppContext } from "@/AppContext";
+import { createSignal } from "@/common/signal";
+import { createContext, createRoot } from "solid-js";
+import { monotonicFactory } from "ulid";
 import { MindNodeHelper } from "./MindNodeHelper";
-
-/** 渲染时信息 */
-export interface RenderInfo {
-  /** 路径变更通知表 */
-  readonly path_emitter_map: Map<string, EmitterSignal>;
-  /** 是否已聚焦。其中为聚焦节点的渲染上下文。 */
-  readonly focused: WrappedSignal<RenderContext | undefined>;
-}
-
-/** 渲染时信息。
- * 渲染时信息储存渲染器的状态。
- */
-export interface RenderContext {
-  /** 节点 id。因为渲染时信息可能会先于节点加载前创建，因此需要先记录节点 id，后续再通过节点 id 获取节点。 */
-  readonly node_id: string;
-  readonly parent_rc: RenderContext;
-  /** 子节点的渲染上下文。子节点变动的时候，需要手动维护。 */
-  readonly children_rc: Map<string, RenderContext>;
-  /** 当节点大小改变时 */
-  handle_obs_resize?: () => void;
-  onresize?: (node_y_offset: number) => void;
-  disposers: (() => void)[];
-  /** 节点渲染的 dom 元素 */
-  dom_el: HTMLElement;
-}
-
-function create_RenderInfo() {
-  return {
-    path_emitter_map: new Map(),
-    focused: createSignal<RenderContext | undefined>(undefined),
-  } satisfies RenderInfo;
-}
+import { MindNodeRenderer, MindNodeRendererElement } from "./MindNodeRenderer";
+import { RendererContext } from "./RendererContext";
+import { NodeContext } from "./NodeContext";
 
 export function set_node_prop(
   node: IMindNode,
-  render_info: RenderInfo,
+  node_context: NodeContext,
   key: keyof IMindNode,
   value: any
 ) {
   node[key] = value;
-  const emitter = render_info.path_emitter_map.get(key);
+  const emitter = node_context.path_emitter_map.get(key);
   emitter?.emit();
 }
 
@@ -57,7 +27,7 @@ export class CanvasState {
   });
   /** 需要被渲染的节点 */
   nodes = new Map<string, IMindNode>();
-  render_info = new Map<string, RenderInfo>();
+  node_context = new Map<string, NodeContext>();
   /** 相对于上次保存的状态来说，已经添加的节点。储存的都是临时的新节点。 */
   added_nodes = new Set<string>();
   /** 相对于上次保存的状态来说，已经删除的节点。储存的都是已有的节点。 */
@@ -68,13 +38,29 @@ export class CanvasState {
 
   /** 当前聚焦的节点 */
   readonly focused_node_data: {
-    rc: RenderContext | undefined;
+    rc: RendererContext | undefined;
   } = {
     rc: undefined,
   };
 
+  /** 当前拖拽的状态 */
+  dragging_node_data = createSignal<
+    | {
+        rc: RendererContext;
+      }
+    | undefined
+  >(undefined);
+
+  /** 当前是否在缩放 */
+  scaling = false
+
   resize_obs = new ResizeObserver((entries) => {
+    if(this.scaling) {
+      this.scaling = false
+    }
     for (const entry of entries) {
+      console.log(entry);
+      
       const render_context = (
         entry.target.closest(".mind_node_renderer") as MindNodeRendererElement
       )._meta.rc;
@@ -85,7 +71,7 @@ export class CanvasState {
   load_node: (id: string) => Promise<IMindNode>;
 
   clean_catch() {
-    this.render_info.clear();
+    this.node_context.clear();
     this.nodes.clear();
     this.added_nodes.clear();
     this.deleted_nodes.clear();
@@ -93,43 +79,36 @@ export class CanvasState {
     this.focused_node_data.rc = undefined;
   }
 
-  get_render_info(id: string) {
-    let render_info = this.render_info.get(id);
-    if (render_info === undefined) {
-      render_info = create_RenderInfo();
-      this.render_info.set(id, render_info);
+  get_node_context(id: string) {
+    let node_context = this.node_context.get(id);
+    if (node_context === undefined) {
+      node_context = new NodeContext();
+      this.node_context.set(id, node_context);
     }
-    return render_info;
+    return node_context;
   }
 
-  async get_node_helper(id: string, rc: RenderContext) {
+  async get_node_helper(id: string, rc: RendererContext) {
     let node = this.nodes.get(id);
     if (node === undefined) {
       node = await this.load_node(id);
       this.nodes.set(id, node);
     }
-    return new MindNodeHelper(node, this.get_render_info(id), rc);
+    return new MindNodeHelper(node, this.get_node_context(id), rc);
   }
 
   /** 渲染节点。尝试使用 `parent_rc` 的缓存渲染上下文，如果缓存不存在，则创建新的渲染上下文。 */
   render_node(
     id: string,
-    parent_rc: RenderContext,
+    parent_rc: RendererContext,
     options: {
       onresize?: (node_y_offset: number) => void;
     }
   ) {
-    let rc: RenderContext | undefined = parent_rc.children_rc.get(id);
+    let rc: RendererContext | undefined = parent_rc.children_rc.get(id);
     let el: any = rc?.dom_el;
     if (!rc) {
-      rc = {
-        node_id: id,
-        parent_rc,
-        children_rc: new Map(),
-        dom_el: null as any,
-        onresize: options.onresize,
-        disposers: [],
-      };
+      rc = new RendererContext(id, parent_rc, options.onresize);
       // 创建 dom 元素，会触发 get_node 方法，因此要先设置 rc
       parent_rc.children_rc.set(id, rc);
       createRoot((disposer) => {
@@ -141,21 +120,19 @@ export class CanvasState {
     return el;
   }
 
-  focus_node(rc: RenderContext | undefined) {
+  focus_node(rc: RendererContext | undefined) {
     // 如果已经是聚焦的节点，则不重复聚焦
     if (this.focused_node_data.rc === rc) return;
 
     if (this.focused_node_data.rc) {
       // 取消之前的聚焦
-      this.get_render_info(this.focused_node_data.rc!.node_id).focused.set(
-        undefined
-      );
+      this.focused_node_data.rc.focused.set(false);
     }
 
     // 设置新的聚焦
     this.focused_node_data.rc = rc;
     if (rc !== undefined) {
-      this.get_render_info(rc.node_id).focused.set(rc);
+      rc.focused.set(true);
     }
   }
 
@@ -177,7 +154,7 @@ export class CanvasState {
   /** 为指定节点添加一个子节点 */
   add_new_child(id: string) {
     const node = this.nodes.get(id)!;
-    const node_ri = this.render_info.get(id)!;
+    const node_ri = this.node_context.get(id)!;
 
     const new_node = {
       id: this.ulid(),
@@ -197,9 +174,9 @@ export class CanvasState {
   }
 
   /** 为指定渲染上下文添加一个同级节点 */
-  add_next_sibling(rc: RenderContext) {
+  add_next_sibling(rc: RendererContext) {
     const parent_node = this.nodes.get(rc.parent_rc.node_id)!;
-    const parent_ri = this.render_info.get(parent_node.id)!;
+    const parent_ri = this.node_context.get(parent_node.id)!;
 
     const new_node = {
       id: this.ulid(),
@@ -223,7 +200,7 @@ export class CanvasState {
   }
 
   /** 删除指定节点 */
-  delete_node(rc: RenderContext) {
+  delete_node(rc: RendererContext) {
     const node_to_delete = this.nodes.get(rc.node_id)!;
 
     rc.disposers.map((it) => it());
@@ -232,7 +209,7 @@ export class CanvasState {
     const parent_node = this.nodes.get(parent_rc.node_id)!;
 
     // 把自己从父节点的 children 中移除
-    const parent_ri = this.render_info.get(parent_node.id)!;
+    const parent_ri = this.node_context.get(parent_node.id)!;
     set_node_prop(
       parent_node,
       parent_ri,
@@ -249,13 +226,13 @@ export class CanvasState {
 
     if (node_to_delete.parents.length > 0) {
       // 还有其他父节点，只删除关系
-      const node_ri = this.render_info.get(node_to_delete.id)!;
+      const node_ri = this.node_context.get(node_to_delete.id)!;
       set_node_prop(node_to_delete, node_ri, "parents", node_to_delete.parents);
       this.mark_modified(node_to_delete.id);
     } else {
       // 没有其他父节点，尝试删除节点，和所有后代节点
       this.nodes.delete(node_to_delete.id);
-      this.render_info.delete(node_to_delete.id);
+      this.node_context.delete(node_to_delete.id);
       this.mark_deleted(node_to_delete.id);
 
       // 由于这个应用的节点允许有多个父节点，因此删除节点时，只会向单个父节点的后代节点传播删除命令，一旦传播到多个父节点的后代，则停止传播，只是标记为更改，并从 parent 列表里面删除目标父节点而已。
@@ -275,14 +252,14 @@ export class CanvasState {
         if (childNode.parents.length === 0) {
           // 如果子节点没有其他父节点，则删除该子节点
           this.nodes.delete(childId);
-          this.render_info.delete(childId);
+          this.node_context.delete(childId);
           this.mark_deleted(childId);
 
           // 继续递归删除该子节点的后代
           this.recursive_delete_descendants(childNode);
         } else {
           // 如果子节点还有其他父节点，只标记为修改
-          const child_ri = this.render_info.get(childId)!;
+          const child_ri = this.node_context.get(childId)!;
           set_node_prop(childNode, child_ri, "parents", childNode.parents);
           this.mark_modified(childId);
         }

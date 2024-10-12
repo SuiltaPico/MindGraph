@@ -216,15 +216,11 @@ class RedrawHelper {
 
 export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
   const it = props.it;
+  const { editing, folded, focused } = it.rc;
   const ctx = useContext(CanvasStateContext)!;
 
-  const focused = createMemo(() => it.ri.focused.get() === it.rc);
-  const editing = createSignal(false);
-  /** 是否已折叠。 */
-  const folded = createSignal(false);
-
   createEffect(
-    on(focused, (focused) => {
+    on(focused.get, (focused) => {
       if (!focused) {
         editing.set(false);
       }
@@ -257,7 +253,6 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
 
   onMount(() => {
     it.rc!.dom_el = container;
-    console.log(props.it.node.content.value, "onmount");
 
     redraw_helper.onmount(
       container,
@@ -276,7 +271,7 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
     it.rc.disposers.push(() => ctx.resize_obs.unobserve(node));
 
     createEffect(
-      on(focused, () => {
+      on(focused.get, () => {
         node.focus();
       })
     );
@@ -286,6 +281,17 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
   function handle_folding_points_click() {
     folded.set(!folded.get());
     redraw_helper.redraw_center_related_objects();
+  }
+
+  function handle_node_dragstart(e: DragEvent) {
+    e.dataTransfer!.setData("text/plain", JSON.stringify(it.node));
+    ctx.dragging_node_data.set({
+      rc: it.rc,
+    });
+  }
+
+  function handle_node_dragend() {
+    ctx.dragging_node_data.set(undefined);
   }
 
   function handle_node_dblclick() {
@@ -310,7 +316,7 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
 
   return (
     <div
-      class={clsx("mind_node_renderer", focused() && "__focused__")}
+      class={clsx("mind_node_renderer", focused.get() && "__focused__")}
       ref={(el) => {
         container = el as MindNodeRendererElement;
         container._meta = {
@@ -325,6 +331,8 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
         class={"__node"}
         contenteditable={editing.get()}
         draggable={!editing.get()}
+        onDragStart={handle_node_dragstart}
+        onDragEnd={handle_node_dragend}
         onDblClick={handle_node_dblclick}
         onInput={handle_node_input}
         ref={(el) => {
@@ -355,7 +363,7 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
           ref={(it) => (folding_points = it)}
           style={{
             display:
-              props.it.get_prop("children").length > 0 && focused()
+              props.it.get_prop("children").length > 0 && focused.get()
                 ? "block"
                 : "none",
           }}
