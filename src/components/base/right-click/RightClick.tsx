@@ -57,11 +57,22 @@ export const RightClickRenderer = () => {
 export const RightClick: Component = () => {
   const [position, setPosition] = createSignal({ x: 0, y: 0 });
   const [isOpen, setIsOpen] = createSignal(false);
+  const [isDragging, setIsDragging] = createSignal(false);
 
   const handleContextMenu = (event: MouseEvent) => {
+    if (isDragging()) {
+      setIsDragging(false);
+      return;
+    }
     event.preventDefault();
     setPosition({ x: event.clientX, y: event.clientY });
     setIsOpen(true);
+  };
+
+  const handleMouseMove = (event: MouseEvent) => {
+    if (event.buttons === 2) {
+      setIsDragging(true);
+    }
   };
 
   const handleClick = () => {
@@ -70,14 +81,15 @@ export const RightClick: Component = () => {
 
   onMount(() => {
     document.addEventListener("contextmenu", handleContextMenu);
+    document.addEventListener("mousemove", handleMouseMove);
     document.addEventListener("click", handleClick);
 
     onCleanup(() => {
       document.removeEventListener("contextmenu", handleContextMenu);
+      document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("click", handleClick);
     });
   });
-
   return (
     <>
       {isOpen() && (

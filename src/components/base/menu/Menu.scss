@@ -2,6 +2,7 @@
 ._m_menu_container {
   @include absolute;
   @include z(10);
+  @include bgc(#fff);
 
   .__menu_list {
     @include flex(col);

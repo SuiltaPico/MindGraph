@@ -1,17 +1,24 @@
 import "./portal.scss";
 import { ListRenderer, ListItem } from "@/components/base/list/List";
-import { useContext, Component } from "solid-js";
+import { useContext, Component, createSignal, JSXElement } from "solid-js";
 import { useNavigate } from "@solidjs/router";
-
+import { DisplayRenderer } from "./DisplayRenderer";
 import { app_context } from "src/AppContext.tsx";
+import { CanvasRenderer } from "../canvas/CanvasRenderer";
 
 export const PortalRenderer = () => {
   const navigate = useNavigate();
+  const [toDisplay, setToDisplay] = createSignal<string | JSXElement>("empty");
+  const ac = useContext(app_context)!;
+
   const goToCanvas = () => {
     navigate("/canvas");
   };
 
-  const ac = useContext(app_context)!;
+  const showCanvas = () => {
+    return;
+  };
+
   const function_item: ListItem[] = [
     {
       text: "回到工作",
@@ -22,15 +29,20 @@ export const PortalRenderer = () => {
     {
       text: "新建文件",
       icon: "mdiFolderEditOutline",
-      functions: () => {
-        alert("还没做");
-      },
+      functions: [
+        async () => {
+          await ac.mg_new();
+          showCanvas();
+        },
+        goToCanvas,
+      ],
     },
     {
       text: "打开文件",
       icon: "mdiFolderArrowLeftOutline",
       functions: async () => {
         await ac.open_mg();
+        showCanvas();
       },
     },
   ];
@@ -56,7 +68,9 @@ export const PortalRenderer = () => {
         </div>
       </div>
       <div class="__portal_right">
-        <div class="__portal_displayzone"></div>
+        <div class="__portal_displayzone">
+          <DisplayRenderer display={toDisplay()} />
+        </div>
       </div>
     </div>
   );

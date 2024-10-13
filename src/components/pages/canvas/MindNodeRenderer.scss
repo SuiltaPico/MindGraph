@@ -17,6 +17,7 @@
     @include relative;
     @include min_w(0.5em);
     @include min_h(calc(1em + 8px));
+    @include max_w(300px);
 
     @include outline(#0000, 2px);
     transition: outline 0.08s;

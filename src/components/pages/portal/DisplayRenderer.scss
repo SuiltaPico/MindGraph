@@ -1,0 +1,17 @@
+@use "@/common/utils.scss" as *;
+
+._display {
+    @include flex(col);
+    @include w(100%);
+    @include h(100%);
+    @include items(center);
+    @include justify(center);
+
+    .__display_empty {
+        @include flex(col);
+        color: #ddd;
+    }
+    .__display_display {
+        @include flex(col);
+    }
+}
