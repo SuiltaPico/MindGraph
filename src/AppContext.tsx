@@ -1,7 +1,7 @@
 import { createContext } from "solid-js";
 import { TauriClient } from "./api/client/tauri";
 import { createSignal } from "./common/signal";
-import { MenuContext } from "./components/base/menu/Menu";
+import { MenuState } from "./components/base/menu/Menu";
 import { CanvasState } from "./components/pages/canvas/CanvasState";
 
 export class AppContext {
@@ -17,7 +17,7 @@ export class AppContext {
   api = this.client.api;
 
   canvas = new CanvasState(this);
-  menu = new MenuContext();
+  menu = new MenuState();
 
   is_modified() {
     return this.canvas.is_modified() || this.file.get().meta_modified;

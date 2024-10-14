@@ -1,0 +1,52 @@
+._m_mind_node {
+  @apply relative flex flex-row items-center
+    top-0 left-0;
+
+  & > .__node {
+    @apply min-w-0.5em min-h-[calc(1em+8px)]
+      relative p-1.5 mr-32px
+      bg-#eee rounded-4px z-1
+      outline outline-#0000 outline-2 transition-[outline];
+
+    &:hover {
+      @apply outline-#2f98ee44;
+    }
+  }
+
+  & > .__diversion {
+    @apply w-full h-full
+      absolute top-0 left-0;
+
+    & path {
+      @apply stroke-[--mg-line-color] stroke-width-[--mg-line-width] fill-none;
+    }
+
+    & > .__folding_point {
+      @apply fill-[--mg-folding-point-color] cursor-pointer;
+    }
+  }
+
+  & > .__children {
+    @apply flex flex-col gap-8px;
+  }
+
+  &.__focused__ {
+    & > .__node {
+      @apply outline-#2f98ee;
+    }
+  }
+}
+
+.mind_node_pending {
+  @apply flex flex-row self-center p-4px
+    bg-#eee rounded-4px;
+}
+
+.mind_node_error {
+  @apply flex flex-col self-center p-4px
+    bg-#eee rounded-4px;
+
+  & > .__accordion {
+    @apply w-200px;
+  }
+}

@@ -1,6 +1,6 @@
 import { IMindNode } from "@/api/types/mg";
 import { createEmitterSignal } from "@/common/signal";
-import { set_node_prop } from "./CanvasState";
+import { set_node_prop } from "../CanvasState";
 import { NodeContext } from "./NodeContext";
 import { RendererContext } from "./RendererContext";
 

@@ -1,0 +1,18 @@
+._m_menu_container {
+  @apply absolute z-10;
+
+  & > .__menu_list {
+    @apply min-w-[100px]
+      flex flex-col
+      shadow-[0_2px_6px_#0004] rounded-md bg-white;
+
+    & > .__menu_item {
+      @apply flex flex-row py-1 px-2
+        cursor-pointer;
+
+      &:hover {
+        @apply bg-gray-100;
+      }
+    }
+  }
+}

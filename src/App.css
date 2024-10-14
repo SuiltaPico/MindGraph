@@ -1,0 +1,6 @@
+html,
+body,
+#root,
+.fw_container {
+  @apply w-full h-full m-0;
+}

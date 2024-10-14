@@ -1,19 +1,18 @@
-import { createSignal, WrappedSignal } from "@/common/signal";
+import { WrappedSignal } from "@/common/signal";
 import clsx from "clsx";
 import {
   Accessor,
   createEffect,
-  createMemo,
   For,
   mapArray,
   on,
   onMount,
   Show,
-  useContext,
+  useContext
 } from "solid-js";
-import { CanvasState, CanvasStateContext } from "./CanvasState";
-import { MindNodeHelper } from "./MindNodeHelper";
-import { MindNodeRendererElement } from "./MindNodeRenderer";
+import { CanvasState, CanvasStateContext } from "../CanvasState";
+import { MindNodeHelper } from "../utils/Helper";
+import { MindNodeRendererElement } from "./Renderer";
 
 interface IChildData {
   id: string;
@@ -316,7 +315,7 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
 
   return (
     <div
-      class={clsx("mind_node_renderer", focused.get() && "__focused__")}
+      class={clsx("_m_mind_node", focused.get() && "__focused__")}
       ref={(el) => {
         container = el as MindNodeRendererElement;
         container._meta = {

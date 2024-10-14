@@ -1,9 +1,9 @@
-import "./portal.scss";
+import "./PortalPage.css";
 import { ListRenderer, ListItem } from "@/components/base/list/List";
 import { useContext, Component } from "solid-js";
 import { useNavigate } from "@solidjs/router";
-
 import { app_context } from "src/AppContext.tsx";
+import { Row } from "@/components/base/block/Flex";
 
 export const PortalRenderer = () => {
   const navigate = useNavigate();
@@ -45,26 +45,26 @@ export const PortalRenderer = () => {
   ];
 
   return (
-    <div class="_portal_container">
-      <div class="__portal_left">
-        <div class="__portal_title">MindGraph</div>
-        <div class="__portal_function_container">
-          <div class="__portal_function_zone">
+    <Row class="_portal_container">
+      <div class="__left">
+        <div class="__title">MindGraph</div>
+        <div class="__function_container">
+          <div class="__zone">
             <ListRenderer items={function_item} />
             <ListRenderer items={setting_item} />
           </div>
         </div>
       </div>
-      <div class="__portal_right">
-        <div class="__portal_displayzone"></div>
+      <div class="__right">
+        <div class="__displayzone"></div>
       </div>
-    </div>
+    </Row>
   );
 };
 
-export const Portal: Component = () => {
+export const PortalPage: Component = () => {
   return (
-    <div class="_portal">
+    <div class="page_portal">
       <PortalRenderer />
     </div>
   );

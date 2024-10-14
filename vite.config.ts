@@ -4,12 +4,13 @@ import postcssScss from "postcss-scss";
 import { defineConfig } from "vite";
 import solid from "vite-plugin-solid";
 import tsconfigPaths from "vite-tsconfig-paths";
+import UnoCSS from "unocss/vite";
 
 const host = process.env.TAURI_DEV_HOST;
 
 // https://vitejs.dev/config/
 export default defineConfig(async () => ({
-  plugins: [solid(), tsconfigPaths() as any],
+  plugins: [UnoCSS({}), solid(), tsconfigPaths() as any],
   resolve: {
     alias: {
       "@": resolve(__dirname, "src"),
@@ -26,19 +27,12 @@ export default defineConfig(async () => ({
       // 忽略监视 `src-tauri`
       ignored: ["**/src-tauri/**"],
     },
-    // 为了防止节点的无线循环渲染问题，需要临时禁用热更新
-    // hmr: host
-    //   ? {
-    //       protocol: "ws",
-    //       host: host,
-    //       port: 1430,
-    //     }
-    //   : undefined,
+    // 为了防止节点的无限循环渲染问题，需要禁用热更新
     hmr: false,
   },
   css: {
     postcss: {
-      plugins: [csstoolsPostcssSass()],
+      plugins: [csstoolsPostcssSass({})],
       syntax: postcssScss,
     },
   },

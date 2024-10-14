@@ -1,0 +1,30 @@
+._list {
+  @apply w-full
+    flex flex-col;
+
+  & > .__list_item {
+    @apply flex flex-row items-center p-1.5
+      rounded-mdflex-nowrap overflow-hidden
+      transition-colors duration-150;
+
+    &:hover {
+      @apply bg-gray-100;
+    }
+    &:focus {
+      @apply bg-gray-200;
+    }
+    & > .__list_left {
+      @apply flex flex-row items-center ml-2.5;
+      & > .__list_text {
+        @apply text-base whitespace-nowrap;
+      }
+    }
+    & > .__list_right {
+      @apply flex flex-row mr-2.5;
+      & > .__list_description {
+        @apply text-sm text-gray-500 whitespace-nowrap
+          overflow-hidden text-ellipsis;
+      }
+    }
+  }
+}

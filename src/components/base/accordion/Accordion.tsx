@@ -3,8 +3,9 @@ import { Component, Show, splitProps } from "solid-js";
 import { JSX } from "solid-js";
 import { Icon } from "../icon/Icon";
 import { mdiChevronDown } from "@mdi/js";
-import "./Accordion.scss";
+import "./Accordion.css";
 import clsx from "clsx";
+import { Row } from "../block/Flex";
 
 export class Accordion {
   title = createSignal<JSX.Element>("");
@@ -39,13 +40,13 @@ export const AccordionRenderer: Component<
       })}
       {...(pure as any)}
     >
-      <div
+      <Row
         class="__title"
         onClick={() => state.is_open.set(!state.is_open.get())}
       >
         <div class="__text">{state.title.get()}</div>
         <Icon class="__icon" path={mdiChevronDown}></Icon>
-      </div>
+      </Row>
       <Show when={state.is_open.get()}>
         <div class="__content">{state.content.get()}</div>
       </Show>

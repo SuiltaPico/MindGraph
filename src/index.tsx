@@ -4,6 +4,7 @@ import App from "./App";
 import { Router } from "@solidjs/router";
 import { routers } from "./components/pages/router";
 import { app_context, AppContext } from "./AppContext";
+import "virtual:uno.css";
 
 const ac = new AppContext();
 

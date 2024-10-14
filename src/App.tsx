@@ -7,7 +7,7 @@ import {
   ParentComponent,
   useContext,
 } from "solid-js";
-import "./App.scss";
+import "./App.css";
 import { app_context } from "./AppContext";
 import { Framework } from "./components/framework/Framework";
 
@@ -16,25 +16,6 @@ export const App: ParentComponent = (props) => {
   console.log("AppContext", ac);
 
   const nav = useNavigate();
-
-  ac.menu.list.set([
-    {
-      name: "新建",
-      onclick: () => ac.mg_new(),
-    },
-    {
-      name: "打开",
-      onclick: () => ac.open_mg(),
-    },
-    { name: "保存", onclick: () => ac.mg_save() },
-    { name: "另存为", onclick: () => ac.mg_save_as() },
-    {
-      name: "退出到主页",
-      onclick: () => {
-        nav("/");
-      },
-    },
-  ]);
 
   createEffect(
     on(ac.meta.get, () => {

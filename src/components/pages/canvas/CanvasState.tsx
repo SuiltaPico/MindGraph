@@ -3,10 +3,10 @@ import { AppContext } from "@/AppContext";
 import { createSignal } from "@/common/signal";
 import { createContext, createRoot } from "solid-js";
 import { monotonicFactory } from "ulid";
-import { MindNodeHelper } from "./MindNodeHelper";
-import { MindNodeRenderer, MindNodeRendererElement } from "./MindNodeRenderer";
-import { RendererContext } from "./RendererContext";
-import { NodeContext } from "./NodeContext";
+import { MindNodeHelper } from "./utils/Helper";
+import { MindNodeRenderer, MindNodeRendererElement } from "./mind_node/Renderer";
+import { RendererContext } from "./utils/RendererContext";
+import { NodeContext } from "./utils/NodeContext";
 
 export function set_node_prop(
   node: IMindNode,
@@ -62,7 +62,7 @@ export class CanvasState {
       console.log(entry);
       
       const render_context = (
-        entry.target.closest(".mind_node_renderer") as MindNodeRendererElement
+        entry.target.closest("._m_mind_node") as MindNodeRendererElement
       )._meta.rc;
       render_context.handle_obs_resize?.();
     }

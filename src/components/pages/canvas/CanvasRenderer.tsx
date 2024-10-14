@@ -1,15 +1,19 @@
 import { Component, onCleanup, onMount, Show } from "solid-js";
 import { canvas_root_id, CanvasState, CanvasStateContext } from "./CanvasState";
-import { RendererContext } from "./RendererContext";
-import "./CanvasRenderer.scss";
-import { MindNodeRendererElement } from "./MindNodeRenderer";
+import { RendererContext } from "./utils/RendererContext";
+import "./CanvasRenderer.css";
+import { MindNodeRendererElement } from "./mind_node/Renderer";
 import { createSignal } from "@/common/signal";
+import { MenuElement } from "@/components/base/menu/Menu";
 
 export const CanvasRenderer: Component<{ state: CanvasState }> = (props) => {
   let container: HTMLElement;
   let field: HTMLElement;
   const { state } = props;
-  let moving = false;
+
+  let right_click_start_x = 0;
+  let right_click_start_y = 0;
+
   let focused_node_data = props.state.focused_node_data;
 
   const dragging_rects = createSignal<
@@ -168,7 +172,7 @@ export const CanvasRenderer: Component<{ state: CanvasState }> = (props) => {
       state.scaling = true;
       field.style.zoom = newScale.toString();
 
-      place_render_root_node()
+      place_render_root_node();
 
       // 调整滚动位置以保持鼠标位置不变
       // container.scrollLeft += moveX;
@@ -191,33 +195,63 @@ export const CanvasRenderer: Component<{ state: CanvasState }> = (props) => {
   function handle_canvas_mousedown(e: MouseEvent) {
     const target = e.target as HTMLElement;
     const node = target.closest(
-      ".mind_node_renderer .__node, .mind_node_renderer .__diversion"
+      "._m_mind_node .__node, ._m_mind_node .__diversion"
     ) as MindNodeRendererElement;
 
     if (node) {
       const renderer = target.closest(
-        ".mind_node_renderer"
+        "._m_mind_node"
       ) as MindNodeRendererElement;
       const meta = renderer._meta;
       state.focus_node(meta.rc);
     } else {
       state.focus_node(undefined);
     }
+
+    if (e.buttons & 0b10) {
+      right_click_start_x = e.clientX;
+      right_click_start_y = e.clientY;
+    }
   }
 
   function handle_canvas_mousemove(e: MouseEvent) {
     if (e.buttons & 0b10) {
-      moving = true;
       container.scrollBy(-e.movementX, -e.movementY);
     }
   }
 
   function handle_canvas_contextmenu(e: MouseEvent) {
-    if (moving) {
-      moving = false;
+    // 如果移动距离大于 4px，则不弹出右键菜单
+    if (
+      Math.sqrt(
+        Math.pow(e.clientX - right_click_start_x, 2) +
+          Math.pow(e.clientY - right_click_start_y, 2)
+      ) > 4
+    ) {
       e.preventDefault();
       return;
     }
+
+    e.preventDefault();
+
+    state.ac.menu.show(right_click_menu_items, {
+      el: {
+        getBoundingClientRect() {
+          return {
+            x: e.clientX,
+            y: e.clientY,
+            width: 0,
+            height: 0,
+            top: e.clientY,
+            left: e.clientX,
+            right: 0,
+            bottom: 0,
+          };
+        },
+      },
+      placement: "bottom-start",
+      offset: { mainAxis: 4 },
+    });
   }
 
   function place_render_root_node() {
@@ -232,30 +266,74 @@ export const CanvasRenderer: Component<{ state: CanvasState }> = (props) => {
     )!.dom_el;
 
     field.style.width = `calc(200% + ${child_container.clientWidth * scale}px)`;
-    field.style.height = `calc(200% + ${child_container.clientHeight * scale}px)`;
+    field.style.height = `calc(200% + ${
+      child_container.clientHeight * scale
+    }px)`;
 
     if (!initialized) {
       setTimeout(() => {
         initialized = true;
       }, 100);
       container.scrollLeft =
-        field.clientWidth / 4 + child_container.clientWidth * scale / 4;
+        field.clientWidth / 4 + (child_container.clientWidth * scale) / 4;
       container.scrollTop =
-        field.clientHeight / 4 + child_container.clientHeight * scale / 4;
+        field.clientHeight / 4 + (child_container.clientHeight * scale) / 4;
     }
 
     child_container.style.left = `${
-      field.offsetWidth / 2 - child_container.clientWidth * scale / 2
+      field.offsetWidth / 2 - (child_container.clientWidth * scale) / 2
     }px`;
     child_container.style.top = `${
-      field.offsetHeight / 2 - child_container.clientHeight * scale / 1.5
+      field.offsetHeight / 2 - (child_container.clientHeight * scale) / 1.5
     }px`;
   }
+
+  const right_click_menu_items: MenuElement[] = [
+    {
+      name: "复制",
+      onclick: () => {
+        alert("还没做");
+      },
+    },
+    {
+      name: "粘贴",
+      onclick: () => {
+        alert("还没做");
+      },
+    },
+    {
+      type: "divider",
+    },
+    {
+      name: "折叠此节点",
+      onclick: () => {
+        alert("还没做");
+      },
+    },
+    {
+      name: "展开此节点",
+      onclick: () => {
+        alert("还没做");
+      },
+    },
+    {
+      name: "以当前节点为根节点",
+      onclick: () => {
+        alert("还没做");
+      },
+    },
+    {
+      name: "插入分支",
+      onclick: () => {
+        alert("还没做");
+      },
+    },
+  ];
 
   return (
     <CanvasStateContext.Provider value={state}>
       <div
-        class="mind_node_canvas"
+        class="_m_mind_node_canvas"
         ref={(it) => (container = it)}
         onMouseDown={handle_canvas_mousedown}
         onMouseMove={handle_canvas_mousemove}

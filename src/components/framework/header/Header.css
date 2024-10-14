@@ -1,0 +1,10 @@
+.fw_top_bar {
+  @apply  w-full h-50px
+    flex flex-row items-center
+    bg-[#0000000a] border-b border-[#0001];
+
+  & > .__project_name {
+    @apply items-center ml-10px p-1
+      text-20px;
+  }
+}

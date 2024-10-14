@@ -1,51 +1,104 @@
-import { Component, Show } from "solid-js";
-import "./Menu.scss";
-
+import { Component, createEffect, on, onMount, Show } from "solid-js";
 import { createSignal } from "@/common/signal";
+import {
+  computePosition,
+  offset,
+  OffsetOptions,
+  Placement,
+  ReferenceElement,
+  shift,
+} from "@floating-ui/dom";
+import "./Menu.css";
 
-export interface MenuItem {
+interface MenuElementBase {
+  type?: string;
+}
+
+export interface MenuDivider extends MenuElementBase {
+  type: "divider";
+}
+
+export interface MenuItem extends MenuElementBase {
   name: string;
   onclick?: () => void | Promise<void>;
   children?: MenuItem[];
 }
 
-export class MenuContext {
-  showing = createSignal(false);
-  list = createSignal<MenuItem[]>([]);
-  handle_click = async (it: MenuItem) => {
-    this.showing.set(false);
+export type MenuElement = MenuDivider | MenuItem;
+
+export interface MenuShowAt {
+  el: ReferenceElement;
+  placement?: Placement;
+  offset?: OffsetOptions;
+}
+
+export class MenuState {
+  show_at = createSignal<MenuShowAt | undefined>(undefined);
+  list = createSignal<MenuElement[]>([]);
+
+  async handle_click(it: MenuItem) {
+    this.hide();
     await it.onclick?.();
-  };
+  }
+
+  show(items: MenuElement[], at: MenuShowAt) {
+    this.list.set(items);
+    this.show_at.set(at);
+  }
+
+  hide() {
+    this.show_at.set(undefined);
+  }
 }
 
 export const MenuRenderer: Component<{
-  context: MenuContext;
+  context: MenuState;
 }> = (props) => {
+  let container: HTMLDivElement | undefined;
   const context = props.context;
+
+  onMount(() => {
+    createEffect(
+      on(context.show_at.get, async (at) => {
+        if (!at) return;
+        const { x, y } = await computePosition(at.el, container!, {
+          middleware: [offset(at.offset ?? { mainAxis: 8 }), shift()],
+          placement: at.placement,
+        });
+        container!.style.left = `${x}px`;
+        container!.style.top = `${y}px`;
+      })
+    );
+  });
+
+  window.addEventListener("click", (e) => {
+    const show_at = context.show_at.get();
+    if (!show_at) {
+      context.hide();
+      return;
+    }
+    if (
+      !container!.contains(e.target as Node) &&
+      (!(show_at.el instanceof HTMLElement) ||
+        (show_at.el instanceof HTMLElement &&
+          !show_at.el.contains(e.target as Node)))
+    ) {
+      context.hide();
+      return;
+    }
+  });
+
   return (
-    <Show when={context.showing.get()}>
-      <div class="_m_menu_container">
+    <Show when={context.show_at.get()}>
+      <div ref={container} class="_m_menu_container">
         <MenuListRenderer context={context} list={context.list.get()} />
       </div>
     </Show>
   );
 };
 
-export const MenuListRenderer: Component<{
-  context: MenuContext;
-  list: MenuItem[];
-}> = (props) => {
-  return (
-    <div class="__menu_list">
-      {props.list.map((item) => (
-        <MenuItemRenderer context={props.context} item={item} />
-      ))}
-    </div>
-  );
-};
-
 export const MenuItemRenderer: Component<{
-  context: MenuContext;
+  context: MenuState;
   item: MenuItem;
 }> = (props) => {
   return (
@@ -56,6 +109,31 @@ export const MenuItemRenderer: Component<{
       <div class="__name">{props.item.name}</div>
       {props.item.children && (
         <MenuListRenderer context={props.context} list={props.item.children} />
+      )}
+    </div>
+  );
+};
+
+export const MenuDividerRenderer: Component<{
+  context: MenuState;
+  item: MenuDivider;
+}> = (props) => {
+  return <div class="__menu_divider" />;
+};
+
+const map: Record<string, Component<{ context: MenuState; item: any }>> = {
+  divider: MenuDividerRenderer,
+  item: MenuItemRenderer,
+};
+
+export const MenuListRenderer: Component<{
+  context: MenuState;
+  list: MenuElement[];
+}> = (props) => {
+  return (
+    <div class="__menu_list">
+      {props.list.map((item) =>
+        map[item.type ?? "item"]({ context: props.context, item: item })
       )}
     </div>
   );

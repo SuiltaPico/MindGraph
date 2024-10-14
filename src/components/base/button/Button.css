@@ -1,0 +1,4 @@
+._m_btn {
+  @apply px-10px py-4px
+    rounded-4px cursor-pointer;
+}

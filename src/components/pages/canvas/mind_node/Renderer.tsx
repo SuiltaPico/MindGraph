@@ -8,11 +8,11 @@ import {
   Switch,
   useContext,
 } from "solid-js";
-import { Accordion, AccordionRenderer } from "../../base/accordion/Accordion";
-import { CanvasStateContext } from "./CanvasState";
-import { RendererContext } from "./RendererContext";
-import { MindNodeContentRenderer } from "./MindNodeContentRenderer";
-import "./MindNodeRenderer.scss";
+import { Accordion, AccordionRenderer } from "../../../base/accordion/Accordion";
+import { CanvasStateContext } from "../CanvasState";
+import { RendererContext } from "../utils/RendererContext";
+import { MindNodeContentRenderer } from "./ContentRenderer";
+import "./Renderer.css";
 
 export type MindNodeContentState = Resource<any>["state"];
 
@@ -41,7 +41,7 @@ export const MindNodePendingRenderer: Component<{
 
   return (
     <div
-      class="mind_node_renderer mind_node_pending"
+      class="_m_mind_node mind_node_pending"
       ref={(it) => {
         container = it as MindNodeRendererElement;
         container._meta = {
@@ -73,7 +73,7 @@ export const MindNodeErrorRenderer: Component<{
   const accordion = new Accordion();
   return (
     <div
-      class="mind_node_renderer mind_node_error"
+      class="_m_mind_node mind_node_error"
       ref={(it) => {
         container = it as MindNodeRendererElement;
         container._meta = {

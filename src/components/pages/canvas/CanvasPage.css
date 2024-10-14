@@ -1,0 +1,3 @@
+.page_canvas {
+  @apply w-full h-[calc(100%-51px)];
+}

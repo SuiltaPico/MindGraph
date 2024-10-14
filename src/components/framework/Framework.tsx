@@ -8,8 +8,8 @@ export const Framework: ParentComponent = (props) => {
   return (
     <div class="fw_container">
       <Header />
-      <MenuRenderer context={ac.menu} />
       {props.children}
+      <MenuRenderer context={ac.menu} />
     </div>
   );
 };

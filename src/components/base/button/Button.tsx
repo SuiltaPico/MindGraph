@@ -1,6 +1,6 @@
 import clsx from "clsx";
 import { JSX, ParentComponent, splitProps } from "solid-js";
-import "./Button.scss";
+import "./Button.css";
 
 export const Button: ParentComponent<
   {} & JSX.ButtonHTMLAttributes<HTMLButtonElement>

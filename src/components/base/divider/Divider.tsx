@@ -1,21 +1,12 @@
-import "./Divider.scss";
+import "./Divider.css";
 import { Component } from "solid-js";
 
-interface DividerProps {
-  direction?: "" | "h" | "horizontal" | "v" | "vertical";
-}
+/** 水平分割线 */
+export const RowDivider: Component = () => {
+  return <div class="_m_divider __horizontal__"></div>;
+};
 
-/**
- * 一个分割线组件。
- * @param props
- *        props.direction 方向（默认为水平，选填horizontal,h,vertical或者v）
- * @returns
- */
-export const Divider: Component<DividerProps> = (props) => {
-  const direction = props.direction ?? "horizontal";
-  const className =
-    direction === "v" || direction === "vertical"
-      ? "_m_divider_vertical"
-      : "_m_divider_horizontal";
-  return <div class={className}></div>;
+/** 垂直分割线 */
+export const ColumnDivider: Component = () => {
+  return <div class="_m_divider __vertical__"></div>;
 };

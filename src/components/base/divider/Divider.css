@@ -1,9 +1,11 @@
-._m_divider_horizontal {
+._m_divider {
+  &.__horizontal__ {
     width: 100%;
     border-top: 1px solid #e8e8e8;
-}
+  }
 
-._m_divider_vertical {
+  &.__vertical__ {
     height: 100%;
     border-left: 1px solid #e8e8e8;
+  }
 }

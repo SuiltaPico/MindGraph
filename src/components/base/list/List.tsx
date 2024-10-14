@@ -1,7 +1,7 @@
 import { Component } from "solid-js";
 import { Icon } from "@/components/base/icon/Icon";
 import * as mdiIcons from "@mdi/js";
-import "./List.scss";
+import "./List.css";
 import { Block } from "@/components/base/block/Block";
 
 export interface ListItem {

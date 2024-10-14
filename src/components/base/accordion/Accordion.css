@@ -1,0 +1,27 @@
+._m_accordion {
+  @apply flex flex-col;
+
+  & > .__title {
+    @apply flex flex-row justify-between p-4px
+      cursor-pointer rounded-2px
+      transition-background-color;
+
+    &:hover {
+      @apply bg-#0001;
+    }
+
+    & > .__icon {
+      @apply transition-transform;
+    }
+  }
+
+  & > .__content {
+    @apply flex flex-col;
+  }
+
+  &.__open__ {
+    & > .__icon {
+      @apply rotate-180deg;
+    }
+  }
+}

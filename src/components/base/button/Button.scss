@@ -1,8 +1,0 @@
-@use "@/common/utils.scss" as *;
-
-._m_btn {
-  @include rounded(4px);
-  @include px(10px);
-  @include py(4px);
-  @include cursor(pointer);
-}
