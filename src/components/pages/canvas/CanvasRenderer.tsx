@@ -217,6 +217,7 @@ export const CanvasRenderer: Component<{ state: CanvasState }> = (props) => {
   function handle_canvas_mousemove(e: MouseEvent) {
     if (e.buttons & 0b10) {
       container.scrollBy(-e.movementX, -e.movementY);
+      state.ac.menu.hide();
     }
   }
 
