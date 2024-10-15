@@ -87,20 +87,6 @@ class RedrawHelper {
 
       offseted_center_y = ft + fh / 2 + (lt + lh / 2 - (ft + fh / 2)) / 2;
       this.node_y_offset = offseted_center_y - container_center_y;
-
-      console.log(
-        "new node_y_offset",
-        this.it.node.content.value,
-        this.node_y_offset,
-        {
-          container_center_y,
-          offseted_center_y,
-          ft,
-          fh,
-          lt,
-          lh,
-        }
-      );
     } else {
       offseted_center_y = container_center_y;
       this.node_y_offset = 0;
@@ -284,12 +270,16 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
 
   function handle_node_dragstart(e: DragEvent) {
     e.dataTransfer!.setData("text/plain", JSON.stringify(it.node));
-    ctx.dragging_node_data.set({
-      rc: it.rc,
+    // [补丁] Chrome 拖动期间更改 DOM 时会触发 DragEnd 事件 
+    // https://groups.google.com/a/chromium.org/g/chromium-bugs/c/YHs3orFC8Dc/m/ryT25b7J-NwJ
+    setTimeout(() => {
+      ctx.dragging_node_data.set({
+        rc: it.rc,
+      });
     });
   }
 
-  function handle_node_dragend() {
+  function handle_node_dragend(e: DragEvent) {
     ctx.dragging_node_data.set(undefined);
   }
 
@@ -329,9 +319,9 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
       <div
         class={"__node"}
         contenteditable={editing.get()}
-        draggable={!editing.get()}
-        onDragStart={handle_node_dragstart}
-        onDragEnd={handle_node_dragend}
+        // draggable={!editing.get()}
+        // onDragStart={handle_node_dragstart}
+        // onDragEnd={handle_node_dragend}
         onDblClick={handle_node_dblclick}
         onInput={handle_node_input}
         ref={(el) => {

@@ -15,6 +15,10 @@
 
       & > .__rect {
         @apply absolute;
+        @apply bg-#04a1 border border-solid border-#000;
+        &:hover {
+          @apply bg-#04a4;
+        }
       }
     }
   }

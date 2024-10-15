@@ -1,5 +1,6 @@
 ._m_mind_node {
-  @apply relative flex flex-row items-center
+  @apply w-fit
+    relative flex flex-row items-center
     top-0 left-0;
 
   & > .__node {
