@@ -54,9 +54,6 @@ importers:
       '@types/throttle-debounce':
         specifier: ^5.0.2
         version: 5.0.2
-      '@unocss/postcss':
-        specifier: ^0.63.4
-        version: 0.63.4(postcss@8.4.47)
       '@unocss/transformer-directives':
         specifier: ^0.63.4
         version: 0.63.4

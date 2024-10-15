@@ -1,5 +1,4 @@
-import "@/common/var.scss";
-import { useNavigate } from "@solidjs/router";
+import "@/common/var.css";
 import {
   createEffect,
   on,
@@ -14,8 +13,6 @@ import { Framework } from "./components/framework/Framework";
 export const App: ParentComponent = (props) => {
   const ac = useContext(app_context)!;
   console.log("AppContext", ac);
-
-  const nav = useNavigate();
 
   createEffect(
     on(ac.meta.get, () => {

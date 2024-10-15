@@ -1,6 +1,4 @@
-import csstoolsPostcssSass from "@csstools/postcss-sass";
 import { resolve } from "path";
-import postcssScss from "postcss-scss";
 import { defineConfig } from "vite";
 import solid from "vite-plugin-solid";
 import tsconfigPaths from "vite-tsconfig-paths";
@@ -29,11 +27,5 @@ export default defineConfig(async () => ({
     },
     // 为了防止节点的无限循环渲染问题，需要禁用热更新
     hmr: false,
-  },
-  css: {
-    postcss: {
-      plugins: [csstoolsPostcssSass({})],
-      syntax: postcssScss,
-    },
   },
 }));
