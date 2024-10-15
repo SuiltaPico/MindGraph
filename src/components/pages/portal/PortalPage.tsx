@@ -1,17 +1,25 @@
-import "./PortalPage.css";
-import { ListRenderer, ListItem } from "@/components/base/list/List";
-import { useContext, Component } from "solid-js";
-import { useNavigate } from "@solidjs/router";
-import { app_context } from "src/AppContext.tsx";
 import { Row } from "@/components/base/block/Flex";
+import { ListItem, ListRenderer } from "@/components/base/list/List";
+import { useNavigate } from "@solidjs/router";
+import { Component, JSXElement, useContext } from "solid-js";
+import { app_context } from "src/AppContext.tsx";
+import { DisplayRenderer } from "./DisplayRenderer";
+import "./PortalPage.css";
+import { createSignal } from "@/common/signal";
 
 export const PortalRenderer = () => {
   const navigate = useNavigate();
+  const toDisplay = createSignal<string | JSXElement>("empty");
+  const ac = useContext(app_context)!;
+
   const goToCanvas = () => {
     navigate("/canvas");
   };
 
-  const ac = useContext(app_context)!;
+  const showCanvas = () => {
+    return;
+  };
+
   const function_item: ListItem[] = [
     {
       text: "回到工作",
@@ -22,15 +30,20 @@ export const PortalRenderer = () => {
     {
       text: "新建文件",
       icon: "mdiFolderEditOutline",
-      functions: () => {
-        alert("还没做");
-      },
+      functions: [
+        async () => {
+          await ac.mg_new();
+          showCanvas();
+        },
+        goToCanvas,
+      ],
     },
     {
       text: "打开文件",
       icon: "mdiFolderArrowLeftOutline",
       functions: async () => {
         await ac.open_mg();
+        showCanvas();
       },
     },
   ];
@@ -56,7 +69,9 @@ export const PortalRenderer = () => {
         </div>
       </div>
       <div class="__right">
-        <div class="__displayzone"></div>
+        <div class="__displayzone">
+          <DisplayRenderer display={toDisplay.get()} />
+        </div>
       </div>
     </Row>
   );

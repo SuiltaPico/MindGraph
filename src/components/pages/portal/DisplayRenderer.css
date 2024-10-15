@@ -1,0 +1,11 @@
+._display {
+    @apply w-full h-full
+        flex flex-col items-center justify-center;
+
+    .__display_empty {
+        @apply flex flex-col text-gray-500;
+    }
+    .__display_display {
+        @apply flex flex-col;
+    }
+}
