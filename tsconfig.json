@@ -19,8 +19,6 @@
     "jsxImportSource": "solid-js",
     /* Linting */
     "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     
     /* 路径 */

@@ -7,19 +7,26 @@ import {
   onMount,
   Show,
 } from "solid-js";
-import { canvas_root_id, CanvasState, CanvasStateContext } from "./CanvasState";
+import {
+  canvas_root_id,
+  CanvasState,
+  CanvasStateContext,
+  set_node_prop,
+} from "./CanvasState";
 import { RendererContext } from "./utils/RendererContext";
 import "./CanvasRenderer.css";
 import { MindNodeRendererElement } from "./mind_node/Renderer";
 import { createSignal } from "@/common/signal";
 import { MenuElement } from "@/components/base/menu/Menu";
+import { get_dot_distance } from "@/common/math";
+import { DraggingRect, calc_dragging_rects } from "./utils/dragging_rect";
 
-type Rect = {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-};
+const offset_x = 32;
+const offset_y = 8;
+
+interface DraggingRectElement extends HTMLElement {
+  _rect: DraggingRect;
+}
 
 export const CanvasRenderer: Component<{ state: CanvasState }> = (props) => {
   let container: HTMLElement;
@@ -31,104 +38,23 @@ export const CanvasRenderer: Component<{ state: CanvasState }> = (props) => {
 
   let focused_node_data = props.state.focused_node_data;
 
-  const dragging_rects = createSignal<Rect[]>([]);
+  let dragging_rect_to_drop: DraggingRect | undefined;
+  const dragging_rects = createSignal<DraggingRect[]>([]);
 
   let initialized = false;
 
-  const offset_x = 32;
-  const offset_y = 8;
-
-  /** 精确更新拖拽矩形。 */
-  function update_dragging_rects() {
-    const field_rect = field.getBoundingClientRect();
-
-    const rects = [];
-
-    const render_root_rc = root_rc.children_rc.get(state.root.get())!;
-    const render_root_rect = render_root_rc.dom_el.getBoundingClientRect();
-
-    // 从根节点开始计算
-    // * 对于父节点是首分支的所有首分支，矩形都起始于 y = 0 处
-    // * 对于父节点是末分支的所有末分支，矩形都结束于 y = canvas_height 处
-    // * 对于所有的最末端节点，矩形都结束于 x = canvas_width 处
-
-    function calc_rect(
-      rc: RendererContext,
-      still_first_branch: boolean,
-      still_last_branch: boolean
-    ) {
-      const rc_container_rect = rc.dom_el.getBoundingClientRect();
-      const rc_node_rect =
-        rc.dom_el.querySelector(":scope > .__node")?.getBoundingClientRect() ??
-        rc_container_rect;
-
-      let x = rc_container_rect.left - field_rect.left - offset_x;
-      let y = rc_container_rect.top - field_rect.top;
-      let width = rc_node_rect.width + offset_x;
-      let height = rc_container_rect.height + offset_y;
-
-      if (still_first_branch && still_last_branch) {
-        y = 0;
-        height = field_rect.height;
-      } else if (still_first_branch) {
-        y = 0;
-        height =
-          rc_container_rect.top +
-          rc_container_rect.height -
-          field_rect.top +
-          offset_y;
-      } else if (still_last_branch) {
-        height = field_rect.bottom - rc_container_rect.top;
-      }
-
-      const node = state.nodes.get(rc.node_id)!;
-      if (node.children.length > 0) {
-        for (let index = 0; index < node.children.length; index++) {
-          const child_id = node.children[index];
-          const child_rc = rc.children_rc.get(child_id);
-          if (child_rc) {
-            calc_rect(
-              child_rc,
-              still_first_branch && index === 0,
-              still_last_branch && index === node.children.length - 1
-            );
-          }
-        }
-      } else {
-        rects.push({
-          x: rc_container_rect.right - field_rect.left - offset_x,
-          y: y,
-          width:
-            field_rect.width - (rc_container_rect.right - field_rect.left) + offset_x,
-          height: height,
-        });
-      }
-
-      rects.push({
-        x,
-        y,
-        width,
-        height,
-      });
-    }
-
-    // 添加根节点左侧的矩形
-    rects.push({
-      x: 0,
-      y: 0,
-      width: render_root_rect.left - field_rect.left - offset_x,
-      height: field_rect.height,
-    });
-    calc_rect(render_root_rc, true, true);
-
-    dragging_rects.set(rects);
-  }
   createEffect(
-    on(state.dragging_node_data.get, () => {
-      if (state.dragging_node_data.get() === undefined) {
-        // dragging_rects.set([]);
-      } else {
-        update_dragging_rects();
+    on(state.dragging_node_data.get, (dragging_node_data) => {
+      if (dragging_node_data?.type === "dragging") {
+        dragging_rects.set(
+          calc_dragging_rects(
+            state,
+            field,
+            dragging_node_data.rc,
+            offset_x,
+            offset_y
+          )
+        );
       }
     })
   );
@@ -148,7 +74,7 @@ export const CanvasRenderer: Component<{ state: CanvasState }> = (props) => {
     state.focus_node(focused_node_data.rc!.children_rc.get(new_node.id)!);
   }
 
-  function handle_keydown(e: KeyboardEvent) {
+  function handle_window_keydown(e: KeyboardEvent) {
     const handler_map: Record<string, () => void> = {
       Enter: () => {
         if (focused_node_data.rc === undefined) return;
@@ -250,7 +176,7 @@ export const CanvasRenderer: Component<{ state: CanvasState }> = (props) => {
     handler_map[e.key]?.();
   }
 
-  function handle_wheel(e: WheelEvent) {
+  function handle_window_wheel(e: WheelEvent) {
     if (e.ctrlKey) {
       let scale = parseFloat(field.style.zoom);
       if (Number.isNaN(scale)) {
@@ -284,13 +210,13 @@ export const CanvasRenderer: Component<{ state: CanvasState }> = (props) => {
   }
 
   onMount(() => {
-    window.addEventListener("keydown", handle_keydown);
-    window.addEventListener("wheel", handle_wheel);
+    window.addEventListener("keydown", handle_window_keydown);
+    container.addEventListener("wheel", handle_window_wheel);
   });
 
   onCleanup(() => {
-    window.removeEventListener("keydown", handle_keydown);
-    window.removeEventListener("wheel", handle_wheel);
+    window.removeEventListener("keydown", handle_window_keydown);
+    container.removeEventListener("wheel", handle_window_wheel);
   });
 
   const root_rc = new RendererContext(canvas_root_id, null as any, () => {});
@@ -307,6 +233,16 @@ export const CanvasRenderer: Component<{ state: CanvasState }> = (props) => {
       ) as MindNodeRendererElement;
       const meta = renderer._meta;
       state.focus_node(meta.rc);
+
+      if (e.buttons & 0b1) {
+        e.preventDefault();
+        state.dragging_node_data.set({
+          type: "pending",
+          x: e.clientX,
+          y: e.clientY,
+          rc: meta.rc,
+        });
+      }
     } else {
       state.focus_node(undefined);
     }
@@ -318,19 +254,93 @@ export const CanvasRenderer: Component<{ state: CanvasState }> = (props) => {
   }
 
   function handle_canvas_mousemove(e: MouseEvent) {
+    const dragging_node_data = state.dragging_node_data.get();
+    if (
+      e.buttons & 0b1 &&
+      dragging_node_data?.type === "pending" &&
+      get_dot_distance(
+        e.clientX,
+        e.clientY,
+        dragging_node_data.x,
+        dragging_node_data.y
+      ) > 2
+    ) {
+      state.dragging_node_data.set({
+        type: "dragging",
+        rc: dragging_node_data.rc,
+      });
+    }
+
     if (e.buttons & 0b10) {
       container.scrollBy(-e.movementX, -e.movementY);
       state.ac.menu.hide();
     }
   }
 
+  function handle_canvas_mouseup(e: MouseEvent) {
+    const dragging_node_data = state.dragging_node_data.get();
+    if (dragging_node_data?.type === "dragging") {
+      const dragging_rc = dragging_node_data.rc;
+      const dragging_node = state.nodes.get(dragging_rc.node_id)!;
+      const dragging_nc = state.get_node_context(dragging_rc.node_id)!;
+
+      const dragging_parent_rc = dragging_node_data.rc.parent_rc;
+      const dragging_parent_node = state.nodes.get(dragging_parent_rc.node_id)!;
+      const dragging_parent_nc = state.get_node_context(
+        dragging_parent_rc.node_id
+      )!;
+
+      const target = e.target as HTMLElement;
+      if (target.classList.contains("__rect")) {
+        const target_rc = (target as DraggingRectElement)._rect.rc;
+        const target_nc = state.get_node_context(target_rc.node_id)!;
+        const target_node = state.nodes.get(target_rc.node_id)!;
+
+        // 去除 dragging_rc 当前的父节点记录
+        dragging_node.parents = dragging_node.parents.splice(
+          dragging_node.parents.indexOf(dragging_parent_rc.node_id),
+          1
+        );
+        set_node_prop(
+          dragging_node,
+          dragging_nc,
+          "parents",
+          dragging_node.parents
+        );
+        state.mark_modified(dragging_node.id);
+
+        // 去除 dragging_parent_node 当前的子节点记录
+        dragging_parent_node.children = dragging_parent_node.children.splice(
+          dragging_parent_node.children.indexOf(dragging_node_data.rc.node_id),
+          1
+        );
+        set_node_prop(
+          dragging_parent_node,
+          dragging_parent_nc,
+          "children",
+          dragging_parent_node.children
+        );
+        state.mark_modified(dragging_parent_node.id);
+
+        // 将 dragging_rc 添加到 target_rc 的子节点中
+        set_node_prop(target_node, target_nc, "children", [
+          dragging_node_data.rc.node_id,
+        ]);
+        state.mark_modified(target_node.id);
+      }
+    }
+    state.dragging_node_data.set(undefined);
+  }
+
   function handle_canvas_contextmenu(e: MouseEvent) {
     // 如果移动距离大于 4px，则不弹出右键菜单
     if (
-      Math.sqrt(
-        Math.pow(e.clientX - right_click_start_x, 2) +
-          Math.pow(e.clientY - right_click_start_y, 2)
-      ) > 4
+      get_dot_distance(
+        e.clientX,
+        e.clientY,
+        right_click_start_x,
+        right_click_start_y
+      ) > 2
     ) {
       e.preventDefault();
       return;
@@ -441,6 +451,7 @@ export const CanvasRenderer: Component<{ state: CanvasState }> = (props) => {
         ref={(it) => (container = it)}
         onMouseDown={handle_canvas_mousedown}
         onMouseMove={handle_canvas_mousemove}
+        onMouseUp={handle_canvas_mouseup}
         onContextMenu={handle_canvas_contextmenu}
       >
         <div class="__field" ref={(it) => (field = it)}>
@@ -452,25 +463,29 @@ export const CanvasRenderer: Component<{ state: CanvasState }> = (props) => {
               onresize: place_render_root_node,
             })}
           </Show>
-          {/* <Show when={state.dragging_node_data.get() !== undefined}>
+          <Show when={state.dragging_node_data.get()?.type === "dragging"}>
             <div class="__dragging_layer">
               <For each={dragging_rects.get()}>
-                {(rect) => (
-                  <div
-                    class="__rect"
-                    style={{
-                      left: `${rect.x}px`,
-                      top: `${rect.y}px`,
-                      width: `${rect.width}px`,
-                      height: `${rect.height}px`,
-                    }}
-                    onDragOver={handle_dragging_rect_dragover}
-                    onDrop={handle_dragging_rect_drop}
-                  ></div>
-                )}
+                {(rect) => {
+                  const result = (
+                    <div
+                      class="__rect"
+                      style={{
+                        left: `${rect.x}px`,
+                        top: `${rect.y}px`,
+                        width: `${rect.width}px`,
+                        height: `${rect.height}px`,
+                      }}
+                      onDragOver={handle_dragging_rect_dragover}
+                      onDrop={handle_dragging_rect_drop}
+                    ></div>
+                  ) as DraggingRectElement;
+                  result._rect = rect;
+                  return result;
+                }}
               </For>
             </div>
-          </Show> */}
+          </Show>
         </div>
       </div>
     </CanvasStateContext.Provider>

@@ -4,7 +4,10 @@ import { createSignal } from "@/common/signal";
 import { createContext, createRoot } from "solid-js";
 import { monotonicFactory } from "ulid";
 import { MindNodeHelper } from "./utils/Helper";
-import { MindNodeRenderer, MindNodeRendererElement } from "./mind_node/Renderer";
+import {
+  MindNodeRenderer,
+  MindNodeRendererElement,
+} from "./mind_node/Renderer";
 import { RendererContext } from "./utils/RendererContext";
 import { NodeContext } from "./utils/NodeContext";
 
@@ -22,19 +25,19 @@ export function set_node_prop(
 export const canvas_root_id = "[canvas_root]";
 
 export class CanvasState {
-  root = createSignal<string>("", {
+  readonly root = createSignal<string>("", {
     equals: false,
   });
   /** 需要被渲染的节点 */
-  nodes = new Map<string, IMindNode>();
-  node_context = new Map<string, NodeContext>();
+  readonly nodes = new Map<string, IMindNode>();
+  readonly node_context = new Map<string, NodeContext>();
   /** 相对于上次保存的状态来说，已经添加的节点。储存的都是临时的新节点。 */
-  added_nodes = new Set<string>();
+  readonly added_nodes = new Set<string>();
   /** 相对于上次保存的状态来说，已经删除的节点。储存的都是已有的节点。 */
-  deleted_nodes = new Set<string>();
+  readonly deleted_nodes = new Set<string>();
   /** 相对于上次保存的状态来说，修改的节点。储存的都是已有的节点。 */
-  modified_nodes = new Set<string>();
-  ulid = monotonicFactory();
+  readonly modified_nodes = new Set<string>();
+  readonly ulid = monotonicFactory();
 
   /** 当前聚焦的节点 */
   readonly focused_node_data: {
@@ -44,23 +47,30 @@ export class CanvasState {
   };
 
   /** 当前拖拽的状态 */
-  dragging_node_data = createSignal<
+  readonly dragging_node_data = createSignal<
     | {
+        type: "dragging";
+        rc: RendererContext;
+      }
+    | {
+        type: "pending";
+        x: number;
+        y: number;
         rc: RendererContext;
       }
     | undefined
   >(undefined);
 
   /** 当前是否在缩放 */
-  scaling = false
+  scaling = false;
 
   resize_obs = new ResizeObserver((entries) => {
-    if(this.scaling) {
-      this.scaling = false
+    if (this.scaling) {
+      this.scaling = false;
     }
     for (const entry of entries) {
       console.log(entry);
-      
+
       const render_context = (
         entry.target.closest("._m_mind_node") as MindNodeRendererElement
       )._meta.rc;

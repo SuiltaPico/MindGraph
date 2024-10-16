@@ -8,7 +8,7 @@ import {
   on,
   onMount,
   Show,
-  useContext
+  useContext,
 } from "solid-js";
 import { CanvasState, CanvasStateContext } from "../CanvasState";
 import { MindNodeHelper } from "../utils/Helper";
@@ -266,21 +266,6 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
   function handle_folding_points_click() {
     folded.set(!folded.get());
     redraw_helper.redraw_center_related_objects();
-  }
-
-  function handle_node_dragstart(e: DragEvent) {
-    e.dataTransfer!.setData("text/plain", JSON.stringify(it.node));
-    // [补丁] Chrome 拖动期间更改 DOM 时会触发 DragEnd 事件 
-    // https://groups.google.com/a/chromium.org/g/chromium-bugs/c/YHs3orFC8Dc/m/ryT25b7J-NwJ
-    setTimeout(() => {
-      ctx.dragging_node_data.set({
-        rc: it.rc,
-      });
-    });
-  }
-
-  function handle_node_dragend(e: DragEvent) {
-    ctx.dragging_node_data.set(undefined);
   }
 
   function handle_node_dblclick() {

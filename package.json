@@ -9,7 +9,8 @@
     "build": "vite build",
     "serve": "vite preview",
     "tauri": "tauri",
-    "build:android": "tauri android build --target aarch64"
+    "build:android": "tauri android build --target aarch64",
+    "scc": "scc -a --min-gen --avg-wage 120000 --currency-symbol ¥ --overhead 1.5"
   },
   "license": "BSD-3-Clause",
   "dependencies": {
