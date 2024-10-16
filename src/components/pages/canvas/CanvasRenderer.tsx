@@ -50,7 +50,7 @@ export const CanvasRenderer: Component<{ state: CanvasState }> = (props) => {
           calc_dragging_rects(
             state,
             field,
-            dragging_node_data.rc,
+            root_rc,
             offset_x,
             offset_y
           )
