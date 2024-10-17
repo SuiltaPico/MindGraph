@@ -62,7 +62,13 @@ export const MenuRenderer: Component<{
       on(context.show_at.get, async (at) => {
         if (!at) return;
         const { x, y } = await computePosition(at.el, container!, {
-          middleware: [offset(at.offset ?? { mainAxis: 8 }), shift()],
+          middleware: [
+            offset(at.offset ?? { mainAxis: 8 }),
+            shift({
+              mainAxis: true,
+              crossAxis: true,
+            }),
+          ],
           placement: at.placement,
         });
         container!.style.left = `${x}px`;
