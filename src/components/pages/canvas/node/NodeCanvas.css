@@ -1,0 +1,25 @@
+._m_mindgraph_node_canvas {
+  @apply w-full h-full
+    overflow-auto;
+
+  & > .__field {
+    @apply relative;
+
+    & > ._m_mind_node {
+      @apply absolute;
+    }
+
+    & > .__dragging_layer {
+      @apply w-full h-full 
+        absolute;
+
+      & > .__rect {
+        @apply absolute;
+        @apply bg-#04a1 border border-solid border-#000;
+        &:hover {
+          @apply bg-#04a4;
+        }
+      }
+    }
+  }
+}

@@ -7,7 +7,7 @@ import { MindNodeHelper } from "./utils/Helper";
 import {
   MindNodeRenderer,
   MindNodeRendererElement,
-} from "./mind_node/Renderer";
+} from "./node/renderer/Node";
 import { RendererContext } from "./utils/RendererContext";
 import { NodeContext } from "./utils/NodeContext";
 
@@ -24,7 +24,7 @@ export function set_node_prop(
 
 export const canvas_root_id = "[canvas_root]";
 
-export class CanvasState {
+export class Canvas {
   readonly root = createSignal<string>("", {
     equals: false,
   });
@@ -302,4 +302,4 @@ export class CanvasState {
   }
 }
 
-export const CanvasStateContext = createContext<CanvasState>();
+export const CanvasStateContext = createContext<Canvas>();

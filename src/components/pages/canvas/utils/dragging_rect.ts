@@ -1,5 +1,9 @@
-import { CanvasState } from "../CanvasState";
+import { Canvas } from "../Canvas";
 import { RendererContext } from "./RendererContext";
+
+export interface DraggingRectElement extends HTMLElement {
+  _rect: DraggingRect;
+}
 
 export type DraggingRect = {
   x: number;
@@ -13,7 +17,7 @@ export type DraggingRect = {
 
 /** 精确更新拖拽矩形。 */
 export function calc_dragging_rects(
-  state: CanvasState,
+  state: Canvas,
   field: HTMLElement,
   root_rc: RendererContext,
   offset_x: number,
@@ -24,7 +28,6 @@ export function calc_dragging_rects(
   const rects: DraggingRect[] = [];
 
   const render_root_rc = root_rc.children_rc.get(state.root.get())!;
-  const render_root_rect = render_root_rc.dom_el.getBoundingClientRect();
 
   // 从根节点开始计算
   // * 对于父节点是首分支的所有首分支，矩形都起始于 y = 0 处

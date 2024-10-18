@@ -10,9 +10,9 @@ import {
   Show,
   useContext,
 } from "solid-js";
-import { CanvasState, CanvasStateContext } from "../CanvasState";
-import { MindNodeHelper } from "../utils/Helper";
-import { MindNodeRendererElement } from "./Renderer";
+import { Canvas, CanvasStateContext } from "../../Canvas";
+import { MindNodeHelper } from "../../utils/Helper";
+import { MindNodeRendererElement } from "./Node";
 
 interface IChildData {
   id: string;
@@ -201,7 +201,7 @@ class RedrawHelper {
   }
 
   constructor(
-    public ctx: CanvasState,
+    public ctx: Canvas,
     public it: MindNodeHelper,
     public children_data_map: Accessor<IChildData[]>,
     public folded: WrappedSignal<boolean>
