@@ -39,9 +39,9 @@ export function calc_dragging_rects(
     still_first_branch: boolean,
     still_last_branch: boolean
   ) {
-    const rc_container_rect = rc.dom_el.getBoundingClientRect();
+    const rc_container_rect = rc.container_el.getBoundingClientRect();
     const rc_node_rect =
-      rc.dom_el.querySelector(":scope > .__node")?.getBoundingClientRect() ??
+      rc.container_el.querySelector(":scope > .__node")?.getBoundingClientRect() ??
       rc_container_rect;
 
     let x = rc_container_rect.left - field_rect.left - offset_x;

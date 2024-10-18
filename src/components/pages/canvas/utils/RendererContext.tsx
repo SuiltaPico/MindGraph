@@ -19,7 +19,9 @@ export class RendererContext {
   private disposers: (() => void)[] = [];
 
   /** 节点渲染的 dom 元素 */
-  dom_el: HTMLElement = null as any;
+  container_el: HTMLElement = null as any;
+  /** 节点渲染的 dom 元素的父元素 */
+  node_el: HTMLElement = null as any;
 
   add_disposer(disposer: () => void) {
     this.disposers.push(disposer);

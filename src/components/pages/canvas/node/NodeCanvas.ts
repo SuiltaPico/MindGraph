@@ -24,7 +24,7 @@ function place_render_root_node(
 
   const child_container = this.root_rc.children_rc.get(
     this.root_rc.children_rc.keys().next()!.value!
-  )!.dom_el;
+  )!.container_el;
 
   field.style.width = `calc(200% + ${child_container.clientWidth * scale}px)`;
   field.style.height = `calc(200% + ${child_container.clientHeight * scale}px)`;

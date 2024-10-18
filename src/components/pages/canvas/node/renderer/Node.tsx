@@ -8,7 +8,10 @@ import {
   Switch,
   useContext,
 } from "solid-js";
-import { Accordion, AccordionRenderer } from "../../../../base/accordion/Accordion";
+import {
+  Accordion,
+  AccordionRenderer,
+} from "../../../../base/accordion/Accordion";
 import { CanvasStateContext } from "../../Canvas";
 import { RendererContext } from "../../utils/RendererContext";
 import { MindNodeContentRenderer } from "./Content";
@@ -35,7 +38,8 @@ export const MindNodePendingRenderer: Component<{
   let container: MindNodeRendererElement;
 
   onMount(() => {
-    props.rc.dom_el = container;
+    props.rc.container_el = container;
+    props.rc.node_el = container;
     props.rc.onresize?.(0);
   });
 
@@ -66,7 +70,8 @@ export const MindNodeErrorRenderer: Component<{
   let container: MindNodeRendererElement;
 
   onMount(() => {
-    props.rc.dom_el = container;
+    props.rc.container_el = container;
+    props.rc.node_el = container;
     props.rc.onresize?.(0);
   });
 

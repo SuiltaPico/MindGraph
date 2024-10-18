@@ -24,6 +24,22 @@ export function set_node_prop(
 
 export const canvas_root_id = "[canvas_root]";
 
+export interface DraggingDraggingNodeData {
+  type: "dragging";
+  rc: RendererContext;
+}
+
+export interface PendingDraggingNodeData {
+  type: "pending";
+  x: number;
+  y: number;
+  rc: RendererContext;
+}
+
+export type DraggingNodeData =
+  | DraggingDraggingNodeData
+  | PendingDraggingNodeData;
+
 export class Canvas {
   readonly root = createSignal<string>("", {
     equals: false,
@@ -47,20 +63,9 @@ export class Canvas {
   };
 
   /** 当前拖拽的状态 */
-  readonly dragging_node_data = createSignal<
-    | {
-        type: "dragging";
-        rc: RendererContext;
-      }
-    | {
-        type: "pending";
-        x: number;
-        y: number;
-        rc: RendererContext;
-      }
-    | undefined
-  >(undefined);
-
+  readonly dragging_node_data = createSignal<DraggingNodeData | undefined>(
+    undefined
+  );
   /** 当前是否在缩放 */
   scaling = false;
 
@@ -68,7 +73,10 @@ export class Canvas {
     if (this.scaling) {
       this.scaling = false;
     }
-    console.log("检测到节点变化", entries.map((it) => it.target));
+    console.log(
+      "检测到节点变化",
+      entries.map((it) => it.target)
+    );
     for (const entry of entries) {
       const render_context = (
         entry.target.closest("._m_mind_node") as MindNodeRendererElement
@@ -97,6 +105,12 @@ export class Canvas {
     return node_context;
   }
 
+  get_node_context_and_node(id: string) {
+    const node_context = this.get_node_context(id);
+    const node = this.nodes.get(id)!;
+    return [node, node_context] as const;
+  }
+
   async get_node_helper(id: string, rc: RendererContext) {
     let node = this.nodes.get(id);
     if (node === undefined) {
@@ -115,7 +129,7 @@ export class Canvas {
     }
   ) {
     let rc: RendererContext | undefined = parent_rc.children_rc.get(id);
-    let el: any = rc?.dom_el;
+    let el: any = rc?.container_el;
     if (!rc) {
       rc = new RendererContext(id, parent_rc, options.onresize);
       // 创建 dom 元素，会触发 get_node 方法，因此要先设置 rc
