@@ -1,4 +1,5 @@
 import {
+  batch,
   Component,
   createEffect,
   For,
@@ -38,7 +39,6 @@ export const CanvasRenderer: Component<{ state: CanvasState }> = (props) => {
 
   let focused_node_data = props.state.focused_node_data;
 
-  let dragging_rect_to_drop: DraggingRect | undefined;
   const dragging_rects = createSignal<DraggingRect[]>([]);
 
   let initialized = false;
@@ -47,27 +47,11 @@ export const CanvasRenderer: Component<{ state: CanvasState }> = (props) => {
     on(state.dragging_node_data.get, (dragging_node_data) => {
       if (dragging_node_data?.type === "dragging") {
         dragging_rects.set(
-          calc_dragging_rects(
-            state,
-            field,
-            root_rc,
-            offset_x,
-            offset_y
-          )
+          calc_dragging_rects(state, field, root_rc, offset_x, offset_y)
         );
       }
     })
   );
-
-  function handle_dragging_rect_dragover(e: DragEvent) {
-    e.preventDefault();
-    console.log("dragover", e);
-  }
-
-  function handle_dragging_rect_drop(e: DragEvent) {
-    e.preventDefault();
-    console.log("drop", e);
-  }
 
   function handle_tab_key() {
     const new_node = state.add_new_child(focused_node_data.rc!.node_id);
@@ -296,37 +280,48 @@ export const CanvasRenderer: Component<{ state: CanvasState }> = (props) => {
         const target_nc = state.get_node_context(target_rc.node_id)!;
         const target_node = state.nodes.get(target_rc.node_id)!;
 
+        console.log(
+          `销毁父节点为 “${dragging_parent_node.content.value}” 的节点 “${dragging_node.content.value}”`
+        );
+        dragging_rc.dispose();
+
         // 去除 dragging_rc 当前的父节点记录
-        dragging_node.parents = dragging_node.parents.splice(
+        dragging_node.parents.splice(
           dragging_node.parents.indexOf(dragging_parent_rc.node_id),
           1
         );
-        set_node_prop(
-          dragging_node,
-          dragging_nc,
-          "parents",
-          dragging_node.parents
-        );
+
+        // 将 dragging_rc 的父节点记录设置为 target_rc
+        dragging_node.parents.push(target_rc.node_id);
         state.mark_modified(dragging_node.id);
 
         // 去除 dragging_parent_node 当前的子节点记录
-        dragging_parent_node.children = dragging_parent_node.children.splice(
+        dragging_parent_node.children.splice(
           dragging_parent_node.children.indexOf(dragging_node_data.rc.node_id),
           1
-        );
-        set_node_prop(
-          dragging_parent_node,
-          dragging_parent_nc,
-          "children",
-          dragging_parent_node.children
         );
         state.mark_modified(dragging_parent_node.id);
 
         // 将 dragging_rc 添加到 target_rc 的子节点中
-        set_node_prop(target_node, target_nc, "children", [
-          dragging_node_data.rc.node_id,
-        ]);
         state.mark_modified(target_node.id);
+
+        batch(() => {
+          set_node_prop(
+            dragging_node,
+            dragging_nc,
+            "parents",
+            dragging_node.parents
+          );
+          set_node_prop(
+            dragging_parent_node,
+            dragging_parent_nc,
+            "children",
+            dragging_parent_node.children
+          );
+          set_node_prop(target_node, target_nc, "children", [
+            dragging_node_data.rc.node_id,
+          ]);
+        });
       }
     }
     state.dragging_node_data.set(undefined);
@@ -371,7 +366,6 @@ export const CanvasRenderer: Component<{ state: CanvasState }> = (props) => {
   function place_render_root_node() {
     let scale = parseFloat(field.style.zoom);
     if (Number.isNaN(scale)) {
-      console.log(field.style.zoom);
       scale = 1;
     }
 
@@ -476,8 +470,6 @@ export const CanvasRenderer: Component<{ state: CanvasState }> = (props) => {
                         width: `${rect.width}px`,
                         height: `${rect.height}px`,
                       }}
-                      onDragOver={handle_dragging_rect_dragover}
-                      onDrop={handle_dragging_rect_drop}
                     ></div>
                   ) as DraggingRectElement;
                   result._rect = rect;

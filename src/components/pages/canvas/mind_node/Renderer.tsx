@@ -101,14 +101,6 @@ export function MindNodeRenderer(props: { id: string; rc: RendererContext }) {
   const ctx = useContext(CanvasStateContext);
   const rc = props.rc;
 
-  // onMount(() => {
-  //   rc.children_rc.set(node_id, rc);
-  // });
-
-  // onCleanup(() => {
-  //   rc.children_rc.delete(node_id);
-  // });
-
   const [node, { refetch }] = createResource(async () => {
     return await ctx!.get_node_helper(node_id, rc);
   });

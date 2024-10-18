@@ -68,9 +68,8 @@ export class CanvasState {
     if (this.scaling) {
       this.scaling = false;
     }
+    console.log("检测到节点变化", entries.map((it) => it.target));
     for (const entry of entries) {
-      console.log(entry);
-
       const render_context = (
         entry.target.closest("._m_mind_node") as MindNodeRendererElement
       )._meta.rc;
@@ -122,7 +121,7 @@ export class CanvasState {
       // 创建 dom 元素，会触发 get_node 方法，因此要先设置 rc
       parent_rc.children_rc.set(id, rc);
       createRoot((disposer) => {
-        rc!.disposers.push(disposer);
+        rc!.add_disposer(disposer);
         el = <MindNodeRenderer id={id} rc={rc!}></MindNodeRenderer>;
       });
     }
@@ -213,7 +212,7 @@ export class CanvasState {
   delete_node(rc: RendererContext) {
     const node_to_delete = this.nodes.get(rc.node_id)!;
 
-    rc.disposers.map((it) => it());
+    rc.dispose();
 
     const parent_rc = rc.parent_rc;
     const parent_node = this.nodes.get(parent_rc.node_id)!;

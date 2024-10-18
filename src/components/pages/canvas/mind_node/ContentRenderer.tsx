@@ -107,6 +107,7 @@ class RedrawHelper {
   }
 
   full_redraw() {
+    console.log(`重绘“${this.it.node.content.value}”`);
     let prev_node_y_offset = this.node_y_offset;
     // 绘制子节点流线依赖最新的 node_y_offset，redraw_center_related_objects 会更新该值，所以必须先调用该函数。
     this.redraw_center_related_objects();
@@ -174,7 +175,8 @@ class RedrawHelper {
   }
 
   /** 在下一帧绘制子节点流线。 */
-  async full_redraw_next_tick() {
+  full_redraw_next_tick() {
+    // console.log("full_redraw_next_tick", this.it.node.content.value);
     if (this.full_redraw_required === false) {
       this.full_redraw_required = true;
       queueMicrotask(() => {
@@ -183,10 +185,17 @@ class RedrawHelper {
     }
   }
 
-  /** 处理子节点容器大小变化。 */
+  /** 处理子节点容器大小变化。子节点容器大小变化时，父节点需要重新绘制。 */
   handle_children_resize(node_y_offset: number, index: number) {
+    console.log(
+      `[父节点：${
+        this.ctx.nodes.get(this.it.rc.parent_rc.node_id)?.content.value ??
+        this.it.rc.parent_rc.node_id
+      }] 子节点 “${
+        this.ctx.nodes.get(this.it.node.children[index])?.content.value ?? index
+      }” 容器大小变化，需要重绘“${this.it.node.content.value}”`
+    );
     const children_container_data = this.children_data_map()[index];
-    // children_container_data.container = child_container;
     children_container_data.node_y_offset = node_y_offset;
     this.full_redraw_next_tick();
   }
@@ -247,18 +256,44 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
       folding_points
     );
     it.rc.handle_obs_resize = () => {
+      console.log(
+        `[父节点：${
+          ctx.nodes.get(it.rc.parent_rc.node_id)?.content.value
+        }] 的子节点 “${it.node.content.value}” 的容器大小变化，需要重绘`
+      );
       redraw_helper.full_redraw();
       it.rc.onresize?.(redraw_helper.node_y_offset);
     };
+    console.log(`观察 “${it.node.content.value}”`);
     ctx.resize_obs.observe(node);
     redraw_helper.redraw_center_related_objects();
     redraw_helper.last_container_height = container.offsetHeight;
-    it.rc.disposers.push(() => ctx.resize_obs.unobserve(node));
+    it.rc.add_disposer(() => {
+      console.log(`取消观察 “${it.node.content.value}”`);
+      ctx.resize_obs.unobserve(node);
+    });
 
     createEffect(
       on(focused.get, () => {
         node.focus();
       })
+    );
+
+    createEffect(
+      on(
+        () => props.it.get_prop("children"),
+        () => {
+          console.log(
+            `[父节点：${
+              ctx.nodes.get(it.rc.parent_rc.node_id)?.content.value
+            }] 子节点数组变化，需要重绘“${it.node.content.value}”`
+          );
+          redraw_helper.full_redraw_next_tick();
+        },
+        {
+          defer: true,
+        }
+      )
     );
   });
 
@@ -304,9 +339,6 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
       <div
         class={"__node"}
         contenteditable={editing.get()}
-        // draggable={!editing.get()}
-        // onDragStart={handle_node_dragstart}
-        // onDragEnd={handle_node_dragend}
         onDblClick={handle_node_dblclick}
         onInput={handle_node_input}
         ref={(el) => {

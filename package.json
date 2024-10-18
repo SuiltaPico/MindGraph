@@ -16,7 +16,7 @@
   "dependencies": {
     "@floating-ui/dom": "^1.6.11",
     "@mdi/js": "^7.4.47",
-    "@solidjs/router": "^0.14.8",
+    "@solidjs/router": "^0.14.9",
     "@tauri-apps/api": "^2.0.2",
     "@tauri-apps/plugin-dialog": "^2.0.0",
     "@tauri-apps/plugin-process": "^2.0.0",
@@ -29,14 +29,14 @@
   "devDependencies": {
     "@csstools/postcss-sass": "^5.1.1",
     "@tauri-apps/cli": "2.0.3",
-    "@types/node": "^22.7.5",
+    "@types/node": "^22.7.6",
     "@types/throttle-debounce": "^5.0.2",
     "@unocss/transformer-directives": "^0.63.4",
     "@unocss/transformer-variant-group": "^0.63.4",
     "postcss-scss": "^4.0.9",
     "typescript": "^5.6.3",
     "unocss": "^0.63.4",
-    "vite": "^5.4.8",
+    "vite": "^5.4.9",
     "vite-plugin-solid": "^2.10.2",
     "vite-tsconfig-paths": "^5.0.1"
   },
