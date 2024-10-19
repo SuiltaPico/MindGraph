@@ -5,7 +5,7 @@
 
   & > .__node {
     @apply min-w-0.5em min-h-[calc(1em+8px)]
-      relative p-1.5 mr-32px
+      relative p-1.5 mr-[--mg-node-horizontal-gap]
       bg-#eee rounded-4px z-1
       outline outline-#0000 outline-2 transition-[outline];
 
@@ -28,7 +28,7 @@
   }
 
   & > .__children {
-    @apply flex flex-col gap-8px;
+    @apply flex flex-col gap-[--mg-node-vertical-gap];
   }
 
   &.__focused__ {

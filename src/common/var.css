@@ -2,4 +2,6 @@
   --mg-line-color: #868686;
   --mg-folding-point-color: #868686;
   --mg-line-width: 2px;
+  --mg-node-vertical-gap: 12px;
+  --mg-node-horizontal-gap: 32px;
 }

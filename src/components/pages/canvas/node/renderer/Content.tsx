@@ -40,7 +40,7 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
 
   /** 子节点容器数据。会随着子节点增删而自动变化。 */
   const children_data_map = mapArray<string, IChildData>(
-    () => props.it.get_prop("children"),
+    () => props.it.get_prop("children").slice(),
     (id) => {
       return {
         id: id,
@@ -48,6 +48,10 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
       };
     }
   );
+
+  createEffect(() => {
+    console.log(children_data_map());
+  });
 
   const redraw_helper = new RedrawHelper(
     ctx,
@@ -59,7 +63,7 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
   onMount(() => {
     it.rc!.container_el = container;
     it.rc!.node_el = node;
-    
+
     redraw_helper.onmount(
       container,
       node,

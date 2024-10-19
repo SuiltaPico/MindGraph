@@ -91,7 +91,7 @@ function get_right_click_menu(this: NodeCanvas) {
 
 export class NodeCanvas {
   offset_x = 32;
-  offset_y = 8;
+  offset_y = 12;
 
   right_click_start_x = 0;
   right_click_start_y = 0;

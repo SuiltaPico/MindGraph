@@ -142,55 +142,82 @@ function handle_drop_to_dragging_rect(this: NodeCanvas, e: MouseEvent) {
       canvas.get_node_context_and_node(target_parent_rc.node_id)!;
     const target_index = target_parent_node.children.indexOf(target_rc.node_id);
 
-    if (mouse_y < target_rect.top) {
-      // 作为临近节点，插入到目标节点上方
-      const update_dragging_relation = remove_dragging_old_relation();
-      dragging_rc.dispose();
-
+    function insert_dragging_to_target_parent_children(before: boolean) {
       target_parent_node.children.splice(
-        target_index,
+        target_index + (before ? 0 : 1),
         0,
         dragging_node_data.rc.node_id
       );
-      canvas.mark_modified(target_parent_node.id);
-      batch(() => {
-        update_dragging_relation();
-        set_node_prop(
-          target_parent_node,
-          target_parent_nc,
-          "children",
-          target_parent_node.children
-        );
-      });
-    } else if (mouse_y > target_rect.bottom) {
+    }
+
+    function insert(before: boolean) {
       // 作为临近节点，插入到目标节点下方
-      const update_dragging_relation = remove_dragging_old_relation();
-      dragging_rc.dispose();
+      // 如果拖拽的节点和目标节点在同一个父节点下，则不销毁拖拽的节点，只是更新目标节点的临近节点。
+      if (dragging_parent_rc === target_parent_rc) {
+        // 仅更新 target_parent_rc 的 children 属性
+        console.log(
+          `[拖拽] “${dragging_node.content.value}”拖拽到目标节点“${
+            target_node.content.value
+          }”${before ? "上" : "下"}方，其父节点共同为“${
+            target_parent_node.content.value
+          }”。`
+        );
 
-      target_parent_node.children.splice(
-        target_index + 1,
-        0,
-        dragging_node_data.rc.node_id
-      );
-      canvas.mark_modified(target_parent_node.id);
-      batch(() => {
-        update_dragging_relation();
+        // 删除原有位置的拖拽节点
+        const dragging_index = target_parent_node.children.indexOf(
+          dragging_node_data.rc.node_id
+        );
+        target_parent_node.children.splice(dragging_index, 1);
+        // 插入到目标节点下方
+        insert_dragging_to_target_parent_children(before);
+
         set_node_prop(
           target_parent_node,
           target_parent_nc,
           "children",
           target_parent_node.children
         );
-      });
+      } else {
+        console.log(
+          `[拖拽] “${dragging_node.content.value}”拖拽到目标节点“${
+            target_node.content.value
+          }”${before ? "上" : "下"}方。`
+        );
+        const update_dragging_relation = remove_dragging_old_relation();
+        dragging_rc.dispose();
+        insert_dragging_to_target_parent_children(before);
+        canvas.mark_modified(target_parent_node.id);
+        batch(() => {
+          update_dragging_relation();
+          set_node_prop(
+            target_parent_node,
+            target_parent_nc,
+            "children",
+            target_parent_node.children
+          );
+        });
+      }
+    }
+
+    if (mouse_y < target_rect.top) {
+      insert(true);
+    } else if (mouse_y > target_rect.bottom) {
+      insert(false);
     }
   }
 
   // 如果拖拽到右空白区域，视为作为目标节点的子节点插入
   if (rect.type === "right_span") {
+    console.log(
+      `[拖拽] “${dragging_node.content.value}”拖拽到右空白区域，视为作为目标节点“${target_node.content.value}”的子节点插入`
+    );
     insert_as_child();
   } else {
     if (rect.rc === this.root_rc) {
       // 如果拖拽到根节点，视为作为根节点的子节点插入
+      console.log(
+        `[拖拽] “${dragging_node.content.value}”拖拽到根节点，视为作为根节点的子节点插入`
+      );
     } else {
       // 如果拖拽到其他节点，视为作为目标节点的临近节点插入
       insert_as_sibling();
