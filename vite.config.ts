@@ -3,6 +3,7 @@ import { defineConfig } from "vite";
 import solid from "vite-plugin-solid";
 import tsconfigPaths from "vite-tsconfig-paths";
 import UnoCSS from "unocss/vite";
+import autoprefixer from "autoprefixer";
 
 const host = process.env.TAURI_DEV_HOST;
 
@@ -12,6 +13,11 @@ export default defineConfig(async () => ({
   resolve: {
     alias: {
       "@": resolve(__dirname, "src"),
+    },
+  },
+  css: {
+    postcss: {
+      plugins: [autoprefixer()],
     },
   },
   // 防止 vite 掩盖 Rust 错误

@@ -1,6 +1,7 @@
 import { Component, createEffect, on, onMount, Show } from "solid-js";
 import { createSignal } from "@/common/signal";
 import {
+  autoUpdate,
   computePosition,
   offset,
   OffsetOptions,
@@ -56,23 +57,32 @@ export const MenuRenderer: Component<{
 }> = (props) => {
   let container: HTMLDivElement | undefined;
   const context = props.context;
+  let cleanup: () => void;
+
+  async function update_position() {
+    const at = context.show_at.get();
+    if (!at) return;
+    const { x, y } = await computePosition(at.el, container!, {
+      middleware: [
+        offset(at.offset ?? { mainAxis: 8 }),
+        shift({
+          mainAxis: true,
+          crossAxis: true,
+        }),
+      ],
+      placement: at.placement,
+    });
+    container!.style.left = `${x}px`;
+    container!.style.top = `${y}px`;
+  }
 
   onMount(() => {
     createEffect(
       on(context.show_at.get, async (at) => {
-        if (!at) return;
-        const { x, y } = await computePosition(at.el, container!, {
-          middleware: [
-            offset(at.offset ?? { mainAxis: 8 }),
-            shift({
-              mainAxis: true,
-              crossAxis: true,
-            }),
-          ],
-          placement: at.placement,
-        });
-        container!.style.left = `${x}px`;
-        container!.style.top = `${y}px`;
+        cleanup?.();
+        if (at) {
+          cleanup = autoUpdate(at.el, container!, update_position);
+        }
       })
     );
   });
