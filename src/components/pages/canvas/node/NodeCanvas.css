@@ -11,7 +11,7 @@
 
     & > .__dragging_layer {
       @apply w-full h-full 
-        absolute;
+        absolute z-1;
 
       & > .__rect {
         @apply absolute;

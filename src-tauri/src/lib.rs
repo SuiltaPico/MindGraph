@@ -7,7 +7,11 @@ use app::{
       load as app__mg__load, new as app__mg__new, save as app__mg__save,
       save_as as app__mg__save_as,
     },
-    node::{__cmd__node_load as __cmd__app__mg__node__load, node_load as app__mg__node__load},
+    node::{
+      __cmd__node_check_relation as __cmd__app__mg__node__check_relation,
+      __cmd__node_load as __cmd__app__mg__node__load,
+      node_check_relation as app__mg__node__check_relation, node_load as app__mg__node__load,
+    },
   },
   app_state::AppState,
 };
@@ -32,6 +36,7 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
       app__mg__save_as,
       app__mg__get_init_data,
       app__mg__node__load,
+      app__mg__node__check_relation,
     ])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");

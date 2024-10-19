@@ -1,6 +1,7 @@
 import { IClient } from "../../client/type";
 import { Id } from "../../types/id";
-import { IInitData, IMeta, IMindNode } from "../../types/mg";
+import { IInitData, IMeta } from "../../types/mg";
+import { IMindNode } from "@/domain/MindNode";
 export * as node from "./node";
 
 export async function new_mg(client: IClient) {

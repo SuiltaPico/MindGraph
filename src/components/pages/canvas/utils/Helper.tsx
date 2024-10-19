@@ -1,4 +1,4 @@
-import { IMindNode } from "@/api/types/mg";
+import { IFullMindNode, IMindNode } from "@/domain/MindNode";
 import { createEmitterSignal } from "@/common/signal";
 import { set_node_prop } from "../Canvas";
 import { NodeContext } from "./NodeContext";
@@ -19,12 +19,15 @@ export class MindNodeHelper {
     return this.node[key];
   }
 
-  set_prop(key: keyof IMindNode, value: any) {
-    set_node_prop(this.node, this.nc, key, value);
+  set_prop(
+    key: Exclude<keyof IFullMindNode, "id" | "__data_type">,
+    value: any
+  ) {
+    set_node_prop(this.node, this.nc, key as any, value);
   }
 
   constructor(
-    public node: IMindNode,
+    public node: IFullMindNode,
     public nc: NodeContext,
     public rc: RendererContext
   ) {

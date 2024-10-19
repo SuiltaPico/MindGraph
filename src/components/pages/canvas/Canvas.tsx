@@ -1,4 +1,4 @@
-import { IMindNode } from "@/api/types/mg";
+import { create_IFullMindNode, IFullMindNode, IMindNode } from "@/domain/MindNode";
 import { AppContext } from "@/AppContext";
 import { createSignal } from "@/common/signal";
 import { createContext, createRoot } from "solid-js";
@@ -10,6 +10,7 @@ import {
 } from "./node/renderer/Node";
 import { RendererContext } from "./utils/RendererContext";
 import { NodeContext } from "./utils/NodeContext";
+import { Id } from "@/api/types/id";
 
 export function set_node_prop(
   node: IMindNode,
@@ -85,7 +86,13 @@ export class Canvas {
     }
   });
 
-  load_node: (id: string) => Promise<IMindNode>;
+  load_node: (id: string) => Promise<IFullMindNode>;
+
+  async target_is_source_ancestor_of(src_id: Id, target_id: Id) {
+    const src_ancestors = new Set<Id>([src_id]);
+    
+    
+  }
 
   clean_catch() {
     this.node_context.clear();
@@ -113,7 +120,7 @@ export class Canvas {
 
   async get_node_helper(id: string, rc: RendererContext) {
     let node = this.nodes.get(id);
-    if (node === undefined) {
+    if (node === undefined || node.__data_type === "relation") {
       node = await this.load_node(id);
       this.nodes.set(id, node);
     }
@@ -179,7 +186,7 @@ export class Canvas {
     const node = this.nodes.get(id)!;
     const node_ri = this.node_context.get(id)!;
 
-    const new_node = {
+    const new_node = create_IFullMindNode({
       id: this.ulid(),
       content: {
         _type: "markdown",
@@ -187,7 +194,7 @@ export class Canvas {
       },
       parents: [id],
       children: [],
-    };
+    });
     this.nodes.set(new_node.id, new_node);
     this.added_nodes.add(new_node.id);
 
@@ -201,7 +208,7 @@ export class Canvas {
     const parent_node = this.nodes.get(rc.parent_rc.node_id)!;
     const parent_ri = this.node_context.get(parent_node.id)!;
 
-    const new_node = {
+    const new_node = create_IFullMindNode({
       id: this.ulid(),
       content: {
         _type: "markdown",
@@ -209,7 +216,7 @@ export class Canvas {
       },
       parents: [parent_node.id],
       children: [],
-    };
+    });
     this.nodes.set(new_node.id, new_node);
     this.added_nodes.add(new_node.id);
 
