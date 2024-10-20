@@ -6,6 +6,8 @@ use sqlx::types::Json;
 pub struct MindNode {
   pub id: String,
   pub content: Json<Value>,
+  pub created_at: String,
+  pub updated_at: String,
   pub parents: Json<Vec<String>>,
   pub children: Json<Vec<String>>,
 }

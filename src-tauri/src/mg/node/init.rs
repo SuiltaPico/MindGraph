@@ -1,4 +1,5 @@
 use crate::utils::types::DBConn;
+use chrono::Utc;
 use ulid::Generator;
 
 pub async fn node_init(conn: &DBConn) -> Result<(), Box<dyn std::error::Error>> {
@@ -16,7 +17,9 @@ pub async fn create_table(conn: &DBConn) -> Result<(), Box<dyn std::error::Error
     r#"
     CREATE TABLE IF NOT EXISTS node (
       id CHAR(26) PRIMARY KEY,
-      content JSONB NOT NULL
+      content JSONB NOT NULL,
+      created_at DATETIME NOT NULL,
+      updated_at DATETIME NOT NULL
     );
     "#,
   )
@@ -48,18 +51,43 @@ pub async fn create_init_data(conn: &DBConn) -> Result<(), Box<dyn std::error::E
   println!("create_init_data");
   // 创建初始节点
   let nodes = vec![
-    ("主题", None),
-    ("分支1", Some(0)),
-    ("分支2", Some(0)),
-    ("分支3", Some(0)),
-    ("子分支1", Some(1)),
-    ("子分支2", Some(1)),
+    ("主题", None, Utc::now().to_string(), Utc::now().to_string()),
+    (
+      "分支1",
+      Some(0),
+      Utc::now().to_string(),
+      Utc::now().to_string(),
+    ),
+    (
+      "分支2",
+      Some(0),
+      Utc::now().to_string(),
+      Utc::now().to_string(),
+    ),
+    (
+      "分支3",
+      Some(0),
+      Utc::now().to_string(),
+      Utc::now().to_string(),
+    ),
+    (
+      "子分支1",
+      Some(1),
+      Utc::now().to_string(),
+      Utc::now().to_string(),
+    ),
+    (
+      "子分支2",
+      Some(1),
+      Utc::now().to_string(),
+      Utc::now().to_string(),
+    ),
   ];
 
   let mut node_ids: Vec<String> = Vec::new();
   let mut ulid_gen = Generator::new();
 
-  for (_, (value, parent_index)) in nodes.iter().enumerate() {
+  for (_, (value, parent_index, created_at, updated_at)) in nodes.iter().enumerate() {
     let id = ulid_gen.generate().unwrap().to_string();
     node_ids.push(id.clone());
 
@@ -68,9 +96,11 @@ pub async fn create_init_data(conn: &DBConn) -> Result<(), Box<dyn std::error::E
         "value": value
     });
 
-    sqlx::query("INSERT INTO node (id, content) VALUES (?, ?)")
+    sqlx::query("INSERT INTO node (id, content, created_at, updated_at) VALUES (?, ?, ?, ?)")
       .bind(&id)
       .bind(content.to_string())
+      .bind(created_at)
+      .bind(updated_at)
       .execute(conn)
       .await?;
 

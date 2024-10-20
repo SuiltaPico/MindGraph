@@ -168,6 +168,10 @@ export class Canvas {
 
   mark_modified(id: string) {
     if (this.added_nodes.has(id)) return;
+    const node = this.nodes.get(id)!;
+    if (node.__data_type === "full") {
+      node.updated_at = Date.now().toString();
+    }
     this.modified_nodes.add(id);
   }
 

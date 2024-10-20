@@ -177,11 +177,17 @@ impl MgState {
       let mut params: Vec<String> = Vec::new();
 
       for node in &modified_nodes {
-        query.push_str("WHEN ? THEN ? ");
+        query.push_str("WHEN ? THEN ?");
         params.push(node.id.clone());
         params.push(serde_json::to_string(&node.content)?);
       }
+      query.push_str("END, updated_at = CASE id ");
 
+      for node in &modified_nodes {
+        query.push_str("WHEN ? THEN ?");
+        params.push(node.id.clone());
+        params.push(node.updated_at.clone());
+      }
       query.push_str("END WHERE id IN (");
       query.push_str(&vec!["?"; modified_nodes.len()].join(", "));
       query.push(')');
@@ -302,7 +308,7 @@ impl MgState {
 
     // 插入新节点
     if !new_nodes.is_empty() {
-      let mut insert_query = String::from("INSERT INTO node (id, content) VALUES ");
+      let mut insert_query = String::from("INSERT INTO node (id, content, created_at, updated_at) VALUES ");
       let mut insert_params: Vec<String> = Vec::new();
 
       for (i, node) in new_nodes.iter().enumerate() {
@@ -310,10 +316,12 @@ impl MgState {
           insert_query.push_str(", ");
         }
 
-        insert_query.push_str("(?, ?)");
+        insert_query.push_str("(?, ?, ?, ?)");
 
         insert_params.push(node.id.clone());
         insert_params.push(serde_json::to_string(&node.content)?);
+        insert_params.push(node.created_at.clone());
+        insert_params.push(node.updated_at.clone());
       }
 
       let mut query_builder = sqlx::query(&insert_query);
@@ -352,7 +360,9 @@ impl MgState {
 
     tokio::fs::rename(self_path.clone(), new_path.clone()).await?;
 
-    self.open_uri(format!("file://{}", new_path.clone())).await?;
+    self
+      .open_uri(format!("file://{}", new_path.clone()))
+      .await?;
 
     Ok(())
   }
