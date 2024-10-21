@@ -9,7 +9,7 @@ import { RendererContext } from "./RendererContext";
 export class MindNodeHelper {
   id: string;
 
-  get_prop<T extends keyof IMindNode>(key: T) {
+  get_prop<T extends keyof IFullMindNode>(key: T) {
     let emitter = this.nc.path_emitter_map.get(key);
     if (emitter === undefined) {
       emitter = createEmitterSignal();

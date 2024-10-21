@@ -1,20 +1,26 @@
 import { Id } from "@/api/types/id";
-import { OutputData } from "@editorjs/editorjs";
+import { OutputBlockData, OutputData } from "@editorjs/editorjs";
+
+export type MarkdownContent = {
+  _type: "markdown";
+  value: string;
+};
+
+export type EditorJSContent = {
+  _type: "editorjs";
+  value: OutputData & {
+    blocks: OutputBlockData<"paragraph", { text: string }>[];
+  };
+};
 
 export interface IFullMindNode {
   id: Id;
   __data_type: "full";
-  content:
-    | {
-        _type: "markdown";
-        value: string;
-      }
-    | {
-        _type: "editorjs";
-        value: OutputData;
-      };
+  content: MarkdownContent | EditorJSContent;
+
   parents: string[];
   children: string[];
+
   created_at: string;
   updated_at: string;
 }

@@ -1,3 +1,4 @@
+import { IFullMindNode } from "@/domain/MindNode";
 import clsx from "clsx";
 import {
   createEffect,
@@ -10,12 +11,10 @@ import {
 } from "solid-js";
 import { CanvasStateContext } from "../../Canvas";
 import { MindNodeHelper } from "../../utils/Helper";
+import { NodeCanvasContext } from "../NodeCanvas";
+import { Editor, EditorRenderer } from "./Editor";
 import { MindNodeRendererElement } from "./Node";
 import { RedrawHelper } from "./RedrawHelper";
-import { NodeCanvasContext } from "../NodeCanvas";
-import { IFullMindNode } from "@/domain/MindNode";
-import EditorJS from "@editorjs/editorjs";
-import { Editor, EditorRenderer } from "./Editor";
 
 export interface IChildData {
   id: string;
@@ -138,15 +137,7 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
   function handle_node_dblclick() {
     if (!editing.get()) {
       editing.set(true);
-      const selection = window.getSelection();
       node.focus();
-      if (selection) {
-        selection.removeAllRanges();
-        const range = document.createRange();
-        range.selectNodeContents(node);
-        range.setStart(node, node.childNodes.length);
-        selection.addRange(range);
-      }
     }
   }
 
