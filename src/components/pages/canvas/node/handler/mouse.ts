@@ -84,13 +84,11 @@ async function handle_drop_to_dragging_rect(this: NodeCanvas, e: MouseEvent) {
     canvas.dragging_node_data.get() as DraggingDraggingNodeData;
 
   const dragging_rc = dragging_node_data.rc;
-  const [dragging_node, dragging_nc] = canvas.get_node_context_and_node(
+  const [dragging_node] = canvas.get_node_context_and_node(
     dragging_rc.node_id
   );
 
   const dragging_parent_rc = dragging_node_data.rc.parent_rc;
-  const [dragging_parent_node, dragging_parent_nc] =
-    canvas.get_node_context_and_node(dragging_parent_rc.node_id)!;
 
   const rect = (target as DraggingRectElement)._rect;
   const target_rc = rect.rc;
@@ -103,47 +101,20 @@ async function handle_drop_to_dragging_rect(this: NodeCanvas, e: MouseEvent) {
     return;
   }
 
-  // const nodes =
-  //   await canvas.ac.api.app.mg.node.load_related({
-  //     id: target_rc.node_id,
-  //     type: "parents",
-  //   });
-
-  // // 禁止目标节点拖拽节点是的后代节点。最新的关系在 nodes 中，因此需要加载
-  // if (target_is_desc_of_src) {
-  //   return;
-  // }
-
-  /** 删除拖拽节点和其父节点的关系。 */
-  function remove_dragging_old_relation() {
-    // 去除 dragging_rc 当前的父节点记录
-    dragging_node.parents.splice(
-      dragging_node.parents.indexOf(dragging_parent_rc.node_id),
-      1
-    );
-    canvas.mark_modified(dragging_node.id);
-
-    // 去除 dragging_parent_node 当前的子节点记录
-    dragging_parent_node.children.splice(
-      dragging_parent_node.children.indexOf(dragging_node_data.rc.node_id),
-      1
-    );
-    canvas.mark_modified(dragging_parent_node.id);
-  }
-
-  function update_dragging_old_relation() {
-    set_node_prop(dragging_node, dragging_nc, "parents", dragging_node.parents);
-    set_node_prop(
-      dragging_parent_node,
-      dragging_parent_nc,
-      "children",
-      dragging_parent_node.children
-    );
+  // 禁止目标节点拖拽节点是的后代节点。
+  if (
+    await canvas.source_is_ancestor_of_target(
+      dragging_node_data.rc.node_id,
+      target_rc.node_id
+    )
+  ) {
+    return;
   }
 
   function insert_as_child() {
-    remove_dragging_old_relation();
     dragging_rc.dispose();
+
+    canvas.disconnect_node_from_parent(dragging_node_data.rc);
 
     // 将 dragging_rc 添加到 target_rc 的子节点中
     target_node.children.push(dragging_node_data.rc.node_id);
@@ -151,10 +122,7 @@ async function handle_drop_to_dragging_rect(this: NodeCanvas, e: MouseEvent) {
     // 将 dragging_rc 的父节点记录设置为 target_rc
     dragging_node.parents.push(target_rc.node_id);
 
-    batch(() => {
-      update_dragging_old_relation();
-      set_node_prop(target_node, target_nc, "children", target_node.children);
-    });
+    set_node_prop(target_node, target_nc, "children", target_node.children);
   }
 
   function insert_dragging_to_target_parent_children(
@@ -181,13 +149,13 @@ async function handle_drop_to_dragging_rect(this: NodeCanvas, e: MouseEvent) {
     // 如果拖拽的节点和目标节点在同一个父节点下，则不销毁拖拽的节点，只是更新目标节点的临近节点。
     if (dragging_parent_rc === target_parent_rc) {
       // 仅更新 target_parent_rc 的 children 属性
-      console.log(
-        `[拖拽] “${dragging_node.content.value}”拖拽到目标节点“${
-          target_node.content.value
-        }”${before ? "上" : "下"}方，其父节点共同为“${
-          target_parent_node.content.value
-        }”。`
-      );
+      // console.log(
+      //   `[拖拽] “${dragging_node.content.value}”拖拽到目标节点“${
+      //     target_node.content.value
+      //   }”${before ? "上" : "下"}方，其父节点共同为“${
+      //     target_parent_node.content.value
+      //   }”。`
+      // );
 
       // 删除原有位置的拖拽节点
       const dragging_index = target_parent_node.children.indexOf(
@@ -209,12 +177,12 @@ async function handle_drop_to_dragging_rect(this: NodeCanvas, e: MouseEvent) {
         target_parent_node.children
       );
     } else {
-      console.log(
-        `[拖拽] “${dragging_node.content.value}”拖拽到目标节点“${
-          target_node.content.value
-        }”${before ? "上" : "下"}方。`
-      );
-      remove_dragging_old_relation();
+      // console.log(
+      //   `[拖拽] “${dragging_node.content.value}”拖拽到目标节点“${
+      //     target_node.content.value
+      //   }”${before ? "上" : "下"}方。`
+      // );
+      canvas.disconnect_node_from_parent(dragging_node_data.rc);
       dragging_rc.dispose();
       insert_dragging_to_target_parent_children(
         target_parent_node,
@@ -222,15 +190,12 @@ async function handle_drop_to_dragging_rect(this: NodeCanvas, e: MouseEvent) {
         before
       );
       canvas.mark_modified(target_parent_node.id);
-      batch(() => {
-        update_dragging_old_relation();
-        set_node_prop(
-          target_parent_node,
-          target_parent_nc,
-          "children",
-          target_parent_node.children
-        );
-      });
+      set_node_prop(
+        target_parent_node,
+        target_parent_nc,
+        "children",
+        target_parent_node.children
+      );
     }
   }
 
@@ -293,16 +258,16 @@ async function handle_drop_to_dragging_rect(this: NodeCanvas, e: MouseEvent) {
 
   // 如果拖拽到右空白区域，视为作为目标节点的子节点插入
   if (rect.type === "right_span") {
-    console.log(
-      `[拖拽] “${dragging_node.content.value}”拖拽到右空白区域，视为作为目标节点“${target_node.content.value}”的子节点插入`
-    );
+    // console.log(
+    //   `[拖拽] “${dragging_node.content.value}”拖拽到右空白区域，视为作为目标节点“${target_node.content.value}”的子节点插入`
+    // );
     insert_as_child();
   } else {
     if (rect.rc.parent_rc === root_rc) {
       // 如果拖拽到渲染根节点，视为作为根节点的子节点插入
-      console.log(
-        `[拖拽] “${dragging_node.content.value}”拖拽到根节点，视为作为根节点的子节点插入。`
-      );
+      // console.log(
+      //   `[拖拽] “${dragging_node.content.value}”拖拽到根节点，视为作为根节点的子节点插入。`
+      // );
       insert_to_root();
     } else {
       // 如果拖拽到其他节点，视为作为目标节点的临近节点插入
@@ -333,7 +298,7 @@ export function handle_window_wheel(
     if (Number.isNaN(scale)) {
       scale = 1;
     }
-    const zoomFactor = 1.09;
+    const zoomFactor = this.scale_factor;
     const delta = e.deltaY > 0 ? 1 / zoomFactor : zoomFactor;
     const newScale = scale * delta;
 

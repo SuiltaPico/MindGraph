@@ -12,6 +12,8 @@ import { CanvasStateContext } from "../../Canvas";
 import { MindNodeHelper } from "../../utils/Helper";
 import { MindNodeRendererElement } from "./Node";
 import { RedrawHelper } from "./RedrawHelper";
+import { NodeCanvasContext } from "../NodeCanvas";
+import { IFullMindNode } from "@/domain/MindNode";
 
 export interface IChildData {
   id: string;
@@ -23,6 +25,7 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
   const it = props.it;
   const { editing, folded, focused } = it.rc;
   const ctx = useContext(CanvasStateContext)!;
+  const node_canvas = useContext(NodeCanvasContext)!;
 
   createEffect(
     on(focused.get, (focused) => {
@@ -40,7 +43,7 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
 
   /** 子节点容器数据。会随着子节点增删而自动变化。 */
   const children_data_map = mapArray<string, IChildData>(
-    () => props.it.get_prop("children").slice(),
+    () => props.it.get_prop("children"),
     (id) => {
       return {
         id: id,
@@ -72,21 +75,21 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
       folding_points
     );
     it.rc.handle_obs_resize = () => {
-      console.log(
-        `[父节点：${
-          ctx.nodes.get(it.rc.parent_rc.node_id)?.content.value
-        }] 的子节点 “${it.node.content.value}” 的容器大小变化，需要重绘`
-      );
+      // console.log(
+      //   `[父节点：${
+      //     ctx.nodes.get(it.rc.parent_rc.node_id)?.content.value
+      //   }] 的子节点 “${it.node.content.value}” 的容器大小变化，需要重绘`
+      // );
       redraw_helper.full_redraw();
       it.rc.onresize?.(redraw_helper.node_y_offset);
     };
     console.log(`观察 “${it.node.content.value}”`);
-    ctx.resize_obs.observe(node);
+    node_canvas.resize_obs.observe(node);
     redraw_helper.redraw_center_related_objects();
     redraw_helper.last_container_height = container.offsetHeight;
     it.rc.add_disposer(() => {
       console.log(`取消观察 “${it.node.content.value}”`);
-      ctx.resize_obs.unobserve(node);
+      node_canvas.resize_obs.unobserve(node);
     });
 
     createEffect(
@@ -99,11 +102,11 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
       on(
         () => props.it.get_prop("children"),
         () => {
-          console.log(
-            `[父节点：${
-              ctx.nodes.get(it.rc.parent_rc.node_id)?.content.value
-            }] 子节点数组变化，需要重绘“${it.node.content.value}”`
-          );
+          // console.log(
+          //   `[父节点：${
+          //     ctx.nodes.get(it.rc.parent_rc.node_id)?.content.value
+          //   }] 子节点数组变化，需要重绘“${it.node.content.value}”`
+          // );
           redraw_helper.full_redraw_next_tick();
         },
         {
@@ -195,12 +198,19 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
       <Show when={!folded.get()}>
         <div class="__children">
           <For each={props.it.get_prop("children")}>
-            {(child, i) =>
-              ctx.render_node(child, it.rc, {
+            {(child, i) => {
+              setTimeout(() => {
+              console.log(
+                `渲染子节点 “${
+                  (ctx.nodes.get(child) as IFullMindNode).content.value
+                }”`
+                );
+              }, 1000);
+              return ctx.render_node(child, it.rc, {
                 onresize: (node_y_offset) =>
                   redraw_helper.handle_children_resize(node_y_offset, i()),
-              })
-            }
+              });
+            }}
           </For>
         </div>
       </Show>

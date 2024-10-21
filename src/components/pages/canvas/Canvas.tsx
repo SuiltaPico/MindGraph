@@ -1,4 +1,8 @@
-import { create_IFullMindNode, IFullMindNode, IMindNode } from "@/domain/MindNode";
+import {
+  create_IFullMindNode,
+  IFullMindNode,
+  IMindNode,
+} from "@/domain/MindNode";
 import { AppContext } from "@/AppContext";
 import { createSignal } from "@/common/signal";
 import { createContext, createRoot } from "solid-js";
@@ -70,28 +74,26 @@ export class Canvas {
   /** 当前是否在缩放 */
   scaling = false;
 
-  resize_obs = new ResizeObserver((entries) => {
-    if (this.scaling) {
-      this.scaling = false;
-    }
-    console.log(
-      "检测到节点变化",
-      entries.map((it) => it.target)
-    );
-    for (const entry of entries) {
-      const render_context = (
-        entry.target.closest("._m_mind_node") as MindNodeRendererElement
-      )._meta.rc;
-      render_context.handle_obs_resize?.();
-    }
-  });
-
   load_node: (id: string) => Promise<IFullMindNode>;
 
-  async target_is_source_ancestor_of(src_id: Id, target_id: Id) {
-    const src_ancestors = new Set<Id>([src_id]);
-    
-    
+  /** 判断 src_id 是否是 target_id 的祖先节点 */
+  async source_is_ancestor_of_target(src_id: Id, target_id: Id) {
+    // 递归查找 target_id 的祖先节点，判断 src_id 是否是 target_id 的祖先节点的任一个
+    const is_ancestor = async (src_id: Id, target_id: Id) => {
+      console.log(`[判断] “${src_id}” 是否是 “${target_id}” 的祖先节点`);
+      let node = this.nodes.get(target_id);
+      if (!node) {
+        node = await this.load_node(target_id);
+        if (!node) return false;
+      }
+      const parents = node.parents;
+      for (const parent_id of parents) {
+        if (parent_id === src_id) return true;
+        if (await is_ancestor(src_id, parent_id)) return true;
+      }
+      return false;
+    };
+    return await is_ancestor(src_id, target_id);
   }
 
   clean_catch() {
@@ -185,10 +187,33 @@ export class Canvas {
     }
   }
 
+  disconnect_node_from_parent(node_rc: RendererContext) {
+    const node = this.nodes.get(node_rc.node_id)!;
+    const node_nc = this.node_context.get(node.id)!;
+    const parent_rc = node_rc.parent_rc;
+    const parent_node = this.nodes.get(parent_rc.node_id)!;
+    const parent_nc = this.node_context.get(parent_node.id)!;
+
+    // 去除 node_rc 当前的父节点记录
+    node.parents.splice(node.parents.indexOf(node_rc.parent_rc.node_id), 1);
+    this.mark_modified(node_rc.node_id);
+
+    // 去除 parent_rc 当前的子节点记录
+    parent_rc.children_rc.delete(node_rc.node_id);
+    parent_node.children.splice(
+      parent_node.children.indexOf(node_rc.node_id),
+      1
+    );
+    this.mark_modified(parent_node.id);
+
+    set_node_prop(node, node_nc, "parents", node.parents);
+    set_node_prop(parent_node, parent_nc, "children", parent_node.children);
+  }
+
   /** 为指定节点添加一个子节点 */
   add_new_child(id: string) {
     const node = this.nodes.get(id)!;
-    const node_ri = this.node_context.get(id)!;
+    const node_nc = this.node_context.get(id)!;
 
     const new_node = create_IFullMindNode({
       id: this.ulid(),
@@ -202,7 +227,7 @@ export class Canvas {
     this.nodes.set(new_node.id, new_node);
     this.added_nodes.add(new_node.id);
 
-    set_node_prop(node, node_ri, "children", [...node.children, new_node.id]);
+    set_node_prop(node, node_nc, "children", [...node.children, new_node.id]);
     this.mark_modified(node.id);
     return new_node;
   }
@@ -210,7 +235,7 @@ export class Canvas {
   /** 为指定渲染上下文添加一个同级节点 */
   add_next_sibling(rc: RendererContext) {
     const parent_node = this.nodes.get(rc.parent_rc.node_id)!;
-    const parent_ri = this.node_context.get(parent_node.id)!;
+    const parent_nc = this.node_context.get(parent_node.id)!;
 
     const new_node = create_IFullMindNode({
       id: this.ulid(),
@@ -228,7 +253,7 @@ export class Canvas {
     const new_children = [...parent_node.children];
     new_children.splice(index + 1, 0, new_node.id);
 
-    set_node_prop(parent_node, parent_ri, "children", new_children);
+    set_node_prop(parent_node, parent_nc, "children", new_children);
     this.mark_modified(parent_node.id);
     return new_node;
   }
@@ -243,10 +268,11 @@ export class Canvas {
     const parent_node = this.nodes.get(parent_rc.node_id)!;
 
     // 把自己从父节点的 children 中移除
-    const parent_ri = this.node_context.get(parent_node.id)!;
+    const parent_nc = this.node_context.get(parent_node.id)!;
+    parent_rc.children_rc.delete(rc.node_id);
     set_node_prop(
       parent_node,
-      parent_ri,
+      parent_nc,
       "children",
       parent_node.children.filter((child_id) => child_id !== rc.node_id)
     );
@@ -260,8 +286,8 @@ export class Canvas {
 
     if (node_to_delete.parents.length > 0) {
       // 还有其他父节点，只删除关系
-      const node_ri = this.node_context.get(node_to_delete.id)!;
-      set_node_prop(node_to_delete, node_ri, "parents", node_to_delete.parents);
+      const node_nc = this.node_context.get(node_to_delete.id)!;
+      set_node_prop(node_to_delete, node_nc, "parents", node_to_delete.parents);
       this.mark_modified(node_to_delete.id);
     } else {
       // 没有其他父节点，尝试删除节点，和所有后代节点

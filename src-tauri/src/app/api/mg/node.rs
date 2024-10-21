@@ -126,7 +126,7 @@ pub struct CheckRelationResult {
 }
 
 #[tauri::command(async, rename_all = "snake_case")]
-pub async fn node_check_relation(
+pub async fn node_load_ancestor(
   state: tauri::State<'_, MutexAppState>,
   src: String,
   target: String,

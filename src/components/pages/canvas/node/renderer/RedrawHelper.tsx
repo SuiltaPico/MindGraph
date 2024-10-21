@@ -164,10 +164,10 @@ export class RedrawHelper {
 
   /** 处理子节点容器大小变化。子节点容器大小变化时，父节点需要重新绘制。 */
   handle_children_resize(node_y_offset: number, index: number) {
-    console.log(
-      `[父节点：${this.ctx.nodes.get(this.it.rc.parent_rc.node_id)?.content.value ??
-      this.it.rc.parent_rc.node_id}] 子节点 “${this.ctx.nodes.get(this.it.node.children[index])?.content.value ?? index}” 容器大小变化，需要重绘“${this.it.node.content.value}”`
-    );
+    // console.log(
+    //   `[父节点：${this.ctx.nodes.get(this.it.rc.parent_rc.node_id)?.content.value ??
+    //   this.it.rc.parent_rc.node_id}] 子节点 “${this.ctx.nodes.get(this.it.node.children[index])?.content.value ?? index}” 容器大小变化，需要重绘“${this.it.node.content.value}”`
+    // );
     const children_container_data = this.children_data_map()[index];
     children_container_data.node_y_offset = node_y_offset;
     this.full_redraw_next_tick();

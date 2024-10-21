@@ -10,6 +10,7 @@ import {
 } from "./handler/mouse";
 import { handle_tab_key, handle_window_keydown } from "./handler/keyboard";
 import { createContext } from "solid-js";
+import { MindNodeRendererElement } from "./renderer/Node";
 
 function place_render_root_node(
   this: NodeCanvas,
@@ -110,6 +111,20 @@ export class NodeCanvas {
 
   place_render_root_node = place_render_root_node.bind(this);
   root_rc = new RendererContext(canvas_root_id, null as any, () => {});
+
+  resize_obs = new ResizeObserver((entries) => {
+    console.log(
+      "检测到节点变化",
+      entries.map((it) => it.target)
+    );
+    for (const entry of entries) {
+      const render_context = (
+        entry.target.closest("._m_mind_node") as MindNodeRendererElement
+      )._meta.rc;
+      render_context.handle_obs_resize?.();
+    }
+  });
+
 
   constructor(public canvas: Canvas) {}
 }
