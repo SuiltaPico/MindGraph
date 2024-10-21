@@ -25,7 +25,7 @@ pub async fn create_table(conn: &DBConn) -> Result<(), Box<dyn std::error::Error
 pub async fn create_init_data(conn: &DBConn) -> Result<(), Box<dyn std::error::Error>> {
   // 创建初始元信息
   let metas = vec![
-    ("name", r#""知识库""#),
+    ("name", r#""新建文档""#),
     ("schema_version", r#"0"#),
   ];
 

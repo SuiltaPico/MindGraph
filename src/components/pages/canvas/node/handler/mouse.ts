@@ -84,9 +84,7 @@ async function handle_drop_to_dragging_rect(this: NodeCanvas, e: MouseEvent) {
     canvas.dragging_node_data.get() as DraggingDraggingNodeData;
 
   const dragging_rc = dragging_node_data.rc;
-  const [dragging_node] = canvas.get_node_context_and_node(
-    dragging_rc.node_id
-  );
+  const [dragging_node] = canvas.get_node_context_and_node(dragging_rc.node_id);
 
   const dragging_parent_rc = dragging_node_data.rc.parent_rc;
 
@@ -96,17 +94,13 @@ async function handle_drop_to_dragging_rect(this: NodeCanvas, e: MouseEvent) {
     target_rc.node_id
   )!;
 
-  // 禁止拖拽节点和目标节点相同
-  if (dragging_parent_rc.node_id === target_rc.node_id) {
-    return;
-  }
-
-  // 禁止目标节点拖拽节点是的后代节点。
+  // 禁止拖拽节点和目标节点相同或者目标节点拖拽节点是的后代节点的情况。
   if (
-    await canvas.source_is_ancestor_of_target(
+    dragging_rc.node_id === target_rc.node_id ||
+    (await canvas.source_is_ancestor_of_target(
       dragging_node_data.rc.node_id,
       target_rc.node_id
-    )
+    ))
   ) {
     return;
   }
@@ -162,7 +156,9 @@ async function handle_drop_to_dragging_rect(this: NodeCanvas, e: MouseEvent) {
         dragging_node_data.rc.node_id
       );
       target_parent_node.children.splice(dragging_index, 1);
-      // 插入到目标节点下方
+      if (dragging_index < target_index) {
+        target_index -= 1;
+      }
       insert_dragging_to_target_parent_children(
         target_parent_node,
         target_index,
@@ -202,7 +198,6 @@ async function handle_drop_to_dragging_rect(this: NodeCanvas, e: MouseEvent) {
   function insert_as_sibling() {
     // 计算鼠标在目标节点中的位置
     const target_rect = target_rc.node_el.getBoundingClientRect();
-    const mouse_x = e.clientX;
     const mouse_y = e.clientY;
 
     const target_parent_rc = target_rc.parent_rc;
@@ -213,21 +208,10 @@ async function handle_drop_to_dragging_rect(this: NodeCanvas, e: MouseEvent) {
 
     const middle_y = target_rect.top + target_rect.height / 2;
 
-    if (mouse_x < target_rect.left) {
-      if (mouse_y < middle_y) {
-        insert(target_parent_rc, target_index, true);
-      } else {
-        insert(target_parent_rc, target_index, false);
-      }
+    if (mouse_y < middle_y) {
+      insert(target_parent_rc, target_index, true);
     } else {
-      // 如果 mouse_x 在目标节点内，则根据 mouse_y 的位置决定插入到目标节点之上、之下或者作为子节点插入
-      if (mouse_y < target_rect.top) {
-        insert(target_parent_rc, target_index, true);
-      } else if (mouse_y > target_rect.bottom) {
-        insert(target_parent_rc, target_index, false);
-      } else {
-        insert_as_child();
-      }
+      insert(target_parent_rc, target_index, false);
     }
   }
 

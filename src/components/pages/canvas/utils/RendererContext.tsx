@@ -13,6 +13,8 @@ export class RendererContext {
   readonly folded = createSignal<boolean>(false);
   /** 是否已聚焦。 */
   readonly focused = createSignal<boolean>(false);
+  /** 是否正在拖拽。 */
+  readonly dragging = createSignal<boolean>(false);
 
   /** 当节点大小改变时 */
   handle_obs_resize?: () => void;

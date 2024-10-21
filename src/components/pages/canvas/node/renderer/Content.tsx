@@ -144,7 +144,11 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
 
   return (
     <div
-      class={clsx("_m_mind_node", focused.get() && "__focused__")}
+      class={clsx(
+        "_m_mind_node",
+        focused.get() && "__focused__",
+        it.rc.dragging.get() && "__dragging__"
+      )}
       ref={(el) => {
         container = el as MindNodeRendererElement;
         container._meta = {
@@ -200,10 +204,10 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
           <For each={props.it.get_prop("children")}>
             {(child, i) => {
               setTimeout(() => {
-              console.log(
-                `渲染子节点 “${
-                  (ctx.nodes.get(child) as IFullMindNode).content.value
-                }”`
+                console.log(
+                  `渲染子节点 “${
+                    (ctx.nodes.get(child) as IFullMindNode).content.value
+                  }”`
                 );
               }, 1000);
               return ctx.render_node(child, it.rc, {

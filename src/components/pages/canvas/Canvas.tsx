@@ -5,7 +5,7 @@ import {
 } from "@/domain/MindNode";
 import { AppContext } from "@/AppContext";
 import { createSignal } from "@/common/signal";
-import { createContext, createRoot } from "solid-js";
+import { createContext, createEffect, createRoot, on } from "solid-js";
 import { monotonicFactory } from "ulid";
 import { MindNodeHelper } from "./utils/Helper";
 import {
@@ -350,6 +350,16 @@ export class Canvas {
 
   constructor(public ac: AppContext) {
     this.load_node = (id) => ac.api.app.mg.node.load({ id });
+
+    createEffect(
+      on(this.dragging_node_data.get, (data, prev) => {
+        if (data?.type === "dragging") {
+          data.rc.dragging.set(true);
+        } else if (prev) {
+          prev.rc.dragging.set(false);
+        }
+      })
+    );
   }
 }
 
