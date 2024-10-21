@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@editorjs/editorjs':
+        specifier: ^2.30.6
+        version: 2.30.6
       '@floating-ui/dom':
         specifier: ^1.6.11
         version: 1.6.11
@@ -188,6 +191,9 @@ packages:
   '@csstools/sass-import-resolve@1.0.0':
     resolution: {integrity: sha512-pH4KCsbtBLLe7eqUrw8brcuFO8IZlN36JjdKlOublibVdAIPHCzEnpBWOVUXK5sCf+DpBi8ZtuWtjF0srybdeA==}
     engines: {node: '>=4.0.0'}
+
+  '@editorjs/editorjs@2.30.6':
+    resolution: {integrity: sha512-6eQMc4Di3Hz9p4o+NGRgKaCeAF7eAk106m+bsDLc4eo94VGYO1M163OiGFdmanE+w503qTmXOzycWff5blEOAQ==}
 
   '@esbuild/aix-ppc64@0.21.5':
     resolution: {integrity: sha512-1SDgH6ZSPTlggy1yI6+Dbkiz8xzpHJEVAlF/AM1tHPLsf5STom9rwtjE4hKAF20FfXXNTFqEYXyJNWh1GiZedQ==}
@@ -1599,6 +1605,8 @@ snapshots:
       source-map: 0.7.4
 
   '@csstools/sass-import-resolve@1.0.0': {}
+
+  '@editorjs/editorjs@2.30.6': {}
 
   '@esbuild/aix-ppc64@0.21.5':
     optional: true

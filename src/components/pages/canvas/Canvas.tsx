@@ -71,6 +71,9 @@ export class Canvas {
   readonly dragging_node_data = createSignal<DraggingNodeData | undefined>(
     undefined
   );
+
+  editing_rc: RendererContext | undefined = undefined;
+
   /** 当前是否在缩放 */
   scaling = false;
 

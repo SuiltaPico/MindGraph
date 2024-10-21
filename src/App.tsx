@@ -12,6 +12,8 @@ import { Framework } from "./components/framework/Framework";
 
 export const App: ParentComponent = (props) => {
   const ac = useContext(app_context)!;
+  // @ts-ignore
+  window.ac_ = ac;
   console.log("AppContext", ac);
 
   createEffect(

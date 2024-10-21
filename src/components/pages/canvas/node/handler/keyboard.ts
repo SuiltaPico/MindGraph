@@ -11,7 +11,7 @@ export function handle_window_keydown(this: NodeCanvas, e: KeyboardEvent) {
   const focused_node_data = this.canvas.focused_node_data;
   const handler_map: Record<string, () => void> = {
     Enter: () => {
-      if (focused_node_data.rc === undefined) return;
+      if (this.canvas.editing_rc || focused_node_data.rc === undefined) return;
       if (e.shiftKey || e.metaKey || e.altKey || e.ctrlKey) return;
       e.preventDefault();
 
@@ -25,14 +25,14 @@ export function handle_window_keydown(this: NodeCanvas, e: KeyboardEvent) {
       }
     },
     Tab: () => {
+      if (this.canvas.editing_rc || focused_node_data.rc === undefined) return;
       e.preventDefault();
-      if (focused_node_data.rc === undefined) return;
       // 添加下级节点
       this.handle_tab_key();
     },
     Delete: () => {
+      if (this.canvas.editing_rc || focused_node_data.rc === undefined) return;
       e.preventDefault();
-      if (focused_node_data.rc === undefined) return;
       const parent_rc = focused_node_data.rc.parent_rc;
       const parent_node = this.canvas.nodes.get(parent_rc.node_id)!;
       const node_to_delete_index = parent_node.children.indexOf(
@@ -52,8 +52,8 @@ export function handle_window_keydown(this: NodeCanvas, e: KeyboardEvent) {
       }
     },
     ArrowUp: () => {
+      if (this.canvas.editing_rc || focused_node_data.rc === undefined) return;
       e.preventDefault();
-      if (focused_node_data.rc === undefined) return;
 
       const parent_rc = focused_node_data.rc.parent_rc;
       if (parent_rc.node_id === canvas_root_id) return;
@@ -68,8 +68,8 @@ export function handle_window_keydown(this: NodeCanvas, e: KeyboardEvent) {
       }
     },
     ArrowDown: () => {
+      if (this.canvas.editing_rc || focused_node_data.rc === undefined) return;
       e.preventDefault();
-      if (focused_node_data.rc === undefined) return;
 
       const parent_rc = focused_node_data.rc.parent_rc;
       if (parent_rc.node_id === canvas_root_id) return;
@@ -84,16 +84,16 @@ export function handle_window_keydown(this: NodeCanvas, e: KeyboardEvent) {
       }
     },
     ArrowLeft: () => {
+      if (this.canvas.editing_rc || focused_node_data.rc === undefined) return;
       e.preventDefault();
-      if (focused_node_data.rc === undefined) return;
       const parent_rc = focused_node_data.rc.parent_rc;
       if (parent_rc.node_id !== canvas_root_id) {
         this.canvas.focus_node(parent_rc);
       }
     },
     ArrowRight: () => {
+      if (this.canvas.editing_rc || focused_node_data.rc === undefined) return;
       e.preventDefault();
-      if (focused_node_data.rc === undefined) return;
       const rc = focused_node_data.rc;
       const node = this.canvas.nodes.get(rc.node_id)!;
       if (node.children.length > 0) {
@@ -101,8 +101,8 @@ export function handle_window_keydown(this: NodeCanvas, e: KeyboardEvent) {
       }
     },
     s: () => {
+      if (this.canvas.editing_rc || !e.ctrlKey) return;
       e.preventDefault();
-      if (!e.ctrlKey) return;
       this.canvas.ac.mg_save();
     },
   };

@@ -14,6 +14,8 @@ import { MindNodeRendererElement } from "./Node";
 import { RedrawHelper } from "./RedrawHelper";
 import { NodeCanvasContext } from "../NodeCanvas";
 import { IFullMindNode } from "@/domain/MindNode";
+import EditorJS from "@editorjs/editorjs";
+import { Editor, EditorRenderer } from "./Editor";
 
 export interface IChildData {
   id: string;
@@ -52,16 +54,14 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
     }
   );
 
-  createEffect(() => {
-    console.log(children_data_map());
-  });
-
   const redraw_helper = new RedrawHelper(
     ctx,
     props.it,
     children_data_map,
     folded
   );
+
+  const editor = new Editor(props.it, ctx, editing);
 
   onMount(() => {
     it.rc!.container_el = container;
@@ -96,6 +96,19 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
       on(focused.get, () => {
         node.focus();
       })
+    );
+
+    createEffect(
+      on(
+        () => editing.get(),
+        () => {
+          if (editing.get()) {
+            ctx.editing_rc = it.rc;
+          } else {
+            ctx.editing_rc = undefined;
+          }
+        }
+      )
     );
 
     createEffect(
@@ -159,17 +172,6 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
         };
       }}
     >
-      <div
-        class={"__node"}
-        contenteditable={editing.get()}
-        onDblClick={handle_node_dblclick}
-        onInput={handle_node_input}
-        ref={(el) => {
-          node = el as MindNodeRendererElement;
-        }}
-      >
-        {it.node.content.value}
-      </div>
       <svg class="__diversion">
         <g
           style={{
@@ -199,6 +201,16 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
           onMouseDown={handle_folding_points_click}
         ></circle>
       </svg>
+      <div
+        class={"__node"}
+        onDblClick={handle_node_dblclick}
+        onInput={handle_node_input}
+        ref={(el) => {
+          node = el as MindNodeRendererElement;
+        }}
+      >
+        <EditorRenderer editor={editor}></EditorRenderer>
+      </div>
       <Show when={!folded.get()}>
         <div class="__children">
           <For each={props.it.get_prop("children")}>

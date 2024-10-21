@@ -14,6 +14,7 @@
   },
   "license": "BSD-3-Clause",
   "dependencies": {
+    "@editorjs/editorjs": "^2.30.6",
     "@floating-ui/dom": "^1.6.11",
     "@mdi/js": "^7.4.47",
     "@solidjs/router": "^0.14.10",

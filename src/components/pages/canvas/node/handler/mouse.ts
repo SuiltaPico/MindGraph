@@ -9,6 +9,7 @@ import { IMindNode } from "@/domain/MindNode";
 
 export function handle_canvas_mousedown(this: NodeCanvas, e: MouseEvent) {
   const canvas = this.canvas;
+
   const root_rc = this.root_rc;
   const target = e.target as HTMLElement;
   const node = target.closest(
@@ -16,7 +17,6 @@ export function handle_canvas_mousedown(this: NodeCanvas, e: MouseEvent) {
   ) as MindNodeRendererElement;
 
   function prepare_dragging_node_data(rc: RendererContext) {
-    e.preventDefault();
     if (rc.parent_rc === root_rc) {
       // 阻止渲染根节点被拖拽
       return;
@@ -36,7 +36,7 @@ export function handle_canvas_mousedown(this: NodeCanvas, e: MouseEvent) {
     const rc = meta.rc;
     canvas.focus_node(rc);
 
-    if (e.buttons & 0b1) {
+    if (e.buttons & 0b1 && !canvas.editing_rc) {
       prepare_dragging_node_data(rc);
     }
   } else {
@@ -54,6 +54,7 @@ export function handle_canvas_mousemove(
   container: HTMLElement
 ) {
   const dragging_node_data = this.canvas.dragging_node_data.get();
+
   if (
     e.buttons & 0b1 &&
     dragging_node_data?.type === "pending" &&
@@ -78,7 +79,7 @@ export function handle_canvas_mousemove(
 
 async function handle_drop_to_dragging_rect(this: NodeCanvas, e: MouseEvent) {
   const root_rc = this.root_rc;
-  const canvas = this.canvas;
+  const canvas = this.canvas;  
   const target = e.target as HTMLElement;
   const dragging_node_data =
     canvas.dragging_node_data.get() as DraggingDraggingNodeData;
@@ -262,6 +263,8 @@ async function handle_drop_to_dragging_rect(this: NodeCanvas, e: MouseEvent) {
 
 export async function handle_canvas_mouseup(this: NodeCanvas, e: MouseEvent) {
   const canvas = this.canvas;
+  if (canvas.editing_rc) return;
+
   const dragging_node_data = canvas.dragging_node_data.get();
   if (dragging_node_data?.type === "dragging") {
     const target = e.target as HTMLElement;

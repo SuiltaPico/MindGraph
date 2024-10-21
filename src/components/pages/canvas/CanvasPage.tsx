@@ -1,7 +1,7 @@
-import { useContext } from "solid-js";
-import { CanvasRenderer } from "./CanvasRenderer";
 import { app_context } from "@/AppContext";
+import { useContext } from "solid-js";
 import "./CanvasPage.css";
+import { CanvasRenderer } from "./CanvasRenderer";
 
 export const CanvasPage = () => {
   const ac = useContext(app_context)!;
