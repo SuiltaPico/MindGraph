@@ -18,7 +18,7 @@
     "@mdi/js": "^7.4.47",
     "@solidjs/router": "^0.14.9",
     "@tauri-apps/api": "^2.0.3",
-    "@tauri-apps/plugin-dialog": "^2.0.0",
+    "@tauri-apps/plugin-dialog": "^2.0.1",
     "@tauri-apps/plugin-process": "^2.0.0",
     "@tauri-apps/plugin-shell": "^2.0.1",
     "clsx": "^2.1.1",
