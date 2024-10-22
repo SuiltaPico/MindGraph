@@ -46,3 +46,64 @@ export function async_debounce(
     });
   };
 }
+
+
+/** 异步节流，会等待上一个调用完成才执行下一次调用。 */
+export function async_throttle(
+  fn: (...args: any[]) => Promise<any>,
+  delay: number
+) {
+  let lastRun = 0;
+  let currentPromise: Promise<any> | null = null;
+  let nextArgs: any[] | null = null;
+
+  function runNext() {
+    if (nextArgs) {
+      const args = nextArgs;
+      nextArgs = null;
+      return execute(args);
+    }
+    return Promise.resolve();
+  }
+
+  async function execute(args: any[]) {
+    lastRun = Date.now();
+    try {
+      return await fn(...args);
+    } finally {
+      currentPromise = null;
+      runNext();
+    }
+  }
+
+  return function (...args: any[]) {
+    return new Promise((resolve, reject) => {
+      const now = Date.now();
+      const timeSinceLastRun = now - lastRun;
+
+      if (timeSinceLastRun >= delay && !currentPromise) {
+        currentPromise = execute(args);
+        currentPromise.then(resolve, reject);
+      } else {
+        nextArgs = args;
+        if (currentPromise) {
+          currentPromise.then(() => {
+            if (nextArgs === args) {
+              nextArgs = null;
+              resolve(undefined);
+            }
+          }, reject);
+        } else {
+          setTimeout(() => {
+            if (nextArgs === args) {
+              currentPromise = execute(args);
+              currentPromise.then(resolve, reject);
+            } else {
+              resolve(undefined);
+            }
+          }, delay - timeSinceLastRun);
+        }
+      }
+    });
+  };
+}

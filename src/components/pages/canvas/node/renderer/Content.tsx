@@ -12,9 +12,17 @@ import {
 import { CanvasStateContext } from "../../Canvas";
 import { MindNodeHelper } from "../../utils/Helper";
 import { NodeCanvasContext } from "../NodeCanvas";
-import { Editor, EditorRenderer } from "./Editor";
+// import { Editor, EditorRenderer } from "./Editor";
 import { MindNodeRendererElement } from "./Node";
 import { RedrawHelper } from "./RedrawHelper";
+import {
+  Paragraph,
+  ParagraphBlock,
+} from "@/components/base/mix_editor/plugins/paragraph";
+import { Text, TextInline } from "@/components/base/mix_editor/plugins/text";
+import { MixEditor } from "@/components/base/mix_editor/MixEditor";
+import { MixEditorRenderer } from "@/components/base/mix_editor/renderer/MixEditorRenderer";
+import { createSignal } from "@/common/signal";
 
 export interface IChildData {
   id: string;
@@ -60,7 +68,7 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
     folded
   );
 
-  const editor = new Editor(props.it, ctx, editing);
+  // const editor = new Editor(props.it, ctx, editing);
 
   onMount(() => {
     it.rc!.container_el = container;
@@ -146,6 +154,28 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
     ctx.mark_modified(it.node.id);
   }
 
+  type MyBlocks = ParagraphBlock<MyInlines>;
+  type MyInlines = TextInline;
+
+  const editor = new MixEditor<MyBlocks, MyInlines>({
+    plugins: [Paragraph(), Text()],
+  });
+  editor.data.set([
+    {
+      type: "paragraph",
+      data: {
+        inlines: createSignal<MyInlines[]>([
+          {
+            type: "text",
+            data: {
+              value: it.node.content.value,
+            },
+          },
+        ]),
+      },
+    },
+  ]);
+
   return (
     <div
       class={clsx(
@@ -200,7 +230,7 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
           node = el as MindNodeRendererElement;
         }}
       >
-        <EditorRenderer editor={editor}></EditorRenderer>
+        <MixEditorRenderer editor={editor}></MixEditorRenderer>
       </div>
       <Show when={!folded.get()}>
         <div class="__children">

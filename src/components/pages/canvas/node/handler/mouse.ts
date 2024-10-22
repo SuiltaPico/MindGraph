@@ -79,7 +79,7 @@ export function handle_canvas_mousemove(
 
 async function handle_drop_to_dragging_rect(this: NodeCanvas, e: MouseEvent) {
   const root_rc = this.root_rc;
-  const canvas = this.canvas;  
+  const canvas = this.canvas;
   const target = e.target as HTMLElement;
   const dragging_node_data =
     canvas.dragging_node_data.get() as DraggingDraggingNodeData;

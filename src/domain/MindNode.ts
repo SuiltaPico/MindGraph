@@ -16,7 +16,7 @@ export type EditorJSContent = {
 export interface IFullMindNode {
   id: Id;
   __data_type: "full";
-  content: MarkdownContent | EditorJSContent;
+  content: MarkdownContent;
 
   parents: string[];
   children: string[];
