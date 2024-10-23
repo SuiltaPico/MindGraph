@@ -157,24 +157,24 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
   type MyBlocks = ParagraphBlock<MyInlines>;
   type MyInlines = TextInline;
 
-  const editor = new MixEditor<MyBlocks, MyInlines>({
-    plugins: [Paragraph(), Text()],
-  });
-  editor.data.set([
-    {
-      type: "paragraph",
-      data: {
-        inlines: createSignal<MyInlines[]>([
-          {
-            type: "text",
-            data: {
-              value: it.node.content.value,
-            },
-          },
-        ]),
-      },
-    },
-  ]);
+  // const editor = new MixEditor<MyBlocks, MyInlines>({
+  //   plugins: [Paragraph(), Text()],
+  // });
+  // editor.data.set([
+  //   {
+  //     type: "paragraph",
+  //     data: {
+  //       inlines: createSignal<MyInlines[]>([
+  //         {
+  //           type: "text",
+  //           data: {
+  //             value: it.node.content.value,
+  //           },
+  //         },
+  //       ]),
+  //     },
+  //   },
+  // ]);
 
   return (
     <div
@@ -230,7 +230,7 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
           node = el as MindNodeRendererElement;
         }}
       >
-        <MixEditorRenderer editor={editor}></MixEditorRenderer>
+        {/* <MixEditorRenderer editor={editor}></MixEditorRenderer> */}
       </div>
       <Show when={!folded.get()}>
         <div class="__children">

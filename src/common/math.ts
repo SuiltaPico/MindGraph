@@ -1,3 +1,8 @@
+export type Position = {
+  x: number;
+  y: number;
+};
+
 export function get_dot_distance(
   x1: number,
   y1: number,

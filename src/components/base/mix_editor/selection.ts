@@ -1,4 +1,7 @@
 import { createSignal } from "@/common/signal";
+import { MixEditor } from "./MixEditor";
+
+export type CaretRendererType = (props: { editor: MixEditor<any, any> }) => any;
 
 /** 选区。 */
 export class Selection {

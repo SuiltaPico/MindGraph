@@ -1,3 +1,5 @@
+export type MaybePromise<T> = T | Promise<T>;
+
 export async function wait(ms: number) {
   return new Promise((resolve) => {
     setTimeout(resolve, ms);
