@@ -13,8 +13,9 @@
 3. 如果你使用的是 Windows 系统，请确保 cmake 处于环境变量 PATH 中。
 
 ## 开发
-3. 执行 `pnpm i` 安装依赖。
-4. 执行 `pnpm tauri dev` 启动开发环境。
+1. 执行 `pnpm i` 安装依赖。
+2. 执行 `pnpm tauri dev` 启动开发环境。
+
 ## 构建
 
 ### 桌面
@@ -33,8 +34,5 @@
 3. 执行 `pnpm build:android` 进行构建，此构建过程生成的安装包仅支持
    aarch64（ARM64）架构。
 
-## 推荐 IDE 配置
-
-- [VS Code](https://code.visualstudio.com/) +
-  [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) +
-  [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+## 路线图
+请前往 [roadmap.md](./docs/roadmap.md) 查看详细信息。

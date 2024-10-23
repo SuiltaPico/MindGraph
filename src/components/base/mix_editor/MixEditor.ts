@@ -27,6 +27,13 @@ export type Inline<TName extends string = string, TData = any> = BaseArea & {
   save: () => MaybePromise<InlineSavedData>;
   type: TName;
   data: TData;
+  tags: InlineTag[];
+};
+
+/** 行内标签。 */
+export type InlineTag<TName extends string = string, TData = any> = BaseArea & {
+  type: TName;
+  data: TData;
 };
 
 export type Area = Block<any, any> | Inline<any, any>;

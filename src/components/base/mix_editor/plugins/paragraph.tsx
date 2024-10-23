@@ -6,6 +6,7 @@ import { PluginFactory } from "../plugin";
 import { InlinesRenderer } from "../renderer/MixEditorRenderer";
 import {
   BlockLoader,
+  create_BlockSaveData,
   InlineSavedData,
   load_inlines,
   save_inlines,
@@ -26,12 +27,9 @@ export class ParagraphBlock<TInline extends Inline<any, any>>
 {
   type = "paragraph" as const;
   async save() {
-    return {
-      type: this.type,
-      data: {
-        inlines: await save_inlines(this.data.inlines.get()),
-      } satisfies ParagraphBlockSavedData,
-    };
+    return create_BlockSaveData(this.type, {
+      inlines: await save_inlines(this.data.inlines.get()),
+    } satisfies ParagraphBlockSavedData);
   }
   get_child(index: number) {
     return this.data.inlines.get()[index];
