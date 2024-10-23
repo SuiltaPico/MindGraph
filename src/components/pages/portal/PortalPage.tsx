@@ -6,6 +6,7 @@ import { app_context } from "src/AppContext.tsx";
 import { DisplayRenderer } from "./DisplayRenderer";
 import "./PortalPage.css";
 import { createSignal } from "@/common/signal";
+import { mdiBackburger, mdiCog, mdiFolderArrowLeftOutline, mdiFolderEditOutline } from "@mdi/js";
 
 export const PortalRenderer = () => {
   const navigate = useNavigate();
@@ -23,13 +24,13 @@ export const PortalRenderer = () => {
   const function_item: ListItem[] = [
     {
       text: "回到工作",
-      icon: "mdiBackburger",
+      icon: mdiBackburger,
       functions: goToCanvas,
       description: "这是一个有关于列表的测试啊！",
     },
     {
       text: "新建文件",
-      icon: "mdiFolderEditOutline",
+      icon: mdiFolderEditOutline,
       functions: [
         async () => {
           await ac.mg_new();
@@ -40,7 +41,7 @@ export const PortalRenderer = () => {
     },
     {
       text: "打开文件",
-      icon: "mdiFolderArrowLeftOutline",
+      icon: mdiFolderArrowLeftOutline,
       functions: async () => {
         await ac.open_mg();
         showCanvas();
@@ -50,7 +51,7 @@ export const PortalRenderer = () => {
   const setting_item: ListItem[] = [
     {
       text: "设置",
-      icon: "mdiCog",
+      icon: mdiCog,
       functions: () => {
         alert("还没做");
       },
