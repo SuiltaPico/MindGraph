@@ -9,6 +9,7 @@ import {
 } from "../save";
 import { Position } from "@/common/math";
 import { get_caret_position } from "@/common/dom";
+import { AreaContext } from "../AreaContext";
 
 export type TextInlineSavedData = { value: string };
 
@@ -42,7 +43,7 @@ export const Text = () => {
     },
     renderer: {
       inline: {
-        text: (props: { inline: TextInline }) => {
+        text: (props: { inline: TextInline; context: AreaContext }) => {
           let container: HTMLElement;
           onMount(() => {
             props.inline.get_child_position = (index) => {

@@ -2,6 +2,7 @@ import { WrappedSignal } from "@/common/signal";
 import { For } from "solid-js";
 import { Block, Inline, MixEditor } from "../MixEditor";
 import { CaretRenderer } from "./CaretRenderer";
+import { AreaContext } from "../AreaContext";
 
 export const MixEditorRenderer = <
   TBlock extends Block<any, any>,
@@ -29,11 +30,12 @@ export const BlocksRenderer = <
   const blocks = props.blocks;
   return (
     <For each={blocks.get()}>
-      {(block) =>
-        editor.get_block_renderer(block.type)({
+      {(block) => {
+        const context = new AreaContext(block, undefined, 0);
+        return editor.get_block_renderer(block.type)({
           editor: editor as MixEditor<any, any>,
           block,
-        })
+        })}
       }
     </For>
   );

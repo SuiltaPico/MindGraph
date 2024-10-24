@@ -16,6 +16,7 @@ import {
   UnknownBlockRenderer,
   UnknownInlineRenderer,
 } from "./renderer/MixEditorRenderer";
+import { AreaContext } from "./AreaContext";
 
 export type BaseArea = {
   save: () => MaybePromise<any>;
@@ -43,7 +44,7 @@ export type InlineTag<TName extends string = any, TData = any> = BaseArea & {
   data: TData;
 };
 
-export type Area = Block<any, any> | Inline<any, any>;
+export type Area = Block<any, any> | Inline<any, any> | InlineTag<any, any>;
 export const NotArea = "not_area" as const;
 export type MaybeArea = Area | typeof NotArea;
 
@@ -65,6 +66,8 @@ export class MixEditor<
   selection = new Selection();
   data = createSignal<TBlock[]>([]);
   metadata = createSignal<Metadata | undefined>(undefined);
+
+  area_context = new Map<Area, AreaContext>();
 
   loader: LoaderMap = {
     block: new Map(),
@@ -100,9 +103,8 @@ export class MixEditor<
   }
 
   constructor(config: Config) {
+    const plugin_keys = ["renderer", "loader"] as const;
     config.plugins.forEach((plugin) => {
-      const plugin_keys = ["renderer", "loader"] as const;
-
       for (const plugin_key of plugin_keys) {
         const plugin_value = plugin[plugin_key];
         if (plugin_value) {

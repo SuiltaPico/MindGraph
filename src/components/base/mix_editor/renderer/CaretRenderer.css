@@ -1,6 +1,10 @@
 ._m_mix_editor {
   @apply relative;
 
+  & .__paragraph {
+    @apply m-0;
+  }
+
   & .__caret_layer {
     @apply absolute top-0 left-0 right-0 bottom-0
       pointer-events-none;
