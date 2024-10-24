@@ -1,5 +1,5 @@
 import { MaybePromise } from "@/common/async";
-import { Block, Inline, InlineTag, MaybeArea, NotArea } from "./MixEditor";
+import { Block, Inline, InlineTag, MaybeArea, Metadata, NotArea } from "./MixEditor";
 import { GetMapValue } from "@/common/types";
 
 export const schema_version = 1;
@@ -54,10 +54,7 @@ export function create_InlineTagSaveData(type: string, data: any) {
 
 export type SavedData = {
   blocks: BlockSavedData[];
-  metadata: {
-    schema_version: number;
-    updated_at: number;
-  };
+  meta: Metadata;
 };
 
 export type BlockLoader<TData = any> = (
@@ -122,15 +119,19 @@ export class LoadingErrorInline
 
 export async function load_data(data: SavedData, parser_map: LoaderMap) {
   const promises = data.blocks.map((block) => load_block(block, parser_map));
-  return await Promise.all(promises);
+  const blocks = await Promise.all(promises);
+  return { blocks, meta: data.meta };
 }
 
 const gen_area_loader = <T extends "block" | "inline" | "inline_tag">(
   type: T
 ) => {
   return async (data: SavedDataRecord[T], parser_map: LoaderMap) => {
+    console.log(parser_map);
+
     const loader = parser_map[type].get(data.type) as any;
     if (!loader) {
+      console.error(`${data.type} ${type} 区域加载器未定义。`);
       return new LoadingErrorBlock({
         reason: `${data.type} 区域加载器未定义。`,
         original: data,
@@ -139,6 +140,7 @@ const gen_area_loader = <T extends "block" | "inline" | "inline_tag">(
     try {
       return await loader(data as any, parser_map);
     } catch (error) {
+      console.error(error);
       return new LoadingErrorBlock({
         reason: `${data.type} 区域解析失败。错误：${String(error)}`,
         original: data,
@@ -168,8 +170,8 @@ export async function save_data(blocks: Block[]): Promise<SavedData> {
   const results = await Promise.all(promises);
   return {
     blocks: results,
-    metadata: {
-      schema_version,
+    meta: {
+      schema_version: schema_version,
       updated_at: Date.now(),
     },
   };

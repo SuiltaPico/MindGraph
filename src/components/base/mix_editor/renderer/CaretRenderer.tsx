@@ -1,4 +1,5 @@
 import { CaretRendererType } from "../selection";
+import "./CaretRenderer.css";
 
 export const CaretRenderer: CaretRendererType = (props) => {
   return (

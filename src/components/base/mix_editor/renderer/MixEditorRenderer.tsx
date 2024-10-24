@@ -19,8 +19,8 @@ export const MixEditorRenderer = <
 };
 
 export const BlocksRenderer = <
-  TBlock extends Block<any, any>,
-  TInline extends Inline<any, any>
+  TBlock extends Block,
+  TInline extends Inline
 >(props: {
   editor: MixEditor<TBlock, TInline>;
   blocks: WrappedSignal<TBlock[]>;
@@ -30,8 +30,8 @@ export const BlocksRenderer = <
   return (
     <For each={blocks.get()}>
       {(block) =>
-        (editor.get_block_renderer(block.type))({
-          editor,
+        editor.get_block_renderer(block.type)({
+          editor: editor as MixEditor<any, any>,
           block,
         })
       }
@@ -48,7 +48,7 @@ export const InlinesRenderer = <TInline extends Inline<any, any>>(props: {
   return (
     <For each={inlines.get()}>
       {(inline) =>
-        (editor.get_inline_renderer(inline.type))({
+        editor.get_inline_renderer(inline.type)({
           editor,
           inline,
         })

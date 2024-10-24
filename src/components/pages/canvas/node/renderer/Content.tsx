@@ -12,17 +12,16 @@ import {
 import { CanvasStateContext } from "../../Canvas";
 import { MindNodeHelper } from "../../utils/Helper";
 import { NodeCanvasContext } from "../NodeCanvas";
-// import { Editor, EditorRenderer } from "./Editor";
-import { MindNodeRendererElement } from "./Node";
-import { RedrawHelper } from "./RedrawHelper";
+import { MixEditor } from "@/components/base/mix_editor/MixEditor";
 import {
   Paragraph,
   ParagraphBlock,
 } from "@/components/base/mix_editor/plugins/paragraph";
 import { Text, TextInline } from "@/components/base/mix_editor/plugins/text";
-import { MixEditor } from "@/components/base/mix_editor/MixEditor";
 import { MixEditorRenderer } from "@/components/base/mix_editor/renderer/MixEditorRenderer";
-import { createSignal } from "@/common/signal";
+import dayjs from "dayjs";
+import { MindNodeRendererElement } from "./Node";
+import { RedrawHelper } from "./RedrawHelper";
 
 export interface IChildData {
   id: string;
@@ -157,24 +156,32 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
   type MyBlocks = ParagraphBlock<MyInlines>;
   type MyInlines = TextInline;
 
-  // const editor = new MixEditor<MyBlocks, MyInlines>({
-  //   plugins: [Paragraph(), Text()],
-  // });
-  // editor.data.set([
-  //   {
-  //     type: "paragraph",
-  //     data: {
-  //       inlines: createSignal<MyInlines[]>([
-  //         {
-  //           type: "text",
-  //           data: {
-  //             value: it.node.content.value,
-  //           },
-  //         },
-  //       ]),
-  //     },
-  //   },
-  // ]);
+  const editor = new MixEditor<MyBlocks, MyInlines>({
+    plugins: [Paragraph(), Text()],
+  });
+  console.log(editor);
+  editor.load({
+    blocks: [
+      {
+        type: "paragraph",
+        data: {
+          inlines: [
+            {
+              type: "text",
+              data: {
+                value: it.node.content.value,
+              },
+              tags: [],
+            },
+          ],
+        },
+      },
+    ],
+    meta: {
+      schema_version: 1,
+      updated_at: dayjs(it.node.updated_at).unix(),
+    },
+  });
 
   return (
     <div
@@ -230,7 +237,7 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
           node = el as MindNodeRendererElement;
         }}
       >
-        {/* <MixEditorRenderer editor={editor}></MixEditorRenderer> */}
+        <MixEditorRenderer editor={editor}></MixEditorRenderer>
       </div>
       <Show when={!folded.get()}>
         <div class="__children">
