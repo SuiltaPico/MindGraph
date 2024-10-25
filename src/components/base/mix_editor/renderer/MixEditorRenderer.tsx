@@ -3,6 +3,7 @@ import { For } from "solid-js";
 import { Block, Inline, MixEditor } from "../MixEditor";
 import { CaretRenderer } from "./CaretRenderer";
 import { AreaContext } from "../AreaContext";
+import { MixEditorMouseEvent } from "../utils/types";
 
 export const MixEditorRenderer = <
   TBlock extends Block,
@@ -12,15 +13,19 @@ export const MixEditorRenderer = <
 }) => {
   let container: HTMLDivElement | undefined;
   const editor = props.editor;
-  // editor.root_area.get_child_position = (index: number) => {
-  //   const block = editor.blocks.get()[index];
-  //   return {
-  //     x: 0,
-  //     y: 0,
-  //   };
-  // };
+
+  function handle_keydown(e: KeyboardEvent) {
+    if (e.key === "ArrowLeft") {
+      e.preventDefault();
+      editor.selection.move_left();
+    } else if (e.key === "ArrowRight") {
+      e.preventDefault();
+      editor.selection.move_right();
+    }
+  }
+
   return (
-    <div class="_m_mix_editor" ref={container}>
+    <div class="_m_mix_editor" ref={container} onKeyDown={handle_keydown}>
       <BlocksRenderer
         editor={editor}
         blocks={editor.blocks}

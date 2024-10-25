@@ -1,7 +1,7 @@
 import { Inline, MixEditor } from "../MixEditor";
 import { TextInline } from "./text";
 
-export type BoldInline = Inline<"bold", { value: TextInline }>;
+export class BoldPlugin implements Inline<"bold", { }> {}
 
 export const Bold = () => ({
   inline_renderer: {

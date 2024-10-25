@@ -1,5 +1,12 @@
 import { MaybePromise } from "@/common/async";
-import { Block, Inline, InlineTag, MaybeArea, Metadata, NotArea } from "./MixEditor";
+import {
+  Block,
+  Inline,
+  InlineTag,
+  MaybeArea,
+  Metadata,
+  NotArea,
+} from "./MixEditor";
 import { GetMapValue } from "@/common/types";
 
 export const schema_version = 1;
@@ -90,6 +97,9 @@ export class LoadingErrorBlock
   save() {
     return this.data.original;
   }
+  children_count() {
+    return 0;
+  }
   get_child() {
     return NotArea;
   }
@@ -107,6 +117,9 @@ export class LoadingErrorInline
   tags = [];
   save() {
     return this.data.original;
+  }
+  children_count() {
+    return 0;
   }
   get_child() {
     return NotArea;

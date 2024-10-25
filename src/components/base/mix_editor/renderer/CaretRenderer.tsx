@@ -13,18 +13,10 @@ export const CaretRenderer: CaretRendererType = (props) => {
 
   onMount(() => {
     createEffect(
-      on(selection.caret_height.get, (height) => {
-        if (start_caret) {
-          start_caret.style.height = `${height}px`;
-        }
-        if (end_caret) {
-          end_caret.style.height = `${height}px`;
-        }
-      })
-    );
-    createEffect(
       on(selection.selected.get, (selected) => {
-        input?.focus();
+        input?.focus({
+          preventScroll: true,
+        });
 
         if (!selected) return;
         if (selected.type === "collapsed") {
@@ -47,16 +39,34 @@ export const CaretRenderer: CaretRendererType = (props) => {
   });
 
   return (
-    <div class="__caret_layer" ref={(it) => (container = it)}>
+    <div
+      class="__caret_layer"
+      ref={(it) => (container = it)}
+      style={{
+        visibility: editor.mode.get() === "edit" ? "visible" : "hidden",
+      }}
+    >
       <Show
         when={selected_type() === "collapsed" || selected_type() === "extended"}
       >
-        <div class="__start_caret" ref={(it) => (start_caret = it)}>
+        <div
+          class="__start_caret"
+          ref={(it) => (start_caret = it)}
+          style={{
+            height: `${selection.caret_height.get()}px`,
+          }}
+        >
           <input ref={(it) => (input = it)} />
         </div>
       </Show>
       <Show when={selected_type() === "extended"}>
-        <div class="__end_caret" ref={(it) => (end_caret = it)}></div>
+        <div
+          class="__end_caret"
+          ref={(it) => (end_caret = it)}
+          style={{
+            height: `${selection.caret_height.get()}px`,
+          }}
+        ></div>
       </Show>
     </div>
   );

@@ -36,6 +36,9 @@ export class ParagraphBlock<TInline extends Inline<any, any>>
     return this.data.inlines.get()[index];
   }
   get_child_position(index: number): Position | void {}
+  children_count() {
+    return this.data.inlines.get().length;
+  }
   constructor(public data: { inlines: WrappedSignal<TInline[]> }) {}
 }
 

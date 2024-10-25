@@ -29,6 +29,9 @@ export class TextInline
       this.tags
     );
   }
+  children_count() {
+    return this.data.value.get().length;
+  }
   get_child(index: number): MaybeArea {
     return NotArea;
   }
@@ -48,6 +51,58 @@ export const Text = () => {
       await load_inline_tags(data.tags, parser_map)
     );
   };
+
+  const renderer = (props: {
+    inline: TextInline;
+    context: AreaContext;
+    editor: MixEditor;
+  }) => {
+    const inline = props.inline;
+    const context = props.context;
+
+    let container: HTMLElement;
+    onMount(() => {
+      inline.get_child_position = (index) => {
+        var range = document.createRange();
+        range.setStart(container.firstChild!, index);
+        range.setEnd(container.firstChild!, inline.data.value.get().length);
+        const rects = range.getClientRects();
+        const rect = rects[0];
+        return {
+          x: rect.left,
+          y: rect.top,
+        };
+      };
+    });
+    return (
+      <span
+        class="__inline __text"
+        ref={(it) => (container = it)}
+        onMouseDown={(e: MixEditorMouseEvent) => {
+          if (e.mix_selection_changed) return;
+          e.mix_selection_changed = true;
+
+          const { offset } = get_caret_position(e);
+          if (offset === null) return;
+
+          e.preventDefault();
+
+          props.editor.selection.collapsed_select(
+            context.get_path().concat(offset)
+          );
+          const container_rects = Array.from(container.getClientRects());
+
+          // TODO：需要考虑多行文本的情况，计算当前位于的行，然后取该行的高度
+          props.editor.selection.caret_height.set(
+            Math.max(...container_rects.map((it) => it.height))
+          );
+        }}
+      >
+        {inline.data.value.get()}
+      </span>
+    );
+  };
+  
   return {
     loader: {
       inline: {
@@ -56,53 +111,7 @@ export const Text = () => {
     },
     renderer: {
       inline: {
-        text: (props: {
-          inline: TextInline;
-          context: AreaContext;
-          editor: MixEditor;
-        }) => {
-          const inline = props.inline;
-          const context = props.context;
-
-          let container: HTMLElement;
-          onMount(() => {
-            inline.get_child_position = (index) => {
-              var range = document.createRange();
-              range.setStart(container.firstChild!, index);
-              range.setEnd(
-                container.firstChild!,
-                inline.data.value.get().length
-              );
-              const rects = range.getClientRects();
-              const rect = rects[0];
-              return {
-                x: rect.left,
-                y: rect.top,
-              };
-            };
-          });
-          return (
-            <span
-              class="__inline __text"
-              ref={(it) => (container = it)}
-              onMouseDown={(e: MixEditorMouseEvent) => {
-                if (e.mix_selection_changed) return;
-                e.mix_selection_changed = true;
-
-                e.preventDefault();
-                const { offset } = get_caret_position(e);
-                if (offset === null) return;
-
-                props.editor.selection.collapsed_select(
-                  context.get_path().concat(offset)
-                );
-                props.editor.selection.caret_height.set(container.offsetHeight);
-              }}
-            >
-              {inline.data.value.get()}
-            </span>
-          );
-        },
+        text: renderer,
       },
     },
   } satisfies Plugin;

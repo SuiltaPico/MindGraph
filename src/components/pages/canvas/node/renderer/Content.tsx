@@ -159,7 +159,6 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
   const editor = new MixEditor<MyBlocks, MyInlines>({
     plugins: [Paragraph(), Text()],
   });
-  console.log(editor);
   editor.load({
     blocks: [
       {
@@ -209,6 +208,10 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
       schema_version: 1,
       updated_at: dayjs(it.node.updated_at).unix(),
     },
+  });
+
+  createEffect(() => {
+    editor.mode.set(editing.get() ? "edit" : "readonly");
   });
 
   return (
@@ -263,6 +266,9 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
         onInput={handle_node_input}
         ref={(el) => {
           node = el as MindNodeRendererElement;
+        }}
+        style={{
+          cursor: editor.mode.get() === "edit" ? "text" : "default",
         }}
       >
         <MixEditorRenderer editor={editor}></MixEditorRenderer>

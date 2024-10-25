@@ -20,6 +20,7 @@ import { AreaContext } from "./AreaContext";
 
 export type BaseArea = {
   save: () => MaybePromise<any>;
+  children_count(): number;
   get_child(index: number): MaybeArea;
   get_child_position(index: number): Position | void;
 };
@@ -63,7 +64,7 @@ export class MixEditor<
   TInline extends Inline<any, any> = Inline<any, any>,
   TInlineTag extends InlineTag<any, any> = InlineTag<any, any>
 > {
-  selection = new Selection();
+  selection = new Selection(this);
   blocks = createSignal<TBlock[]>([]);
   metadata = createSignal<Metadata | undefined>(undefined);
 
@@ -75,10 +76,13 @@ export class MixEditor<
       type: "root",
       data: {},
     }),
+    children_count: () => this.blocks.get().length,
     get_child: (index: number) => this.blocks.get()[index],
     get_child_position: (index: number) => undefined as Position | undefined,
   };
   root_context = new AreaContext(this.root_area, undefined, 0);
+
+  mode = createSignal<"readonly" | "edit">("readonly");
 
   loader: LoaderMap = {
     block: new Map(),
@@ -101,6 +105,16 @@ export class MixEditor<
 
   get_inline_tag_renderer(type: TInlineTag["type"]) {
     return this.renderer.inline_tag?.get(type) ?? (() => undefined);
+  }
+
+  get_area_of_path(path: number[]) {
+    let area = this.root_area;
+    for (let index = 0; index < path.length; index++) {
+      const path_index = path[index];
+      area = area.get_child(path_index) as Block<any, any>;
+      if (!area) return undefined;
+    }
+    return area;
   }
 
   get_position_of_path(path: number[]) {
