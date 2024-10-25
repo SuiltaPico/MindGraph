@@ -3,16 +3,44 @@ import { MixEditor } from "./MixEditor";
 
 export type CaretRendererType = (props: { editor: MixEditor<any, any> }) => any;
 
+export type CollapsedSelected = {
+  type: "collapsed";
+  start_path: number[];
+}
+
+export type ExtendedSelected = {
+  type: "extended";
+  start_path: number[];
+  end_path: number[];
+}
+
+export type Selected = CollapsedSelected | ExtendedSelected;
+
 /** 选区。 */
 export class Selection {
-  start_path = createSignal<number[]>([]);
-  end_path = createSignal<number[]>([]);
+  selected = createSignal<Selected | undefined>(undefined);
+  caret_height = createSignal<number>(16);
 
-  set_start_path(path: number[]) {
-    this.start_path.set(path);
+  collapsed_select(path: number[]) {
+    this.selected.set({
+      type: "collapsed",
+      start_path: path,
+    });
   }
 
-  set_end_path(path: number[]) {
-    this.end_path.set(path);
+  extended_select(start_path: number[], end_path: number[]) {
+    this.selected.set({
+      type: "extended",
+      start_path,
+      end_path,
+    });
+  }
+
+  clear() {
+    this.selected.set(undefined);
+  }
+
+  get() {
+    return this.selected.get();
   }
 }

@@ -173,6 +173,34 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
               },
               tags: [],
             },
+            {
+              type: "text",
+              data: {
+                value: it.node.content.value,
+              },
+              tags: [],
+            },
+          ],
+        },
+      },
+      {
+        type: "paragraph",
+        data: {
+          inlines: [
+            {
+              type: "text",
+              data: {
+                value: it.node.content.value,
+              },
+              tags: [],
+            },
+            {
+              type: "text",
+              data: {
+                value: it.node.content.value,
+              },
+              tags: [],
+            },
           ],
         },
       },

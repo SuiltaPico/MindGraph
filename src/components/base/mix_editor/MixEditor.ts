@@ -64,10 +64,21 @@ export class MixEditor<
   TInlineTag extends InlineTag<any, any> = InlineTag<any, any>
 > {
   selection = new Selection();
-  data = createSignal<TBlock[]>([]);
+  blocks = createSignal<TBlock[]>([]);
   metadata = createSignal<Metadata | undefined>(undefined);
 
   area_context = new Map<Area, AreaContext>();
+  root_area: Block<"root", {}> = {
+    type: "root",
+    data: {},
+    save: () => ({
+      type: "root",
+      data: {},
+    }),
+    get_child: (index: number) => this.blocks.get()[index],
+    get_child_position: (index: number) => undefined as Position | undefined,
+  };
+  root_context = new AreaContext(this.root_area, undefined, 0);
 
   loader: LoaderMap = {
     block: new Map(),
@@ -92,14 +103,24 @@ export class MixEditor<
     return this.renderer.inline_tag?.get(type) ?? (() => undefined);
   }
 
+  get_position_of_path(path: number[]) {
+    let area = this.root_area;
+    for (let index = 0; index < path.length; index++) {
+      const path_index = path[index];
+      if (index === path.length - 1) return area.get_child_position(path_index);
+      area = area.get_child(path_index) as Block<any, any>;
+      if (!area) return undefined;
+    }
+  }
+
   async load(data: SavedData) {
     const { blocks, meta } = await load_data(data, this.loader);
-    this.data.set(blocks);
+    this.blocks.set(blocks);
     this.metadata.set(meta);
   }
 
   async save() {
-    return await save_data(this.data.get());
+    return await save_data(this.blocks.get());
   }
 
   constructor(config: Config) {

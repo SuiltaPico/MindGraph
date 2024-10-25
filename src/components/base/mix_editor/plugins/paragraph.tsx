@@ -11,6 +11,7 @@ import {
   load_inlines,
   save_inlines,
 } from "../save";
+import { AreaContext } from "../AreaContext";
 
 export type ParagraphBlockSavedData = {
   inlines: InlineSavedData[];
@@ -51,6 +52,7 @@ export const Paragraph = (() => {
   const renderer = (props: {
     editor: MixEditor<any, any>;
     block: ParagraphBlock<any>;
+    context: AreaContext;
   }) => {
     let container: HTMLElement | undefined;
     const editor = props.editor;
@@ -69,7 +71,11 @@ export const Paragraph = (() => {
 
     return (
       <p class="__block __paragraph" ref={(it) => (container = it)}>
-        <InlinesRenderer editor={editor} inlines={block.data.inlines} />
+        <InlinesRenderer
+          editor={editor}
+          inlines={block.data.inlines}
+          parent={props.context}
+        />
       </p>
     );
   };

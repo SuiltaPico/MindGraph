@@ -1,20 +1,16 @@
 import { Area } from "./MixEditor";
 
 export class AreaContext {
-  area: Area;
-  parent: AreaContext;
-  parent_index: number;
-
-  constructor(area: Area, parent: AreaContext, parent_index: number) {
-    this.area = area;
-    this.parent = parent;
-    this.parent_index = parent_index;
-  }
+  constructor(
+    public area: Area,
+    public parent: AreaContext | undefined,
+    public parent_index: number
+  ) {}
 
   get_path() {
     const path: number[] = [];
     let current: AreaContext | undefined = this;
-    while (current) {
+    while (current?.parent) {
       path.push(current.parent_index);
       current = current.parent;
     }

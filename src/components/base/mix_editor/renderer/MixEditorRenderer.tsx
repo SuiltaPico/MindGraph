@@ -5,15 +5,27 @@ import { CaretRenderer } from "./CaretRenderer";
 import { AreaContext } from "../AreaContext";
 
 export const MixEditorRenderer = <
-  TBlock extends Block<any, any>,
-  TInline extends Inline<any, any>
+  TBlock extends Block,
+  TInline extends Inline
 >(props: {
   editor: MixEditor<TBlock, TInline>;
 }) => {
+  let container: HTMLDivElement | undefined;
   const editor = props.editor;
+  // editor.root_area.get_child_position = (index: number) => {
+  //   const block = editor.blocks.get()[index];
+  //   return {
+  //     x: 0,
+  //     y: 0,
+  //   };
+  // };
   return (
-    <div class="_m_mix_editor">
-      <BlocksRenderer editor={editor} blocks={editor.data} />
+    <div class="_m_mix_editor" ref={container}>
+      <BlocksRenderer
+        editor={editor}
+        blocks={editor.blocks}
+        parent={editor.root_context}
+      />
       <CaretRenderer editor={editor} />
     </div>
   );
@@ -25,18 +37,20 @@ export const BlocksRenderer = <
 >(props: {
   editor: MixEditor<TBlock, TInline>;
   blocks: WrappedSignal<TBlock[]>;
+  parent: AreaContext;
 }) => {
   const editor = props.editor;
   const blocks = props.blocks;
   return (
     <For each={blocks.get()}>
-      {(block) => {
-        const context = new AreaContext(block, undefined, 0);
+      {(block, index) => {
+        const context = new AreaContext(block, props.parent, index());
         return editor.get_block_renderer(block.type)({
           editor: editor as MixEditor<any, any>,
           block,
-        })}
-      }
+          context,
+        });
+      }}
     </For>
   );
 };
@@ -44,17 +58,20 @@ export const BlocksRenderer = <
 export const InlinesRenderer = <TInline extends Inline<any, any>>(props: {
   editor: MixEditor<any, TInline>;
   inlines: WrappedSignal<TInline[]>;
+  parent: AreaContext;
 }) => {
   const editor = props.editor;
   const inlines = props.inlines;
   return (
     <For each={inlines.get()}>
-      {(inline) =>
-        editor.get_inline_renderer(inline.type)({
+      {(inline, index) => {
+        const context = new AreaContext(inline, props.parent, index());
+        return editor.get_inline_renderer(inline.type)({
           editor,
           inline,
-        })
-      }
+          context,
+        });
+      }}
     </For>
   );
 };

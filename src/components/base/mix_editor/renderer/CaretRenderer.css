@@ -9,12 +9,13 @@
     @apply absolute top-0 left-0 right-0 bottom-0
       pointer-events-none;
 
-    & > .__caret {
+    & > .__start_caret,
+    & > .__end_caret {
       @apply w-px 
         absolute
         pointer-events-auto bg-black;
 
-      animation: _m_mix_editor__caret_blink 1s step-end infinite;
+      animation: _m_mix_editor__caret_blink 1s step-start infinite;
 
       & > input {
         @apply w-0 p-0 m-0 border-none outline-none pointer-events-none;
