@@ -58,8 +58,8 @@ importers:
         specifier: 2.0.3
         version: 2.0.3
       '@types/node':
-        specifier: ^22.7.7
-        version: 22.7.7
+        specifier: ^22.8.1
+        version: 22.8.1
       '@types/throttle-debounce':
         specifier: ^5.0.2
         version: 5.0.2
@@ -80,16 +80,16 @@ importers:
         version: 5.6.3
       unocss:
         specifier: ^0.63.4
-        version: 0.63.4(postcss@8.4.47)(rollup@4.24.0)(vite@5.4.9(@types/node@22.7.7)(sass@1.80.3))
+        version: 0.63.4(postcss@8.4.47)(rollup@4.24.0)(vite@5.4.9(@types/node@22.8.1)(sass@1.80.3))
       vite:
         specifier: ^5.4.9
-        version: 5.4.9(@types/node@22.7.7)(sass@1.80.3)
+        version: 5.4.9(@types/node@22.8.1)(sass@1.80.3)
       vite-plugin-solid:
         specifier: ^2.10.2
-        version: 2.10.2(solid-js@1.9.2)(vite@5.4.9(@types/node@22.7.7)(sass@1.80.3))
+        version: 2.10.2(solid-js@1.9.2)(vite@5.4.9(@types/node@22.8.1)(sass@1.80.3))
       vite-tsconfig-paths:
         specifier: ^5.0.1
-        version: 5.0.1(typescript@5.6.3)(vite@5.4.9(@types/node@22.7.7)(sass@1.80.3))
+        version: 5.0.1(typescript@5.6.3)(vite@5.4.9(@types/node@22.8.1)(sass@1.80.3))
 
 packages:
 
@@ -791,8 +791,8 @@ packages:
   '@types/estree@1.0.6':
     resolution: {integrity: sha512-AYnb1nQyY49te+VRAVgmzfcgjYS91mY5P0TKUDCLEM+gNnA+3T6rWITXRLYCpahpqSQbN5cE+gHpnPyXjHWxcw==}
 
-  '@types/node@22.7.7':
-    resolution: {integrity: sha512-SRxCrrg9CL/y54aiMCG3edPKdprgMVGDXjA3gB8UmmBW5TcXzRUYAh8EWzTnSJFAd1rgImPELza+A3bJ+qxz8Q==}
+  '@types/node@22.8.1':
+    resolution: {integrity: sha512-k6Gi8Yyo8EtrNtkHXutUu2corfDf9su95VYVP10aGYMMROM6SAItZi0w1XszA6RtWTHSVp5OeFof37w0IEqCQg==}
 
   '@types/throttle-debounce@5.0.2':
     resolution: {integrity: sha512-pDzSNulqooSKvSNcksnV72nk8p7gRqN8As71Sp28nov1IgmPKWbOEIwAWvBME5pPTtaXJAvG3O4oc76HlQ4kqQ==}
@@ -2009,19 +2009,19 @@ snapshots:
 
   '@types/estree@1.0.6': {}
 
-  '@types/node@22.7.7':
+  '@types/node@22.8.1':
     dependencies:
       undici-types: 6.19.8
 
   '@types/throttle-debounce@5.0.2': {}
 
-  '@unocss/astro@0.63.4(rollup@4.24.0)(vite@5.4.9(@types/node@22.7.7)(sass@1.80.3))':
+  '@unocss/astro@0.63.4(rollup@4.24.0)(vite@5.4.9(@types/node@22.8.1)(sass@1.80.3))':
     dependencies:
       '@unocss/core': 0.63.4
       '@unocss/reset': 0.63.4
-      '@unocss/vite': 0.63.4(rollup@4.24.0)(vite@5.4.9(@types/node@22.7.7)(sass@1.80.3))
+      '@unocss/vite': 0.63.4(rollup@4.24.0)(vite@5.4.9(@types/node@22.8.1)(sass@1.80.3))
     optionalDependencies:
-      vite: 5.4.9(@types/node@22.7.7)(sass@1.80.3)
+      vite: 5.4.9(@types/node@22.8.1)(sass@1.80.3)
     transitivePeerDependencies:
       - rollup
       - supports-color
@@ -2146,7 +2146,7 @@ snapshots:
     dependencies:
       '@unocss/core': 0.63.4
 
-  '@unocss/vite@0.63.4(rollup@4.24.0)(vite@5.4.9(@types/node@22.7.7)(sass@1.80.3))':
+  '@unocss/vite@0.63.4(rollup@4.24.0)(vite@5.4.9(@types/node@22.8.1)(sass@1.80.3))':
     dependencies:
       '@ampproject/remapping': 2.3.0
       '@rollup/pluginutils': 5.1.2(rollup@4.24.0)
@@ -2156,7 +2156,7 @@ snapshots:
       chokidar: 3.6.0
       magic-string: 0.30.12
       tinyglobby: 0.2.9
-      vite: 5.4.9(@types/node@22.7.7)(sass@1.80.3)
+      vite: 5.4.9(@types/node@22.8.1)(sass@1.80.3)
     transitivePeerDependencies:
       - rollup
       - supports-color
@@ -2668,9 +2668,9 @@ snapshots:
 
   undici-types@6.19.8: {}
 
-  unocss@0.63.4(postcss@8.4.47)(rollup@4.24.0)(vite@5.4.9(@types/node@22.7.7)(sass@1.80.3)):
+  unocss@0.63.4(postcss@8.4.47)(rollup@4.24.0)(vite@5.4.9(@types/node@22.8.1)(sass@1.80.3)):
     dependencies:
-      '@unocss/astro': 0.63.4(rollup@4.24.0)(vite@5.4.9(@types/node@22.7.7)(sass@1.80.3))
+      '@unocss/astro': 0.63.4(rollup@4.24.0)(vite@5.4.9(@types/node@22.8.1)(sass@1.80.3))
       '@unocss/cli': 0.63.4(rollup@4.24.0)
       '@unocss/core': 0.63.4
       '@unocss/postcss': 0.63.4(postcss@8.4.47)
@@ -2686,9 +2686,9 @@ snapshots:
       '@unocss/transformer-compile-class': 0.63.4
       '@unocss/transformer-directives': 0.63.4
       '@unocss/transformer-variant-group': 0.63.4
-      '@unocss/vite': 0.63.4(rollup@4.24.0)(vite@5.4.9(@types/node@22.7.7)(sass@1.80.3))
+      '@unocss/vite': 0.63.4(rollup@4.24.0)(vite@5.4.9(@types/node@22.8.1)(sass@1.80.3))
     optionalDependencies:
-      vite: 5.4.9(@types/node@22.7.7)(sass@1.80.3)
+      vite: 5.4.9(@types/node@22.8.1)(sass@1.80.3)
     transitivePeerDependencies:
       - postcss
       - rollup
@@ -2702,7 +2702,7 @@ snapshots:
 
   validate-html-nesting@1.2.2: {}
 
-  vite-plugin-solid@2.10.2(solid-js@1.9.2)(vite@5.4.9(@types/node@22.7.7)(sass@1.80.3)):
+  vite-plugin-solid@2.10.2(solid-js@1.9.2)(vite@5.4.9(@types/node@22.8.1)(sass@1.80.3)):
     dependencies:
       '@babel/core': 7.25.8
       '@types/babel__core': 7.20.5
@@ -2710,34 +2710,34 @@ snapshots:
       merge-anything: 5.1.7
       solid-js: 1.9.2
       solid-refresh: 0.6.3(solid-js@1.9.2)
-      vite: 5.4.9(@types/node@22.7.7)(sass@1.80.3)
-      vitefu: 0.2.5(vite@5.4.9(@types/node@22.7.7)(sass@1.80.3))
+      vite: 5.4.9(@types/node@22.8.1)(sass@1.80.3)
+      vitefu: 0.2.5(vite@5.4.9(@types/node@22.8.1)(sass@1.80.3))
     transitivePeerDependencies:
       - supports-color
 
-  vite-tsconfig-paths@5.0.1(typescript@5.6.3)(vite@5.4.9(@types/node@22.7.7)(sass@1.80.3)):
+  vite-tsconfig-paths@5.0.1(typescript@5.6.3)(vite@5.4.9(@types/node@22.8.1)(sass@1.80.3)):
     dependencies:
       debug: 4.3.7
       globrex: 0.1.2
       tsconfck: 3.1.4(typescript@5.6.3)
     optionalDependencies:
-      vite: 5.4.9(@types/node@22.7.7)(sass@1.80.3)
+      vite: 5.4.9(@types/node@22.8.1)(sass@1.80.3)
     transitivePeerDependencies:
       - supports-color
       - typescript
 
-  vite@5.4.9(@types/node@22.7.7)(sass@1.80.3):
+  vite@5.4.9(@types/node@22.8.1)(sass@1.80.3):
     dependencies:
       esbuild: 0.21.5
       postcss: 8.4.47
       rollup: 4.24.0
     optionalDependencies:
-      '@types/node': 22.7.7
+      '@types/node': 22.8.1
       fsevents: 2.3.3
       sass: 1.80.3
 
-  vitefu@0.2.5(vite@5.4.9(@types/node@22.7.7)(sass@1.80.3)):
+  vitefu@0.2.5(vite@5.4.9(@types/node@22.8.1)(sass@1.80.3)):
     optionalDependencies:
-      vite: 5.4.9(@types/node@22.7.7)(sass@1.80.3)
+      vite: 5.4.9(@types/node@22.8.1)(sass@1.80.3)
 
   yallist@3.1.1: {}
