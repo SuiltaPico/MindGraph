@@ -17,7 +17,7 @@
     "@editorjs/editorjs": "^2.30.6",
     "@floating-ui/dom": "^1.6.12",
     "@mdi/js": "^7.4.47",
-    "@solidjs/router": "^0.14.10",
+    "@solidjs/router": "^0.15.0",
     "@tauri-apps/api": "^2.0.3",
     "@tauri-apps/plugin-dialog": "^2.0.1",
     "@tauri-apps/plugin-process": "^2.0.0",
