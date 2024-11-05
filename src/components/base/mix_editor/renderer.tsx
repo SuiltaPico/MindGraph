@@ -2,21 +2,21 @@ import { JSX } from "solid-js";
 import { MixEditor, Block, Inline, InlineTag } from "./MixEditor";
 import { AreaContext } from "./AreaContext";
 
-export type BlockRenderer = (props: {
+export type BlockRenderer<TBlock extends Block = any> = (props: {
   editor: MixEditor;
-  block: Block;
+  block: TBlock;
   context: AreaContext;
 }) => JSX.Element;
 
-export type InlineRenderer = (props: {
+export type InlineRenderer<TInline extends Inline = any> = (props: {
   editor: MixEditor;
-  inline: Inline;
+  inline: TInline;
   context: AreaContext;
 }) => JSX.Element;
 
-export type InlineTagRenderer = (props: {
+export type InlineTagRenderer<TInlineTag extends InlineTag = any> = (props: {
   editor: MixEditor;
-  inline_tag: InlineTag;
+  inline_tag: TInlineTag;
   context: AreaContext;
 }) => JSX.Element;
 

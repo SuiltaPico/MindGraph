@@ -6,6 +6,7 @@ import { MaybePromise } from "@/common/async";
 import {
   BlockSavedData,
   InlineSavedData,
+  InlineTagSavedData,
   load_data,
   LoaderMap,
   save_data,
@@ -17,33 +18,41 @@ import {
   UnknownInlineRenderer,
 } from "./renderer/MixEditorRenderer";
 import { AreaContext } from "./AreaContext";
+import { EventPair } from "./event";
 
-export type BaseArea = {
+export interface BaseArea {
   save: () => MaybePromise<any>;
   children_count(): number;
   get_child(index: number): MaybeArea;
   get_child_position(index: number): Position | void;
-};
+  handle_event?<TEventPair extends EventPair>(
+    event: TEventPair["event"]
+  ): TEventPair["returning"] | void;
+}
 /** 块区域。 */
-export type Block<TName extends string = any, TData = any> = BaseArea & {
+export interface Block<TName extends string = any, TData = any>
+  extends BaseArea {
   save: () => MaybePromise<BlockSavedData>;
   type: TName;
   data: TData;
-};
+}
 
 /** 行内区域。 */
-export type Inline<TName extends string = any, TData = any> = BaseArea & {
+export interface Inline<TName extends string = any, TData = any>
+  extends BaseArea {
   save: () => MaybePromise<InlineSavedData>;
   type: TName;
   data: TData;
   tags: InlineTag[];
-};
+}
 
 /** 行内标签。 */
-export type InlineTag<TName extends string = any, TData = any> = BaseArea & {
+export interface InlineTag<TName extends string = any, TData = any>
+  extends BaseArea {
+  save: () => MaybePromise<InlineTagSavedData>;
   type: TName;
   data: TData;
-};
+}
 
 export type Area = Block<any, any> | Inline<any, any> | InlineTag<any, any>;
 export const NotArea = "not_area" as const;
@@ -79,6 +88,7 @@ export class MixEditor<
     children_count: () => this.blocks.get().length,
     get_child: (index: number) => this.blocks.get()[index],
     get_child_position: (index: number) => undefined as Position | undefined,
+    handle_event: () => undefined,
   };
   root_context = new AreaContext(this.root_area, undefined, 0);
 

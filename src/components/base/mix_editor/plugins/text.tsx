@@ -12,6 +12,9 @@ import { get_caret_position } from "@/common/dom";
 import { AreaContext } from "../AreaContext";
 import { createSignal, WrappedSignal } from "@/common/signal";
 import { MixEditorMouseEvent } from "../utils/types";
+import { EventPair } from "../event";
+import { CaretMoveEnterEventReturning } from "../event/CaretMoveEnter";
+import { MaybePromise } from "@/common/async";
 
 export type TextInlineSavedData = { value: string };
 
@@ -20,13 +23,13 @@ export class TextInline
 {
   type = "text" as const;
   data: { value: WrappedSignal<string> };
-  save() {
+  async save() {
     return create_InlineSaveData(
       this.type,
       {
         value: this.data.value.get(),
       },
-      this.tags
+      await Promise.all(this.tags.map((it) => it.save()))
     );
   }
   children_count() {
@@ -36,6 +39,15 @@ export class TextInline
     return NotArea;
   }
   get_child_position(index: number): Position | void {}
+
+  handle_event<TEventPair extends EventPair>(
+    event: TEventPair["event"]
+  ): TEventPair["returning"] | void {
+    if (event.event_type === "caret_move_enter") {
+      return CaretMoveEnterEventReturning.enter();
+    }
+  }
+
   constructor(data: { value: string }, public tags: InlineTag[]) {
     this.data = { value: createSignal(data.value) };
   }
@@ -102,7 +114,7 @@ export const Text = () => {
       </span>
     );
   };
-  
+
   return {
     loader: {
       inline: {
