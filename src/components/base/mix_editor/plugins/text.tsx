@@ -1,5 +1,6 @@
 import { onMount } from "solid-js";
-import { Inline, InlineTag, MaybeArea, MixEditor, NotArea } from "../MixEditor";
+import { MaybeArea, MixEditor, NotArea } from "../MixEditor";
+import { Inline, InlineTag } from "../Area";
 import { Plugin } from "../plugin";
 import {
   create_InlineSaveData,
@@ -13,7 +14,7 @@ import { AreaContext } from "../AreaContext";
 import { createSignal, WrappedSignal } from "@/common/signal";
 import { MixEditorMouseEvent } from "../utils/types";
 import { EventPair } from "../event";
-import { CaretMoveEnterEventReturning } from "../event/CaretMoveEnter";
+import { CaretMoveEnterEventResult } from "../event/CaretMoveEnter";
 import { MaybePromise } from "@/common/async";
 
 export type TextInlineSavedData = { value: string };
@@ -44,7 +45,7 @@ export class TextInline
     event: TEventPair["event"]
   ): TEventPair["returning"] | void {
     if (event.event_type === "caret_move_enter") {
-      return CaretMoveEnterEventReturning.enter();
+      return CaretMoveEnterEventResult.enter();
     }
   }
 

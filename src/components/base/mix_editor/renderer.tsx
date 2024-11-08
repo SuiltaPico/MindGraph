@@ -1,5 +1,6 @@
 import { JSX } from "solid-js";
-import { MixEditor, Block, Inline, InlineTag } from "./MixEditor";
+import { MixEditor } from "./MixEditor";
+import { Block, Inline, InlineTag } from "./Area";
 import { AreaContext } from "./AreaContext";
 
 export type BlockRenderer<TBlock extends Block = any> = (props: {

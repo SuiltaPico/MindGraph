@@ -1,7 +1,8 @@
 import { Position } from "@/common/math";
 import { createSignal, WrappedSignal } from "@/common/signal";
 import { onMount } from "solid-js";
-import { Block, Inline, MixEditor } from "../MixEditor";
+import { MixEditor } from "../MixEditor";
+import { Block, Inline } from "../Area";
 import { PluginFactory } from "../plugin";
 import { InlinesRenderer } from "../renderer/MixEditorRenderer";
 import {

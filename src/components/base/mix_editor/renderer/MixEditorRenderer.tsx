@@ -1,6 +1,7 @@
 import { WrappedSignal } from "@/common/signal";
 import { For } from "solid-js";
-import { Block, Inline, MixEditor } from "../MixEditor";
+import { MixEditor } from "../MixEditor";
+import { Block, Inline } from "../Area";
 import { CaretRenderer } from "./CaretRenderer";
 import { AreaContext } from "../AreaContext";
 import { MixEditorMouseEvent } from "../utils/types";

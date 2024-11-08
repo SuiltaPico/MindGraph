@@ -1,12 +1,14 @@
 import { MaybePromise } from "@/common/async";
 import {
-  Block,
-  Inline,
-  InlineTag,
   MaybeArea,
   Metadata,
   NotArea,
 } from "./MixEditor";
+import {
+  Block,
+  Inline,
+  InlineTag
+} from "./Area";
 import { GetMapValue } from "@/common/types";
 
 export const schema_version = 1;

@@ -1,17 +1,29 @@
 import { createSignal } from "@/common/signal";
 import { MixEditor } from "./MixEditor";
+import { Area } from "./Area";
+import {
+  CaretMoveEnterEventResult,
+  CaretMoveEnterEventResult,
+} from "./event/CaretMoveEnter";
 
 export type CaretRendererType = (props: { editor: MixEditor<any, any> }) => any;
 
+export type SelectedAreaInfo = {
+  area: Area;
+  /** 选中类型。 */
+  type: "after" | "inside";
+  /** 子区域路径。 */
+  child_path?: number[];
+};
 export type CollapsedSelected = {
   type: "collapsed";
-  start_path: number[];
+  start: SelectedAreaInfo;
 };
 
 export type ExtendedSelected = {
   type: "extended";
-  start_path: number[];
-  end_path: number[];
+  start: SelectedAreaInfo;
+  end: SelectedAreaInfo;
 };
 
 export type Selected = CollapsedSelected | ExtendedSelected;
@@ -21,18 +33,18 @@ export class Selection {
   selected = createSignal<Selected | undefined>(undefined);
   caret_height = createSignal<number>(16);
 
-  collapsed_select(path: number[]) {
+  collapsed_select(selected_area: SelectedAreaInfo) {
     this.selected.set({
       type: "collapsed",
-      start_path: path,
+      start: selected_area,
     });
   }
 
-  extended_select(start_path: number[], end_path: number[]) {
+  extended_select(start_area: SelectedAreaInfo, end_area: SelectedAreaInfo) {
     this.selected.set({
       type: "extended",
-      start_path,
-      end_path,
+      start: start_area,
+      end: end_area,
     });
   }
   clear() {
@@ -42,18 +54,29 @@ export class Selection {
     return this.selected.get();
   }
 
-  move_left() {
+  async move_left() {
     const selected = this.selected.get();
     if (!selected) return;
 
-    const start_path = selected.start_path;
-    const last_index = start_path[start_path.length - 1];
+    const start_info = selected.start;
 
-    /** 需要移动到左邻近块的最后一个索引。 */
-    if (last_index === 0) {
-    } else {
-      start_path[start_path.length - 1]--;
-      this.collapsed_select(start_path);
+    let current_area = start_info.area;
+    const entered_areas: Area[] = [];
+    while (true) {
+      // 对当前区域触发 caret_move_enter
+      let command: CaretMoveEnterEventResult;
+      const result = await current_area.handle_event?.({
+        event_type: "caret_move_enter",
+        direction: "left",
+      });
+      command = result || CaretMoveEnterEventResult.skip;
+
+      // 解读命令
+
+      // 如果跳过，则尝试进入上一个区域
+      if (command.type === "skip") {
+        break;
+      }
     }
   }
 

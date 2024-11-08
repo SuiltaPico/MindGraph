@@ -1,4 +1,4 @@
-import { Area } from "./MixEditor";
+import { Area } from "./Area";
 
 export class AreaContext {
   constructor(

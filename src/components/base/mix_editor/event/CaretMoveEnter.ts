@@ -1,7 +1,7 @@
 import { MaybePromise } from "@/common/async";
 import { BaseEvent } from "../event";
 
-export type CaretMoveEventReturningType =
+export type CaretMoveEnterEventResult =
   | {
       type: "skip";
     }
@@ -16,7 +16,7 @@ export type CaretMoveEventReturningType =
       type: "end";
     };
 
-export const CaretMoveEnterEventReturning = {
+export const CaretMoveEnterEventResult = {
   /** 不接受进入，跳过当前节点。 */
   skip: { type: "skip" } as const,
   /** 接受进入，交给此节点内部的指定节点处理。 */
@@ -35,5 +35,5 @@ export interface CaretMoveEnterEvent extends BaseEvent {
 
 export type CaretMoveEnterEventPair = {
   event: CaretMoveEnterEvent;
-  returning: MaybePromise<CaretMoveEventReturningType>;
+  result: MaybePromise<CaretMoveEnterEventResult>;
 };

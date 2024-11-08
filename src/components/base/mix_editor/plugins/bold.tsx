@@ -1,4 +1,5 @@
-import { Inline, MixEditor } from "../MixEditor";
+import { MixEditor } from "../MixEditor";
+import { Inline } from "../Area";
 import { TextInline } from "./text";
 
 export class BoldPlugin implements Inline<"bold", { }> {}
