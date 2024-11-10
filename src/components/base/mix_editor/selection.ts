@@ -3,17 +3,14 @@ import { MixEditor } from "./MixEditor";
 import { Area } from "./Area";
 import {
   CaretMoveEnterEventResult,
-  CaretMoveEnterEventResult,
 } from "./event/CaretMoveEnter";
 
 export type CaretRendererType = (props: { editor: MixEditor<any, any> }) => any;
 
 export type SelectedAreaInfo = {
   area: Area;
-  /** 选中类型。 */
-  type: "after" | "inside";
   /** 子区域路径。 */
-  child_path?: number[];
+  child_path: number;
 };
 export type CollapsedSelected = {
   type: "collapsed";
@@ -73,30 +70,40 @@ export class Selection {
 
       // 解读命令
 
-      // 如果跳过，则尝试进入上一个区域
       if (command.type === "skip") {
-        break;
+        // 如果跳过，则尝试进入当前所在区域的上一个区域
+        const child_path = start_info.child_path;
+        if (child_path === 0) {
+          const context = this.editor.get_context(current_area)!;
+          // current_area = context.parent!.area;
+        } else {
+          start_info.child_path--;
+        }
+      } else if (command.type === "enter") {
+        // current_area = this.editor.get_area_of_path(
+        //   current_area.get_path().slice(0, -1)
+        // )!;
       }
     }
   }
 
-  move_right() {
-    const selected = this.selected.get();
-    if (!selected) return;
+  // move_right() {
+  //   const selected = this.selected.get();
+  //   if (!selected) return;
 
-    const start_path = selected.start_path;
-    const last_index = start_path[start_path.length - 1];
+  //   const start_path = selected.start_path;
+  //   const last_index = start_path[start_path.length - 1];
 
-    /** 需要移动到左邻近块的最后一个索引。 */
-    if (
-      last_index ===
-      this.editor.get_area_of_path(start_path.slice(0, -1))?.children_count()
-    ) {
-    } else {
-      start_path[start_path.length - 1]++;
-      this.collapsed_select(start_path);
-    }
-  }
+  //   /** 需要移动到左邻近块的最后一个索引。 */
+  //   if (
+  //     last_index ===
+  //     this.editor.get_area_of_path(start_path.slice(0, -1))?.children_count()
+  //   ) {
+  //   } else {
+  //     start_path[start_path.length - 1]++;
+  //     this.collapsed_select(start_path);
+  //   }
+  // }
 
   constructor(public editor: MixEditor<any, any>) {}
 }

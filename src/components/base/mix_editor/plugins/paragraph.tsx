@@ -78,7 +78,6 @@ export const Paragraph = (() => {
         <InlinesRenderer
           editor={editor}
           inlines={block.data.inlines}
-          parent={props.context}
         />
       </p>
     );

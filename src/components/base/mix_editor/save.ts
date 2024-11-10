@@ -1,15 +1,7 @@
 import { MaybePromise } from "@/common/async";
-import {
-  MaybeArea,
-  Metadata,
-  NotArea,
-} from "./MixEditor";
-import {
-  Block,
-  Inline,
-  InlineTag
-} from "./Area";
-import { GetMapValue } from "@/common/types";
+import { MaybeArea, Metadata, MixEditor, NotArea } from "./MixEditor";
+import { Block, Inline, InlineTag } from "./Area";
+import { AreaContext } from "./AreaContext";
 
 export const schema_version = 1;
 
@@ -132,12 +124,6 @@ export class LoadingErrorInline
   constructor(public data: { reason: string; original: InlineSavedData }) {}
 }
 
-export async function load_data(data: SavedData, parser_map: LoaderMap) {
-  const promises = data.blocks.map((block) => load_block(block, parser_map));
-  const blocks = await Promise.all(promises);
-  return { blocks, meta: data.meta };
-}
-
 const gen_area_loader = <T extends "block" | "inline" | "inline_tag">(
   type: T
 ) => {
@@ -195,4 +181,69 @@ export async function save_data(blocks: Block[]): Promise<SavedData> {
 export async function save_inlines(inlines: Inline[]) {
   const promises = inlines.map((it) => it.save());
   return await Promise.all(promises);
+}
+
+export class Saver {
+  /** 加载块数组，并创建上下文。 */
+  async load_blocks(
+    areas: any[],
+    parser_map: LoaderMap,
+    parent: MaybeArea = NotArea
+  ): Promise<Block<any, any>[]> {
+    const blocks = await load_blocks(areas, parser_map);
+    for (const block of blocks) {
+      this.editor.area_context.set(block, new AreaContext(block, parent));
+    }
+    return blocks;
+  }
+
+  async load_inlines(
+    areas: any[],
+    parser_map: LoaderMap,
+    parent: MaybeArea = NotArea
+  ): Promise<Inline[]> {
+    const inlines = await load_inlines(areas, parser_map);
+    for (const inline of inlines) {
+      this.editor.area_context.set(inline, new AreaContext(inline, parent));
+    }
+    return inlines;
+  }
+
+  async load_inline_tags(
+    areas: any[],
+    parser_map: LoaderMap,
+    parent: MaybeArea = NotArea
+  ): Promise<InlineTag[]> {
+    const inline_tags = await load_inline_tags(areas, parser_map);
+    for (const inline_tag of inline_tags) {
+      this.editor.area_context.set(
+        inline_tag,
+        new AreaContext(inline_tag, parent)
+      );
+    }
+    return inline_tags;
+  }
+
+  async load_data(data: SavedData) {
+    return {
+      blocks: await this.load_blocks(
+        data.blocks,
+        this.editor.loader,
+        this.editor.root_area
+      ),
+      meta: data.meta,
+    };
+  }
+
+  async load(data: SavedData) {
+    const { blocks, meta } = await this.load_data(data);
+    this.editor.blocks.set(blocks);
+    this.editor.metadata.set(meta);
+  }
+
+  async save() {
+    return await save_data(this.editor.blocks.get());
+  }
+
+  constructor(private editor: MixEditor) {}
 }

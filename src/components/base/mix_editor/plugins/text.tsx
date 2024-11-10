@@ -1,21 +1,15 @@
-import { onMount } from "solid-js";
-import { MaybeArea, MixEditor, NotArea } from "../MixEditor";
-import { Inline, InlineTag } from "../Area";
-import { Plugin } from "../plugin";
-import {
-  create_InlineSaveData,
-  InlineLoader,
-  InlineSavedData,
-  load_inline_tags,
-} from "../save";
-import { Position } from "@/common/math";
 import { get_caret_position } from "@/common/dom";
-import { AreaContext } from "../AreaContext";
+import { Position } from "@/common/math";
 import { createSignal, WrappedSignal } from "@/common/signal";
-import { MixEditorMouseEvent } from "../utils/types";
+import { onMount } from "solid-js";
+import { Inline, InlineTag } from "../Area";
+import { AreaContext } from "../AreaContext";
 import { EventPair } from "../event";
 import { CaretMoveEnterEventResult } from "../event/CaretMoveEnter";
-import { MaybePromise } from "@/common/async";
+import { MaybeArea, MixEditor, NotArea } from "../MixEditor";
+import { Plugin } from "../plugin";
+import { create_InlineSaveData, InlineLoader, load_inline_tags } from "../save";
+import { MixEditorMouseEvent } from "../utils/types";
 
 export type TextInlineSavedData = { value: string };
 
@@ -43,7 +37,7 @@ export class TextInline
 
   handle_event<TEventPair extends EventPair>(
     event: TEventPair["event"]
-  ): TEventPair["returning"] | void {
+  ): TEventPair["result"] | void {
     if (event.event_type === "caret_move_enter") {
       return CaretMoveEnterEventResult.enter();
     }
@@ -65,13 +59,9 @@ export const Text = () => {
     );
   };
 
-  const renderer = (props: {
-    inline: TextInline;
-    context: AreaContext;
-    editor: MixEditor;
-  }) => {
+  const renderer = (props: { inline: TextInline; editor: MixEditor }) => {
     const inline = props.inline;
-    const context = props.context;
+    const context = props.editor.get_context(inline)!;
 
     let container: HTMLElement;
     onMount(() => {
@@ -100,9 +90,10 @@ export const Text = () => {
 
           e.preventDefault();
 
-          props.editor.selection.collapsed_select(
-            context.get_path().concat(offset)
-          );
+          props.editor.selection.collapsed_select({
+            area: context.area,
+            child_path: offset,
+          });
           const container_rects = Array.from(container.getClientRects());
 
           // TODO：需要考虑多行文本的情况，计算当前位于的行，然后取该行的高度

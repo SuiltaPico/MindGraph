@@ -1,20 +1,18 @@
 import { Position } from "@/common/math";
 import { createSignal } from "@/common/signal";
+import { Area, Block, Inline, InlineTag } from "./Area";
+import { AreaContext } from "./AreaContext";
 import { Plugin } from "./plugin";
-import { Selection } from "./selection";
-import {
-  load_data,
-  LoaderMap,
-  save_data,
-  SavedData,
-} from "./save";
 import { RendererMap } from "./renderer";
 import {
   UnknownBlockRenderer,
   UnknownInlineRenderer,
 } from "./renderer/MixEditorRenderer";
-import { AreaContext } from "./AreaContext";
-import { Area, Block, Inline, InlineTag } from "./Area";
+import {
+  LoaderMap,
+  Saver
+} from "./save";
+import { Selection } from "./selection";
 
 export const NotArea = "not_area" as const;
 export type MaybeArea = Area | typeof NotArea;
@@ -41,7 +39,8 @@ export class MixEditor<
   /** 元数据。 */
   metadata = createSignal<Metadata | undefined>(undefined);
 
-  area_context = new Map<Area, AreaContext>();
+  /** 区域的上下文。 */
+  area_context = new WeakMap<Area, AreaContext>();
   root_area: Block<"root", {}> = {
     type: "root",
     data: {},
@@ -54,7 +53,7 @@ export class MixEditor<
     get_child_position: (index: number) => undefined as Position | undefined,
     handle_event: () => undefined,
   };
-  root_context = new AreaContext(this.root_area, undefined, 0);
+  root_context = new AreaContext(this.root_area, undefined);
 
   mode = createSignal<"readonly" | "edit">("readonly");
 
@@ -68,6 +67,8 @@ export class MixEditor<
     inline: new Map(),
     inline_tag: new Map(),
   };
+
+  saver = new Saver(this);
 
   get_block_renderer(type: TBlock["type"]) {
     return this.renderer.block?.get(type) ?? UnknownBlockRenderer;
@@ -103,16 +104,6 @@ export class MixEditor<
 
   get_context(area: Area) {
     return this.area_context.get(area);
-  }
-
-  async load(data: SavedData) {
-    const { blocks, meta } = await load_data(data, this.loader);
-    this.blocks.set(blocks);
-    this.metadata.set(meta);
-  }
-
-  async save() {
-    return await save_data(this.blocks.get());
   }
 
   constructor(config: Config) {
