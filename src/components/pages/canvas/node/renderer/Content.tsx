@@ -159,7 +159,7 @@ export const MindNodeContentRenderer = (props: { it: MindNodeHelper }) => {
   const editor = new MixEditor<MyBlocks, MyInlines>({
     plugins: [Paragraph(), Text()],
   });
-  editor.load({
+  editor.saver.load({
     blocks: [
       {
         type: "paragraph",

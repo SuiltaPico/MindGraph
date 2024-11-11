@@ -8,7 +8,7 @@ import { EventPair } from "../event";
 import { CaretMoveEnterEventResult } from "../event/CaretMoveEnter";
 import { MaybeArea, MixEditor, NotArea } from "../MixEditor";
 import { Plugin } from "../plugin";
-import { create_InlineSaveData, InlineLoader, load_inline_tags } from "../save";
+import { create_InlineSaveData, InlineLoader } from "../save";
 import { MixEditorMouseEvent } from "../utils/types";
 
 export type TextInlineSavedData = { value: string };
@@ -24,7 +24,7 @@ export class TextInline
       {
         value: this.data.value.get(),
       },
-      await Promise.all(this.tags.map((it) => it.save()))
+      await Promise.all(this.tags.get().map((it) => it.save()))
     );
   }
   children_count() {
@@ -43,20 +43,24 @@ export class TextInline
     }
   }
 
-  constructor(data: { value: string }, public tags: InlineTag[]) {
+  constructor(
+    data: { value: string },
+    public tags: WrappedSignal<InlineTag[]>
+  ) {
     this.data = { value: createSignal(data.value) };
   }
 }
 
 export const Text = () => {
-  const loader: InlineLoader<TextInlineSavedData> = async (
-    data,
-    parser_map
-  ) => {
-    return new TextInline(
-      data.data,
-      await load_inline_tags(data.tags, parser_map)
+  const loader: InlineLoader<TextInlineSavedData> = async (data, editor) => {
+    const result = new TextInline(data.data, createSignal<InlineTag[]>([]));
+    const inline_tags = await editor.saver.load_areas(
+      "inline_tag",
+      data.tags,
+      result
     );
+    result.tags.set(inline_tags);
+    return result;
   };
 
   const renderer = (props: { inline: TextInline; editor: MixEditor }) => {
@@ -120,3 +124,4 @@ export const Text = () => {
     },
   } satisfies Plugin;
 };
+8;

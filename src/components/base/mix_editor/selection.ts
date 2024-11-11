@@ -1,9 +1,7 @@
 import { createSignal } from "@/common/signal";
 import { MixEditor } from "./MixEditor";
 import { Area } from "./Area";
-import {
-  CaretMoveEnterEventResult,
-} from "./event/CaretMoveEnter";
+import { CaretMoveEnterEventResult } from "./event/CaretMoveEnter";
 
 export type CaretRendererType = (props: { editor: MixEditor<any, any> }) => any;
 
@@ -68,14 +66,11 @@ export class Selection {
       });
       command = result || CaretMoveEnterEventResult.skip;
 
-      // 解读命令
-
       if (command.type === "skip") {
-        // 如果跳过，则尝试进入当前所在区域的上一个区域
+        // 如果跳过，则离开当前区域，尝试进入上一个区域
         const child_path = start_info.child_path;
         if (child_path === 0) {
           const context = this.editor.get_context(current_area)!;
-          // current_area = context.parent!.area;
         } else {
           start_info.child_path--;
         }
@@ -87,23 +82,21 @@ export class Selection {
     }
   }
 
-  // move_right() {
-  //   const selected = this.selected.get();
-  //   if (!selected) return;
-
-  //   const start_path = selected.start_path;
-  //   const last_index = start_path[start_path.length - 1];
-
-  //   /** 需要移动到左邻近块的最后一个索引。 */
-  //   if (
-  //     last_index ===
-  //     this.editor.get_area_of_path(start_path.slice(0, -1))?.children_count()
-  //   ) {
-  //   } else {
-  //     start_path[start_path.length - 1]++;
-  //     this.collapsed_select(start_path);
-  //   }
-  // }
+  move_right() {
+    //   const selected = this.selected.get();
+    //   if (!selected) return;
+    //   const start_path = selected.start_path;
+    //   const last_index = start_path[start_path.length - 1];
+    //   /** 需要移动到左邻近块的最后一个索引。 */
+    //   if (
+    //     last_index ===
+    //     this.editor.get_area_of_path(start_path.slice(0, -1))?.children_count()
+    //   ) {
+    //   } else {
+    //     start_path[start_path.length - 1]++;
+    //     this.collapsed_select(start_path);
+    //   }
+  }
 
   constructor(public editor: MixEditor<any, any>) {}
 }

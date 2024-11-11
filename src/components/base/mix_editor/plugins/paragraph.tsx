@@ -9,10 +9,8 @@ import {
   BlockLoader,
   create_BlockSaveData,
   InlineSavedData,
-  load_inlines,
   save_inlines,
 } from "../save";
-import { AreaContext } from "../AreaContext";
 
 export type ParagraphBlockSavedData = {
   inlines: InlineSavedData[];
@@ -46,17 +44,23 @@ export class ParagraphBlock<TInline extends Inline<any, any>>
 export const Paragraph = (() => {
   const loader: BlockLoader<ParagraphBlockSavedData> = async (
     block,
-    parser_map
+    editor
   ) => {
-    return new ParagraphBlock({
-      inlines: createSignal(await load_inlines(block.data.inlines, parser_map)),
+    const result = new ParagraphBlock({
+      inlines: createSignal<Inline[]>([]),
     });
+    const inlines = await editor.saver.load_areas(
+      "inline",
+      block.data.inlines,
+      result
+    );
+    result.data.inlines.set(inlines);
+    return result;
   };
 
   const renderer = (props: {
     editor: MixEditor<any, any>;
     block: ParagraphBlock<any>;
-    context: AreaContext;
   }) => {
     let container: HTMLElement | undefined;
     const editor = props.editor;
@@ -75,10 +79,7 @@ export const Paragraph = (() => {
 
     return (
       <p class="__block __paragraph" ref={(it) => (container = it)}>
-        <InlinesRenderer
-          editor={editor}
-          inlines={block.data.inlines}
-        />
+        <InlinesRenderer editor={editor} inlines={block.data.inlines} />
       </p>
     );
   };

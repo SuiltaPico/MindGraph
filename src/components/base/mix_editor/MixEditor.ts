@@ -9,7 +9,7 @@ import {
   UnknownInlineRenderer,
 } from "./renderer/MixEditorRenderer";
 import {
-  LoaderMap,
+  LoaderMapRecord,
   Saver
 } from "./save";
 import { Selection } from "./selection";
@@ -57,7 +57,7 @@ export class MixEditor<
 
   mode = createSignal<"readonly" | "edit">("readonly");
 
-  loader: LoaderMap = {
+  loader: LoaderMapRecord = {
     block: new Map(),
     inline: new Map(),
     inline_tag: new Map(),
@@ -119,7 +119,7 @@ export class MixEditor<
       for (const [record_type, record] of Object.entries(maps_record_of_plugin)) {
         if (!record) continue;
         for (const [key, value] of Object.entries(record)) {
-          maps_record_of_this[record_type as keyof LoaderMap].set(
+          maps_record_of_this[record_type as keyof LoaderMapRecord].set(
             key as TBlock["type"],
             value as any
           );

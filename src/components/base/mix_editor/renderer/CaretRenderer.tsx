@@ -21,10 +21,13 @@ export const CaretRenderer: CaretRendererType = (props) => {
         if (!selected) return;
         if (selected.type === "collapsed") {
           const container_rect = container?.getBoundingClientRect();
-          const position = editor.get_position_of_path(selected.start_path);
+          const position = selected.start.area.get_child_position(
+            selected.start.child_path
+          )!;
+
           if (!position) return;
-          start_caret.style.left = `${position?.x - container_rect!.left}px`;
-          start_caret.style.top = `${position?.y - container_rect!.top}px`;
+          start_caret.style.left = `${position.x - container_rect!.left}px`;
+          start_caret.style.top = `${position.y - container_rect!.top}px`;
 
           // 重置动画
           start_caret.style.animation = "none";

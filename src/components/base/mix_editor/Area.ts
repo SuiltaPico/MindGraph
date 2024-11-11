@@ -3,6 +3,7 @@ import { Position } from "@/common/math";
 import { EventPair } from "./event";
 import { MaybeArea } from "./MixEditor";
 import { BlockSavedData, InlineSavedData, InlineTagSavedData } from "./save";
+import { WrappedSignal } from "@/common/signal";
 
 export interface BaseArea {
   /** 生成保存数据。 */
@@ -35,7 +36,7 @@ export interface Inline<TName extends string = any, TData = any>
   save: () => MaybePromise<InlineSavedData>;
   type: TName;
   data: TData;
-  tags: InlineTag[];
+  tags: WrappedSignal<InlineTag[]>;
 }
 
 /** 行内标签。 */
@@ -45,5 +46,11 @@ export interface InlineTag<TName extends string = any, TData = any>
   type: TName;
   data: TData;
 }
+
+export type AreaMap = {
+  block: Block;
+  inline: Inline;
+  inline_tag: InlineTag;
+};
 
 export type Area = Block<any, any> | Inline<any, any> | InlineTag<any, any>;
