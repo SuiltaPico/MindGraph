@@ -57,7 +57,7 @@ export class Selection {
 
     let current_area = start_info.area;
     const entered_areas: Area[] = [];
-    while (true) {
+    // while (true) {
       // 对当前区域触发 caret_move_enter
       let command: CaretMoveEnterEventResult;
       const result = await current_area.handle_event?.({
@@ -74,12 +74,15 @@ export class Selection {
         } else {
           start_info.child_path--;
         }
+        // break
       } else if (command.type === "enter") {
-        // current_area = this.editor.get_area_of_path(
-        //   current_area.get_path().slice(0, -1)
-        // )!;
+        this.collapsed_select({
+          area: start_info.area,
+          child_path: start_info.child_path - 1,
+        });
+        // break
       }
-    }
+    // }
   }
 
   move_right() {

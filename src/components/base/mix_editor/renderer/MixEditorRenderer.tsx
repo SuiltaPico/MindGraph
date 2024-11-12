@@ -14,7 +14,7 @@ export const MixEditorRenderer = <
   let container: HTMLDivElement | undefined;
   const editor = props.editor;
 
-  function handle_keydown(e: KeyboardEvent) {
+  function handle_keydown(e: KeyboardEvent) {    
     if (e.key === "ArrowLeft") {
       e.preventDefault();
       editor.selection.move_left();

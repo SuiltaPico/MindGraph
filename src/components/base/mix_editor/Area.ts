@@ -15,7 +15,7 @@ export interface BaseArea {
   get_child(index: number): MaybeArea;
   /** 获取指定索引的子区域的位置。 */
   get_child_position(index: number): Position | void;
-  
+
   /** 处理事件。 */
   handle_event?<TEventPair extends EventPair>(
     event: TEventPair["event"]
@@ -31,12 +31,15 @@ export interface Block<TName extends string = any, TData = any>
 }
 
 /** 行内区域。 */
-export interface Inline<TName extends string = any, TData = any>
-  extends BaseArea {
+export interface Inline<
+  TName extends string = any,
+  TData extends {
+    tags: WrappedSignal<InlineTag[]>;
+  } = any
+> extends BaseArea {
   save: () => MaybePromise<InlineSavedData>;
   type: TName;
   data: TData;
-  tags: WrappedSignal<InlineTag[]>;
 }
 
 /** 行内标签。 */

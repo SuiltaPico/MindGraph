@@ -14,17 +14,21 @@ import { MixEditorMouseEvent } from "../utils/types";
 export type TextInlineSavedData = { value: string };
 
 export class TextInline
-  implements Inline<"text", { value: WrappedSignal<string> }>
+  implements
+    Inline<
+      "text",
+      { value: WrappedSignal<string>; tags: WrappedSignal<InlineTag[]> }
+    >
 {
   type = "text" as const;
-  data: { value: WrappedSignal<string> };
+  data: { value: WrappedSignal<string>; tags: WrappedSignal<InlineTag[]> };
   async save() {
     return create_InlineSaveData(
       this.type,
       {
         value: this.data.value.get(),
       },
-      await Promise.all(this.tags.get().map((it) => it.save()))
+      await Promise.all(this.data.tags.get().map((it) => it.save()))
     );
   }
   children_count() {
@@ -39,27 +43,31 @@ export class TextInline
     event: TEventPair["event"]
   ): TEventPair["result"] | void {
     if (event.event_type === "caret_move_enter") {
-      return CaretMoveEnterEventResult.enter();
+      const selected = this.editor.selection.selected.get();
+      if (!selected) return;
+      if (selected.type === "collapsed") {
+        return CaretMoveEnterEventResult.enter();
+      }
     }
   }
 
-  constructor(
-    data: { value: string },
-    public tags: WrappedSignal<InlineTag[]>
-  ) {
-    this.data = { value: createSignal(data.value) };
+  constructor(data: { value: string }, private editor: MixEditor) {
+    this.data = {
+      value: createSignal(data.value),
+      tags: createSignal<InlineTag[]>([]),
+    };
   }
 }
 
 export const Text = () => {
   const loader: InlineLoader<TextInlineSavedData> = async (data, editor) => {
-    const result = new TextInline(data.data, createSignal<InlineTag[]>([]));
+    const result = new TextInline(data.data, editor);
     const inline_tags = await editor.saver.load_areas(
       "inline_tag",
       data.tags,
       result
     );
-    result.tags.set(inline_tags);
+    result.data.tags.set(inline_tags);
     return result;
   };
 
