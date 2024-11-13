@@ -18,21 +18,26 @@ export const CaretRenderer: CaretRendererType = (props) => {
           preventScroll: true,
         });
 
-        if (!selected) return;
+        if (!selected) {
+          console.log("[光标渲染器] 没有选区，光标不显示。");
+          return
+        };
         if (selected.type === "collapsed") {
           const container_rect = container?.getBoundingClientRect();
           const position = selected.start.area.get_child_position(
             selected.start.child_path
           )!;
-
-          if (!position) return;
+          if (!position) {
+            console.log("[光标渲染器] 获取光标位置失败，光标不显示。");
+            return;
+          }
           start_caret.style.left = `${position.x - container_rect!.left}px`;
           start_caret.style.top = `${position.y - container_rect!.top}px`;
 
           // 重置动画
           start_caret.style.animation = "none";
           start_caret.style.opacity = "1";
-          setTimeout(() => {
+          requestAnimationFrame(() => {
             start_caret.style.animation = "";
             start_caret.style.opacity = "";
           });

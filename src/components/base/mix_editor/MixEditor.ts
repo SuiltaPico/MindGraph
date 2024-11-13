@@ -13,9 +13,10 @@ import {
   Saver
 } from "./save";
 import { Selection } from "./selection";
+import { CaretMoveEnterEventResult } from "./event/CaretMoveEnter";
+import { RootArea } from "./root";
 
-export const NotArea = "not_area" as const;
-export type MaybeArea = Area | typeof NotArea;
+export type MaybeArea = Area | undefined;
 
 /** 元数据。 */
 export type Metadata = {
@@ -41,18 +42,7 @@ export class MixEditor<
 
   /** 区域的上下文。 */
   area_context = new WeakMap<Area, AreaContext>();
-  root_area: Block<"root", {}> = {
-    type: "root",
-    data: {},
-    save: () => ({
-      type: "root",
-      data: {},
-    }),
-    children_count: () => this.blocks.get().length,
-    get_child: (index: number) => this.blocks.get()[index],
-    get_child_position: (index: number) => undefined as Position | undefined,
-    handle_event: () => undefined,
-  };
+  root_area = new RootArea(this);
   root_context = new AreaContext(this.root_area, undefined);
 
   mode = createSignal<"readonly" | "edit">("readonly");
@@ -82,31 +72,14 @@ export class MixEditor<
     return this.renderer.inline_tag?.get(type) ?? (() => undefined);
   }
 
-  get_area_of_path(path: number[]) {
-    let area = this.root_area;
-    for (let index = 0; index < path.length; index++) {
-      const path_index = path[index];
-      area = area.get_child(path_index) as Block<any, any>;
-      if (!area) return undefined;
-    }
-    return area;
-  }
-
-  get_position_of_path(path: number[]) {
-    let area = this.root_area;
-    for (let index = 0; index < path.length; index++) {
-      const path_index = path[index];
-      if (index === path.length - 1) return area.get_child_position(path_index);
-      area = area.get_child(path_index) as Block<any, any>;
-      if (!area) return undefined;
-    }
-  }
-
   get_context(area: Area) {
     return this.area_context.get(area);
   }
 
   constructor(config: Config) {
+    this.area_context.set(this.root_area, this.root_context);
+
+
     const plugin_keys = ["renderer", "loader"] as const;
     const that = this;
 

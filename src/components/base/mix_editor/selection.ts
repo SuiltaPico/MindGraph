@@ -23,6 +23,8 @@ export type ExtendedSelected = {
 
 export type Selected = CollapsedSelected | ExtendedSelected;
 
+export const ToEnd = Infinity;
+
 /** 选区。 */
 export class Selection {
   selected = createSignal<Selected | undefined>(undefined);
@@ -49,56 +51,69 @@ export class Selection {
     return this.selected.get();
   }
 
-  async move_left() {
+  private async move(direction: "left" | "right") {
     const selected = this.selected.get();
     if (!selected) return;
 
     const start_info = selected.start;
 
     let current_area = start_info.area;
-    const entered_areas: Area[] = [];
-    // while (true) {
-      // 对当前区域触发 caret_move_enter
+    // 根据方向设置初始 to 值
+    let to = start_info.child_path + (direction === "left" ? -1 : 1);
+    let from_child = false;
+
+    while (true) {
       let command: CaretMoveEnterEventResult;
       const result = await current_area.handle_event?.({
         event_type: "caret_move_enter",
-        direction: "left",
+        direction,
+        to,
+        from_child,
       });
       command = result || CaretMoveEnterEventResult.skip;
 
+      console.log(`move_${direction}`, current_area, to, command, from_child);
+
       if (command.type === "skip") {
-        // 如果跳过，则离开当前区域，尝试进入上一个区域
-        const child_path = start_info.child_path;
-        if (child_path === 0) {
-          const context = this.editor.get_context(current_area)!;
-        } else {
-          start_info.child_path--;
+        const context = this.editor.get_context(current_area)!;
+        const parent = context.parent;
+        if (!parent) break;
+        const length = parent.children_count();
+
+        let index_in_parent = 0;
+        for (; index_in_parent < length; index_in_parent++) {
+          const child = parent.get_child(index_in_parent);
+          if (child === current_area) break;
         }
-        // break
+
+        current_area = parent;
+        // 根据方向调整父区域的 to 值
+        to = index_in_parent + (direction === "left" ? 0 : 1);
+        from_child = true;
       } else if (command.type === "enter") {
         this.collapsed_select({
-          area: start_info.area,
-          child_path: start_info.child_path - 1,
+          area: current_area,
+          child_path: command.to,
         });
-        // break
+        break;
+      } else if (command.type === "enter_child") {
+        const child = current_area.get_child(command.to);
+        if (!child) break;
+
+        current_area = child;
+        // 根据方向设置子区域的 to 值
+        to = direction === "left" ? ToEnd : 0;
+        from_child = false;
       }
-    // }
+    }
   }
 
-  move_right() {
-    //   const selected = this.selected.get();
-    //   if (!selected) return;
-    //   const start_path = selected.start_path;
-    //   const last_index = start_path[start_path.length - 1];
-    //   /** 需要移动到左邻近块的最后一个索引。 */
-    //   if (
-    //     last_index ===
-    //     this.editor.get_area_of_path(start_path.slice(0, -1))?.children_count()
-    //   ) {
-    //   } else {
-    //     start_path[start_path.length - 1]++;
-    //     this.collapsed_select(start_path);
-    //   }
+  async move_left() {
+    return this.move("left");
+  }
+
+  async move_right() {
+    return this.move("right");
   }
 
   constructor(public editor: MixEditor<any, any>) {}

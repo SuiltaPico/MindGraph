@@ -1,8 +1,8 @@
 import { MaybePromise } from "@/common/async";
-import { MaybeArea, Metadata, MixEditor, NotArea } from "./MixEditor";
+import { MaybeArea, Metadata, MixEditor } from "./MixEditor";
 import { AreaMap, Block, Inline, InlineTag } from "./Area";
 import { AreaContext } from "./AreaContext";
-import { createSignal } from "@/common/signal";
+import { createSignal, WrappedSignal } from "@/common/signal";
 
 export const schema_version = 1;
 
@@ -107,7 +107,7 @@ export class LoadingErrorBlock
     return 0;
   }
   get_child() {
-    return NotArea;
+    return undefined;
   }
   get_child_position() {
     return undefined;
@@ -117,10 +117,16 @@ export class LoadingErrorBlock
 
 export class LoadingErrorInline
   implements
-    Inline<"loading_error", { reason: string; original: InlineSavedData }>
+    Inline<
+      "loading_error",
+      {
+        reason: string;
+        original: InlineSavedData;
+        tags: WrappedSignal<InlineTag[]>;
+      }
+    >
 {
   type = "loading_error" as const;
-  tags = createSignal<InlineTag[]>([]);
   save() {
     return this.data.original;
   }
@@ -128,12 +134,18 @@ export class LoadingErrorInline
     return 0;
   }
   get_child() {
-    return NotArea;
+    return undefined;
   }
   get_child_position() {
     return undefined;
   }
-  constructor(public data: { reason: string; original: InlineSavedData }) {}
+  constructor(
+    public data: {
+      reason: string;
+      original: InlineSavedData;
+      tags: WrappedSignal<InlineTag[]>;
+    }
+  ) {}
 }
 
 async function load_area(

@@ -1,14 +1,14 @@
-import { get_caret_position } from "@/common/dom";
+import { clear_dom_selection, get_caret_position_for_text } from "@/common/dom";
 import { Position } from "@/common/math";
 import { createSignal, WrappedSignal } from "@/common/signal";
 import { onMount } from "solid-js";
 import { Inline, InlineTag } from "../Area";
-import { AreaContext } from "../AreaContext";
 import { EventPair } from "../event";
 import { CaretMoveEnterEventResult } from "../event/CaretMoveEnter";
-import { MaybeArea, MixEditor, NotArea } from "../MixEditor";
+import { MaybeArea, MixEditor } from "../MixEditor";
 import { Plugin } from "../plugin";
 import { create_InlineSaveData, InlineLoader } from "../save";
+import { ToEnd } from "../selection";
 import { MixEditorMouseEvent } from "../utils/types";
 
 export type TextInlineSavedData = { value: string };
@@ -35,7 +35,7 @@ export class TextInline
     return this.data.value.get().length;
   }
   get_child(index: number): MaybeArea {
-    return NotArea;
+    return undefined;
   }
   get_child_position(index: number): Position | void {}
 
@@ -43,10 +43,22 @@ export class TextInline
     event: TEventPair["event"]
   ): TEventPair["result"] | void {
     if (event.event_type === "caret_move_enter") {
-      const selected = this.editor.selection.selected.get();
-      if (!selected) return;
-      if (selected.type === "collapsed") {
-        return CaretMoveEnterEventResult.enter();
+      const to = event.to;
+      const to_left = event.direction === "left";
+
+      if ((to_left && to >= this.children_count()) || (!to_left && to <= 0)) {
+        // 顺方向前边界进入
+        return CaretMoveEnterEventResult.enter(
+          to_left ? this.children_count() - 1 : 1
+        );
+      } else if (
+        (to_left && to <= 0) ||
+        (!to_left && to >= this.children_count())
+      ) {
+        // 顺方向后边界跳过
+        return CaretMoveEnterEventResult.skip;
+      } else {
+        return CaretMoveEnterEventResult.enter(to);
       }
     }
   }
@@ -89,30 +101,39 @@ export const Text = () => {
         };
       };
     });
+
+    function handle_pointer_down(e: MixEditorMouseEvent) {
+      if (e.mix_selection_changed) return;
+
+      const { offset } = get_caret_position_for_text(e);
+      if (offset === null || offset === 0 || offset >= inline.children_count())
+        return;
+
+      e.mix_selection_changed = true;
+      e.preventDefault();
+
+      props.editor.selection.collapsed_select({
+        area: context.area,
+        child_path: offset,
+      });
+      const container_rects = Array.from(container.getClientRects());
+
+      // TODO：需要考虑多行文本的情况，计算当前位于的行，然后取该行的高度
+      props.editor.selection.caret_height.set(
+        Math.max(...container_rects.map((it) => it.height))
+      );
+    }
+
+    function handle_dblclick(e: MouseEvent) {
+      clear_dom_selection();
+    }
+
     return (
       <span
         class="__inline __text"
         ref={(it) => (container = it)}
-        onMouseDown={(e: MixEditorMouseEvent) => {
-          if (e.mix_selection_changed) return;
-          e.mix_selection_changed = true;
-
-          const { offset } = get_caret_position(e);
-          if (offset === null) return;
-
-          e.preventDefault();
-
-          props.editor.selection.collapsed_select({
-            area: context.area,
-            child_path: offset,
-          });
-          const container_rects = Array.from(container.getClientRects());
-
-          // TODO：需要考虑多行文本的情况，计算当前位于的行，然后取该行的高度
-          props.editor.selection.caret_height.set(
-            Math.max(...container_rects.map((it) => it.height))
-          );
-        }}
+        onPointerDown={handle_pointer_down}
+        onDblClick={handle_dblclick}
       >
         {inline.data.value.get()}
       </span>

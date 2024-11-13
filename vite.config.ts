@@ -33,5 +33,6 @@ export default defineConfig(async () => ({
     },
     // 为了防止节点的无限循环渲染问题，需要禁用热更新
     hmr: false,
+    // hmr: true
   },
 }));

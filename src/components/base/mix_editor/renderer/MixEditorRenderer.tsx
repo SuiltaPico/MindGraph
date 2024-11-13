@@ -1,9 +1,10 @@
 import { WrappedSignal } from "@/common/signal";
-import { For } from "solid-js";
+import { For, onCleanup, onMount } from "solid-js";
 import { Block, Inline } from "../Area";
 import { AreaContext } from "../AreaContext";
 import { MixEditor } from "../MixEditor";
 import { CaretRenderer } from "./CaretRenderer";
+import { MixEditorMouseEvent } from "../utils/types";
 
 export const MixEditorRenderer = <
   TBlock extends Block,
@@ -14,7 +15,7 @@ export const MixEditorRenderer = <
   let container: HTMLDivElement | undefined;
   const editor = props.editor;
 
-  function handle_keydown(e: KeyboardEvent) {    
+  function handle_keydown(e: KeyboardEvent) {
     if (e.key === "ArrowLeft") {
       e.preventDefault();
       editor.selection.move_left();
@@ -24,12 +25,40 @@ export const MixEditorRenderer = <
     }
   }
 
+  function handle_pointer_down(e: MixEditorMouseEvent) {
+    if (!(e.target instanceof Element)) return;
+    
+    // 点击编辑器外失焦
+    if (!container?.contains(e.target)) {
+      editor.selection.clear();
+      return;
+    }
+  }
+
+  onMount(() => {
+    window.addEventListener("keydown", handle_keydown);
+    window.addEventListener("pointerdown", handle_pointer_down);
+    editor.root_area.get_child_position = (index) => {
+      const rect = container?.children[index].getBoundingClientRect();
+      if (!rect) return undefined;
+      return {
+        x: rect.left,
+        y: rect.top,
+      };
+    };
+  });
+
+  onCleanup(() => {
+    window.removeEventListener("keydown", handle_keydown);
+    window.removeEventListener("pointerdown", handle_pointer_down);
+  });
+
   return (
-    <div class="_m_mix_editor" ref={container} onKeyDown={handle_keydown}>
-      <BlocksRenderer
-        editor={editor}
-        blocks={editor.blocks}
-      />
+    <div
+      class="_m_mix_editor"
+      ref={container}
+    >
+      <BlocksRenderer editor={editor} blocks={editor.blocks} />
       <CaretRenderer editor={editor} />
     </div>
   );
