@@ -34,7 +34,7 @@
     "@tauri-apps/cli": "2.0.4",
     "@types/node": "^22.9.0",
     "@types/throttle-debounce": "^5.0.2",
-    "@unocss/transformer-directives": "^0.63.6",
+    "@unocss/transformer-directives": "^0.64.0",
     "@unocss/transformer-variant-group": "^0.63.6",
     "autoprefixer": "^10.4.20",
     "postcss-scss": "^4.0.9",
