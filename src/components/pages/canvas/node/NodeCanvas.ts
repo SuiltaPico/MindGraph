@@ -1,15 +1,14 @@
 import { MenuElement } from "@/components/base/menu/Menu";
+import { createContext } from "solid-js";
 import { Canvas, canvas_root_id } from "../Canvas";
-import { DraggingRect } from "../utils/dragging_rect";
 import { RendererContext } from "../utils/RendererContext";
+import { handle_tab_key, handle_window_keydown } from "./handler/keyboard";
 import {
-  handle_canvas_mousedown,
-  handle_canvas_mousemove,
-  handle_canvas_mouseup,
+  handle_canvas_pointerdown,
+  handle_canvas_pointermove,
+  handle_canvas_pointerup,
   handle_window_wheel,
 } from "./handler/mouse";
-import { handle_tab_key, handle_window_keydown } from "./handler/keyboard";
-import { createContext } from "solid-js";
 import { MindNodeRendererElement } from "./renderer/Node";
 
 function place_render_root_node(
@@ -104,9 +103,9 @@ export class NodeCanvas {
   handle_tab_key = handle_tab_key.bind(this);
   handle_window_keydown = handle_window_keydown.bind(this);
 
-  handle_canvas_mousedown = handle_canvas_mousedown.bind(this);
-  handle_canvas_mousemove = handle_canvas_mousemove.bind(this);
-  handle_canvas_mouseup = handle_canvas_mouseup.bind(this);
+  handle_canvas_pointerdown = handle_canvas_pointerdown.bind(this);
+  handle_canvas_pointermove = handle_canvas_pointermove.bind(this);
+  handle_canvas_pointerup = handle_canvas_pointerup.bind(this);
   handle_window_wheel = handle_window_wheel.bind(this);
 
   place_render_root_node = place_render_root_node.bind(this);

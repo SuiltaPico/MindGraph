@@ -7,7 +7,7 @@
     @apply min-w-0.5em min-h-[calc(1em+8px)]
       relative p-1.5 mr-[--mg-node-horizontal-gap]
       bg-#eee rounded-4px
-      outline outline-#0000 outline-2 transition-[outline];
+      outline outline-#0000 outline-2 transition-[outline] select-none;
 
     &:hover {
       @apply outline-#2f98ee44;

@@ -73,9 +73,9 @@ export const NodeCanvasRenderer: Component<{
       <div
         class="_m_mindgraph_node_canvas"
         ref={(it) => (container = it)}
-        onMouseDown={(e) => node_canvas.handle_canvas_mousedown(e)}
-        onMouseMove={(e) => node_canvas.handle_canvas_mousemove(e, container)}
-        onMouseUp={(e) => node_canvas.handle_canvas_mouseup(e)}
+        onPointerDown={(e) => node_canvas.handle_canvas_pointerdown(e)}
+        onPointerMove={(e) => node_canvas.handle_canvas_pointermove(e, container)}
+        onPointerUp={(e) => node_canvas.handle_canvas_pointerup(e)}
         onContextMenu={handle_canvas_contextmenu}
       >
         <div class="__field" ref={(it) => (field = it)}>

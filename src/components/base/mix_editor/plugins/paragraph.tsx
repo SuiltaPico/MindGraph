@@ -14,8 +14,9 @@ import {
 import { EventPair } from "../event";
 import { CaretMoveEnterEventResult } from "../event/CaretMoveEnter";
 import { ToEnd } from "../selection";
-import { MixEditorMouseEvent } from "../utils/types";
+import { MixEditorMouseEvent } from "../utils/area";
 import { find_ancestor_below, find_index_of_parent } from "@/common/dom";
+import { DeleteEventResult } from "../event/Delete";
 
 export type ParagraphBlockSavedData = {
   inlines: InlineSavedData[];
@@ -71,6 +72,25 @@ export class ParagraphBlock<TInline extends Inline<any, any>>
         if (!child) return CaretMoveEnterEventResult.skip;
         return CaretMoveEnterEventResult.enter_child(actual_to);
       }
+    } else if (event.event_type === "delete") {
+      const to = event.to;
+      if (event.type === "backward") {
+        if (to === 0) {
+          return DeleteEventResult.skip;
+        }
+        return DeleteEventResult.enter_child(to - 1);
+      } else if (event.type === "forward") {
+        if (to > this.children_count()) {
+          return DeleteEventResult.skip;
+        }
+        return DeleteEventResult.enter_child(to);
+      } else if (event.type === "specified") {
+        const from = event.from;
+        const curr_children = this.data.inlines.get();
+        const new_children = curr_children.splice(from, to - from);
+        this.data.inlines.set(new_children);
+        return DeleteEventResult.done(from + 1);
+      }
     }
   }
   constructor(public data: { inlines: WrappedSignal<TInline[]> }) {}
@@ -82,7 +102,7 @@ export const Paragraph = (() => {
     editor
   ) => {
     const result = new ParagraphBlock({
-      inlines: createSignal<Inline[]>([]),
+      inlines: createSignal<Inline[]>([], { equals: false }),
     });
     const inlines = await editor.saver.load_areas(
       "inline",
@@ -127,6 +147,17 @@ export const Paragraph = (() => {
       const child_of_container = find_ancestor_below(e.target, container!);
       if (!child_of_container) return;
 
+      const child_of_container_rect =
+        child_of_container.getBoundingClientRect();
+
+      let caret_before = true;
+      if (
+        e.x >
+        child_of_container_rect.left + child_of_container_rect.width / 2
+      ) {
+        caret_before = false;
+      }
+
       e.mix_selection_changed = true;
 
       const index_in_container = find_index_of_parent(
@@ -136,10 +167,9 @@ export const Paragraph = (() => {
 
       e.preventDefault();
 
-      console.log("collapsed_select", child_of_container, index_in_container);
       props.editor.selection.collapsed_select({
         area: block,
-        child_path: index_in_container,
+        child_path: index_in_container + (caret_before ? 0 : 1),
       });
 
       // TODO：需要考虑多行文本的情况，计算当前位于的行，然后取该行的高度

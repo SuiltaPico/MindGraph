@@ -7,7 +7,7 @@ import { DraggingRectElement } from "../../utils/dragging_rect";
 import { RendererContext } from "../../utils/RendererContext";
 import { IMindNode } from "@/domain/MindNode";
 
-export function handle_canvas_mousedown(this: NodeCanvas, e: MouseEvent) {
+export function handle_canvas_pointerdown(this: NodeCanvas, e: MouseEvent) {
   const canvas = this.canvas;
 
   const root_rc = this.root_rc;
@@ -30,7 +30,7 @@ export function handle_canvas_mousedown(this: NodeCanvas, e: MouseEvent) {
     });
   }
 
-  if (node) {
+  if (node) {    
     const renderer = target.closest("._m_mind_node") as MindNodeRendererElement;
     const meta = renderer._meta;
     const rc = meta.rc;
@@ -48,7 +48,7 @@ export function handle_canvas_mousedown(this: NodeCanvas, e: MouseEvent) {
     this.right_click_start_y = e.clientY;
   }
 }
-export function handle_canvas_mousemove(
+export function handle_canvas_pointermove(
   this: NodeCanvas,
   e: MouseEvent,
   container: HTMLElement
@@ -261,7 +261,7 @@ async function handle_drop_to_dragging_rect(this: NodeCanvas, e: MouseEvent) {
   }
 }
 
-export async function handle_canvas_mouseup(this: NodeCanvas, e: MouseEvent) {
+export async function handle_canvas_pointerup(this: NodeCanvas, e: MouseEvent) {
   const canvas = this.canvas;
   if (canvas.editing_rc) return;
 

@@ -1,9 +1,14 @@
 import { createSignal } from "@/common/signal";
 import { MixEditor } from "./MixEditor";
 import { Area } from "./Area";
-import { CaretMoveEnterEventResult } from "./event/CaretMoveEnter";
-
-export type CaretRendererType = (props: { editor: MixEditor<any, any> }) => any;
+import {
+  CaretMoveEnterEventPair,
+  CaretMoveEnterEventResult,
+} from "./event/CaretMoveEnter";
+import { InputEventPair } from "./event/Input";
+import { DeleteEventPair, DeleteEventResult } from "./event/Delete";
+import { find_index_in_parent_area } from "./utils/area";
+import { CombineEventPair } from "./event/Combine";
 
 export type SelectedAreaInfo = {
   area: Area;
@@ -64,12 +69,14 @@ export class Selection {
 
     while (true) {
       let command: CaretMoveEnterEventResult;
-      const result = await current_area.handle_event?.({
-        event_type: "caret_move_enter",
-        direction,
-        to,
-        from_child,
-      });
+      const result = await current_area.handle_event?.<CaretMoveEnterEventPair>(
+        {
+          event_type: "caret_move_enter",
+          direction,
+          to,
+          from_child,
+        }
+      );
       command = result || CaretMoveEnterEventResult.skip;
 
       console.log(`move_${direction}`, current_area, to, command, from_child);
@@ -77,7 +84,7 @@ export class Selection {
       if (command.type === "skip") {
         const context = this.editor.get_context(current_area)!;
         const parent = context.parent;
-        if (!parent) break;
+        if (!parent) return;
         const length = parent.children_count();
 
         let index_in_parent = 0;
@@ -95,10 +102,10 @@ export class Selection {
           area: current_area,
           child_path: command.to,
         });
-        break;
+        return true;
       } else if (command.type === "enter_child") {
         const child = current_area.get_child(command.to);
-        if (!child) break;
+        if (!child) return;
 
         current_area = child;
         // 根据方向设置子区域的 to 值
@@ -114,6 +121,121 @@ export class Selection {
 
   async move_right() {
     return this.move("right");
+  }
+
+  /** 输入到选区。 */
+  async input_to_selection(value: string, dataTransfer?: DataTransfer) {
+    const selected = this.selected.get();
+    const editor_mode = this.editor.mode.get();
+    if (!selected || editor_mode !== "edit") return;
+    if (selected?.type === "collapsed") {
+      const result = await selected.start.area.handle_event?.<InputEventPair>({
+        event_type: "input",
+        value,
+        to: selected.start.child_path,
+        dataTransfer,
+      });
+
+      if (result?.type === "done") {
+        this.collapsed_select({
+          area: selected.start.area,
+          child_path: result.to,
+        });
+        return true;
+      }
+    }
+  }
+
+  /** 删除选区。 */
+  async delete_selection(direction: "forward" | "backward") {
+    const selected = this.selected.get();
+    const editor_mode = this.editor.mode.get();
+    if (!selected || editor_mode !== "edit") return;
+
+    if (selected.type === "collapsed") {
+      let current_area = selected.start.area;
+      let result = await current_area.handle_event?.<DeleteEventPair>({
+        event_type: "delete",
+        type: direction,
+        to: selected.start.child_path,
+        from_child: false,
+      });
+
+      while (true) {
+        result ??= DeleteEventResult.done(selected.start.child_path);
+
+        console.log(`delete_${direction}`, current_area, result);
+
+        if (result.type === "done") {
+          this.collapsed_select({
+            area: current_area,
+            child_path: result.to,
+          });
+          return true;
+        } else if (result.type === "self_delete_required") {
+          const context = this.editor.get_context(current_area)!;
+          const parent = context.parent;
+          if (!parent) return;
+
+          let index = find_index_in_parent_area(current_area, parent);
+          if (direction === "backward") {
+            index -= 1;
+          }
+
+          current_area = parent;
+          result = await current_area.handle_event?.<DeleteEventPair>({
+            event_type: "delete",
+            type: "specified",
+            from: index,
+            to: index + 1,
+          });
+        } else if (result.type === "enter_child") {
+          const child = current_area.get_child(result.to);
+          if (!child) return;
+
+          current_area = child;
+          result = await current_area.handle_event?.<DeleteEventPair>({
+            event_type: "delete",
+            type: direction,
+            to: direction === "forward" ? 0 : ToEnd,
+            from_child: false,
+          });
+        } else if (result.type === "skip") {
+          const context = this.editor.get_context(current_area)!;
+          const parent = context.parent;
+          if (!parent) return;
+
+          current_area = parent;
+          result = await current_area.handle_event?.<DeleteEventPair>({
+            event_type: "delete",
+            type: direction,
+            to: find_index_in_parent_area(current_area, parent),
+            from_child: true,
+          });
+        }
+      }
+    }
+  }
+
+  /** 合并两个区域。 */
+  async combine_areas(from_area: Area, to_area: Area, to_index: number) {
+    const selected = this.selected.get();
+    const editor_mode = this.editor.mode.get();
+    if (!selected || editor_mode !== "edit") return;
+
+    const result = await to_area.handle_event?.<CombineEventPair>({
+      event_type: "combine",
+      area: from_area,
+      to: to_index,
+    });
+
+    if (result?.type === "done") {
+      this.collapsed_select({
+        area: to_area,
+        child_path: result.to,
+      });
+      return true;
+    }
   }
 
   constructor(public editor: MixEditor<any, any>) {}

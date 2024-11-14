@@ -1,27 +1,49 @@
-import { createEffect, createMemo, on, onMount, Show } from "solid-js";
-import { CaretRendererType } from "../selection";
+import {
+  createEffect,
+  createMemo,
+  on,
+  onCleanup,
+  onMount,
+  Show,
+  useContext,
+} from "solid-js";
+import { MixEditor } from "../MixEditor";
 import "./CaretRenderer.css";
+import {
+  MixEditorRendererState,
+  MixEditorRendererStateContext,
+} from "./MixEditorRenderer";
+
+export type CaretRendererType = (props: { editor: MixEditor<any, any> }) => any;
 
 export const CaretRenderer: CaretRendererType = (props) => {
   let container: HTMLElement;
-  let input: HTMLInputElement;
+  let input: HTMLDivElement;
   let start_caret: HTMLElement;
   let end_caret: HTMLElement;
   const editor = props.editor;
   const selection = editor.selection;
   const selected_type = createMemo(() => selection.get()?.type);
 
+  const renderer_state = useContext(MixEditorRendererStateContext);
+
   onMount(() => {
     createEffect(
       on(selection.selected.get, (selected) => {
-        input?.focus({
-          preventScroll: true,
-        });
+        console.log("[光标渲染器] 选区变化。", selected);
+
+        setTimeout(() => {
+          input?.blur();
+          input?.focus({
+            preventScroll: true,
+          });
+          console.log(document.activeElement);
+        }, 50);
 
         if (!selected) {
           console.log("[光标渲染器] 没有选区，光标不显示。");
-          return
-        };
+          return;
+        }
         if (selected.type === "collapsed") {
           const container_rect = container?.getBoundingClientRect();
           const position = selected.start.area.get_child_position(
@@ -46,12 +68,18 @@ export const CaretRenderer: CaretRendererType = (props) => {
     );
   });
 
+  function handle_inputer_input(e: InputEvent) {
+    if (!e.data) return;
+    (e.target as HTMLDivElement).innerText = "";
+    selection.input_to_selection(e.data, e.dataTransfer ?? undefined);
+  }
+
   return (
     <div
       class="__caret_layer"
       ref={(it) => (container = it)}
       style={{
-        visibility: editor.mode.get() === "edit" ? "visible" : "hidden",
+        opacity: editor.mode.get() === "edit" ? "1" : "0",
       }}
     >
       <Show
@@ -64,7 +92,15 @@ export const CaretRenderer: CaretRendererType = (props) => {
             height: `${selection.caret_height.get()}px`,
           }}
         >
-          <input ref={(it) => (input = it)} />
+          <div
+            class="__inputer"
+            contentEditable
+            ref={(it) => (console.log("new inputer", it), (input = it))}
+            onInput={handle_inputer_input}
+            onPointerDown={(e) => {
+              e.preventDefault();
+            }}
+          />
         </div>
       </Show>
       <Show when={selected_type() === "extended"}>

@@ -6,6 +6,7 @@ import { AreaContext } from "./AreaContext";
 import { Block } from "./Area";
 import { MixEditor } from "./MixEditor";
 import { Position } from "@/common/math";
+import { DeleteEventResult } from "./event/Delete";
 
 /** 根区域。是无界的块区域。 */
 export class RootArea implements Block<"root", {}> {
@@ -30,37 +31,6 @@ export class RootArea implements Block<"root", {}> {
     if (event.event_type === "caret_move_enter") {
       const to = event.to;
       const to_left = event.direction === "left";
-      // if (to_left) {
-      //   if (event.from_child) {
-      //     if (to === 0) {
-      //       // 因为块无界，如果从自己的子区域跳出，则跳过
-      //       return CaretMoveEnterEventResult.skip;
-      //     }
-      //     // 如果从自己的子区域跳入，则进入特定索引
-      //     return CaretMoveEnterEventResult.enter_child(to - 1);
-      //   }
-      //   if (!event.from_child) {
-      //     // 如果从自己的区域跳入，则进入特定索引
-      //     const child = this.get_child(to);
-      //     if (!child) return CaretMoveEnterEventResult.skip;
-      //     return CaretMoveEnterEventResult.enter_child(to);
-      //   }
-      // } else {
-      //   if (event.from_child) {
-      //     if (to > this.children_count() - 1) {
-      //       return CaretMoveEnterEventResult.skip;
-      //     }
-      //     // 如果从自己的子区域跳入，则进入特定索引
-      //     return CaretMoveEnterEventResult.enter_child(to);
-      //   }
-      //   if (!event.from_child) {
-      //     // 如果从自己的区域跳入，则进入特定索引
-      //     const child = this.get_child(to + 1);
-      //     if (!child) return CaretMoveEnterEventResult.skip;
-      //     return CaretMoveEnterEventResult.enter_child(to + 1);
-      //   }
-      // }
-
       if (event.from_child) {
         if (
           (to_left && to === 0) ||
@@ -76,6 +46,8 @@ export class RootArea implements Block<"root", {}> {
           "根区域顶层索引约定为无界，所以不可能从根区域顶层索引进入。这可能是插件直接设置了选区导致的错误选择了根区域的索引。"
         );
       }
+    } else if (event.event_type === "delete") {
+      return DeleteEventResult.skip;
     }
   }
   constructor(public editor: MixEditor) {}

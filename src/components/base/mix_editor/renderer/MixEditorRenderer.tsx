@@ -1,10 +1,19 @@
 import { WrappedSignal } from "@/common/signal";
-import { For, onCleanup, onMount } from "solid-js";
+import { createContext, For, onCleanup, onMount } from "solid-js";
 import { Block, Inline } from "../Area";
 import { AreaContext } from "../AreaContext";
 import { MixEditor } from "../MixEditor";
 import { CaretRenderer } from "./CaretRenderer";
-import { MixEditorMouseEvent } from "../utils/types";
+import { MixEditorMouseEvent } from "../utils/area";
+
+export class MixEditorRendererState {
+  container: HTMLDivElement | undefined;
+  constructor(public editor: MixEditor<any, any>) {}
+}
+
+export const MixEditorRendererStateContext = createContext<
+  MixEditorRendererState | undefined
+>(undefined);
 
 export const MixEditorRenderer = <
   TBlock extends Block,
@@ -14,20 +23,35 @@ export const MixEditorRenderer = <
 }) => {
   let container: HTMLDivElement | undefined;
   const editor = props.editor;
+  const state = new MixEditorRendererState(editor);
 
   function handle_keydown(e: KeyboardEvent) {
-    if (e.key === "ArrowLeft") {
-      e.preventDefault();
-      editor.selection.move_left();
-    } else if (e.key === "ArrowRight") {
-      e.preventDefault();
-      editor.selection.move_right();
+    const map: Record<string, () => void> = {
+      ArrowLeft: () => {
+        e.preventDefault();
+        editor.selection.move_left();
+      },
+      ArrowRight: () => {
+        e.preventDefault();
+        editor.selection.move_right();
+      },
+      Backspace: () => {
+        e.preventDefault();
+        editor.selection.delete_selection("backward");
+      },
+      Delete: () => {
+        e.preventDefault();
+        editor.selection.delete_selection("forward");
+      },
+    };
+    if (e.key in map) {
+      map[e.key]?.();
     }
   }
 
   function handle_pointer_down(e: MixEditorMouseEvent) {
     if (!(e.target instanceof Element)) return;
-    
+
     // 点击编辑器外失焦
     if (!container?.contains(e.target)) {
       editor.selection.clear();
@@ -54,13 +78,12 @@ export const MixEditorRenderer = <
   });
 
   return (
-    <div
-      class="_m_mix_editor"
-      ref={container}
-    >
-      <BlocksRenderer editor={editor} blocks={editor.blocks} />
-      <CaretRenderer editor={editor} />
-    </div>
+    <MixEditorRendererStateContext.Provider value={state}>
+      <div class="_m_mix_editor" ref={container}>
+        <BlocksRenderer editor={editor} blocks={editor.blocks} />
+        <CaretRenderer editor={editor} />
+      </div>
+    </MixEditorRendererStateContext.Provider>
   );
 };
 

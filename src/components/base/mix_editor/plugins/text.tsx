@@ -9,7 +9,9 @@ import { MaybeArea, MixEditor } from "../MixEditor";
 import { Plugin } from "../plugin";
 import { create_InlineSaveData, InlineLoader } from "../save";
 import { ToEnd } from "../selection";
-import { MixEditorMouseEvent } from "../utils/types";
+import { MixEditorMouseEvent } from "../utils/area";
+import { InputEventResult } from "../event/Input";
+import { DeleteEventResult } from "../event/Delete";
 
 export type TextInlineSavedData = { value: string };
 
@@ -59,6 +61,44 @@ export class TextInline
         return CaretMoveEnterEventResult.skip;
       } else {
         return CaretMoveEnterEventResult.enter(to);
+      }
+    } else if (event.event_type === "input") {
+      const curr_value = this.data.value.get();
+      this.data.value.set(
+        curr_value.slice(0, event.to) + event.value + curr_value.slice(event.to)
+      );
+      return InputEventResult.done(event.to + event.value.length);
+    } else if (event.event_type === "delete") {
+      const curr_value = this.data.value.get();
+      let to = event.to;
+      if (to === ToEnd) {
+        to = curr_value.length;
+      }
+      if (event.type === "backward") {
+        const new_value = curr_value.slice(0, to - 1) + curr_value.slice(to);
+
+        if (new_value.length === 0) {
+          return DeleteEventResult.self_delete_required;
+        }
+        this.data.value.set(new_value);
+        return DeleteEventResult.done(to - 1);
+      } else if (event.type === "forward") {
+        const new_value = curr_value.slice(0, to) + curr_value.slice(to + 1);
+
+        if (new_value.length === 0) {
+          return DeleteEventResult.self_delete_required;
+        }
+        this.data.value.set(new_value);
+        return DeleteEventResult.done(to);
+      } else if (event.type === "specified") {
+        const new_value =
+          curr_value.slice(0, event.from) + curr_value.slice(to);
+
+        if (new_value.length === 0) {
+          return DeleteEventResult.self_delete_required;
+        }
+        this.data.value.set(new_value);
+        return DeleteEventResult.done(to);
       }
     }
   }
@@ -124,16 +164,11 @@ export const Text = () => {
       );
     }
 
-    function handle_dblclick(e: MouseEvent) {
-      clear_dom_selection();
-    }
-
     return (
       <span
         class="__inline __text"
         ref={(it) => (container = it)}
         onPointerDown={handle_pointer_down}
-        onDblClick={handle_dblclick}
       >
         {inline.data.value.get()}
       </span>
