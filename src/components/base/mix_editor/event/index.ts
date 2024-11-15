@@ -12,3 +12,5 @@ export type EventPair =
   | InputEventPair
   | DeleteEventPair
   | CombineEventPair;
+
+export type MixEditorEvent = EventPair["event"];

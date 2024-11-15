@@ -7,6 +7,8 @@ import { Block } from "./Area";
 import { MixEditor } from "./MixEditor";
 import { Position } from "@/common/math";
 import { DeleteEventResult } from "./event/Delete";
+import { MixEditorEvent } from "./event";
+import { ToEnd } from "./selection";
 
 /** 根区域。是无界的块区域。 */
 export class RootArea implements Block<"root", {}> {
@@ -27,7 +29,7 @@ export class RootArea implements Block<"root", {}> {
   get_child_position(index: number) {
     return undefined as Position | undefined;
   }
-  handle_event(event: CaretMoveEnterEvent) {
+  handle_event(event: MixEditorEvent) {
     if (event.event_type === "caret_move_enter") {
       const to = event.to;
       const to_left = event.direction === "left";
@@ -47,7 +49,34 @@ export class RootArea implements Block<"root", {}> {
         );
       }
     } else if (event.event_type === "delete") {
-      return DeleteEventResult.skip;
+      // 如果子区域请求根区域负责删除，则尝试合并子区域
+      const to = event.to;
+      const to_backward = event.type === "backward";
+
+      // 跳过越界删除
+      if (
+        (to_backward && to === 0) ||
+        (!to_backward && to >= this.children_count())
+      ) {
+        return DeleteEventResult.skip;
+      }
+
+      // 尝试合并前后两个子区域
+      let prev_child: Block | undefined;
+      let child: Block | undefined;
+      if (to_backward) {
+        prev_child = this.get_child(to - 1);
+        child = this.get_child(to);
+      } else {
+        prev_child = this.get_child(to);
+        child = this.get_child(to + 1);
+      }
+
+      this.editor.selection.combine_areas(
+        child,
+        prev_child,
+        to_backward ? ToEnd : 0
+      );
     }
   }
   constructor(public editor: MixEditor) {}
