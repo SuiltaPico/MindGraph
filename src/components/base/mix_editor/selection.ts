@@ -6,7 +6,11 @@ import {
   CaretMoveEnterEventResult,
 } from "./event/CaretMoveEnter";
 import { InputEventPair } from "./event/Input";
-import { DeleteEventPair, DeleteEventResult } from "./event/Delete";
+import {
+  DeleteEvent,
+  DeleteEventPair,
+  DeleteEventResult,
+} from "./event/Delete";
 import { find_index_in_parent_area } from "./utils/area";
 import { CombineEventPair } from "./event/Combine";
 
@@ -146,6 +150,70 @@ export class Selection {
     }
   }
 
+  async handle_delete_event_result(
+    result: DeleteEventResult | void,
+    current_area: Area,
+    direction: any,
+    handle_caret: boolean = true
+  ) {
+    while (true) {
+      result ??= DeleteEventResult.skip;
+
+      console.log(`delete_${direction}`, current_area, result);
+
+      if (result.type === "done") {
+        if (result.to >= 0 && handle_caret) {
+          this.collapsed_select({
+            area: current_area,
+            child_path: result.to,
+          });
+        }
+        return true;
+      } else if (result.type === "self_delete_required") {
+        const context = this.editor.get_context(current_area)!;
+        const parent = context.parent;
+        if (!parent) return;
+
+        let index = find_index_in_parent_area(current_area, parent);
+        if (direction === "backward") {
+          index -= 1;
+        }
+
+        current_area = parent;
+        result = await current_area.handle_event?.<DeleteEventPair>({
+          event_type: "delete",
+          type: "specified",
+          from: index,
+          to: index + 1,
+        });
+      } else if (result.type === "enter_child") {
+        const child = current_area.get_child(result.to);
+        if (!child) return;
+
+        current_area = child;
+        result = await current_area.handle_event?.<DeleteEventPair>({
+          event_type: "delete",
+          type: direction,
+          to: direction === "backward" ? ToEnd : 0,
+          from_child: false,
+        });
+      } else if (result.type === "skip") {
+        const context = this.editor.get_context(current_area)!;
+        const child = current_area;
+        const parent = context.parent;
+        if (!parent) return;
+
+        current_area = parent;
+        result = await current_area.handle_event?.<DeleteEventPair>({
+          event_type: "delete",
+          type: direction,
+          to: find_index_in_parent_area(child, parent),
+          from_child: true,
+        });
+      }
+    }
+  }
+
   /** 删除选区。 */
   async delete_selection(direction: "forward" | "backward") {
     const selected = this.selected.get();
@@ -153,67 +221,16 @@ export class Selection {
     if (!selected || editor_mode !== "edit") return;
 
     if (selected.type === "collapsed") {
-      let current_area = selected.start.area;
-      let result = await current_area.handle_event?.<DeleteEventPair>({
-        event_type: "delete",
-        type: direction,
-        to: selected.start.child_path,
-        from_child: false,
-      });
-
-      while (true) {
-        result ??= DeleteEventResult.done(selected.start.child_path);
-
-        console.log(`delete_${direction}`, current_area, result);
-
-        if (result.type === "done") {
-          this.collapsed_select({
-            area: current_area,
-            child_path: result.to,
-          });
-          return true;
-        } else if (result.type === "self_delete_required") {
-          const context = this.editor.get_context(current_area)!;
-          const parent = context.parent;
-          if (!parent) return;
-
-          let index = find_index_in_parent_area(current_area, parent);
-          if (direction === "backward") {
-            index -= 1;
-          }
-
-          current_area = parent;
-          result = await current_area.handle_event?.<DeleteEventPair>({
-            event_type: "delete",
-            type: "specified",
-            from: index,
-            to: index + 1,
-          });
-        } else if (result.type === "enter_child") {
-          const child = current_area.get_child(result.to);
-          if (!child) return;
-
-          current_area = child;
-          result = await current_area.handle_event?.<DeleteEventPair>({
-            event_type: "delete",
-            type: direction,
-            to: direction === "forward" ? 0 : ToEnd,
-            from_child: false,
-          });
-        } else if (result.type === "skip") {
-          const context = this.editor.get_context(current_area)!;
-          const parent = context.parent;
-          if (!parent) return;
-
-          current_area = parent;
-          result = await current_area.handle_event?.<DeleteEventPair>({
-            event_type: "delete",
-            type: direction,
-            to: find_index_in_parent_area(current_area, parent),
-            from_child: true,
-          });
-        }
-      }
+      return this.handle_delete_event_result(
+        await selected.start.area.handle_event?.<DeleteEventPair>({
+          event_type: "delete",
+          type: direction,
+          to: selected.start.child_path,
+          from_child: false,
+        }),
+        selected.start.area,
+        direction
+      );
     }
   }
 

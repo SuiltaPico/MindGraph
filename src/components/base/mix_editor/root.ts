@@ -29,7 +29,7 @@ export class RootArea implements Block<"root", {}> {
   get_child_position(index: number) {
     return undefined as Position | undefined;
   }
-  handle_event(event: MixEditorEvent) {
+  async handle_event(event: MixEditorEvent) {
     if (event.event_type === "caret_move_enter") {
       const to = event.to;
       const to_left = event.direction === "left";
@@ -51,32 +51,52 @@ export class RootArea implements Block<"root", {}> {
     } else if (event.event_type === "delete") {
       // 如果子区域请求根区域负责删除，则尝试合并子区域
       const to = event.to;
-      const to_backward = event.type === "backward";
-
-      // 跳过越界删除
-      if (
-        (to_backward && to === 0) ||
-        (!to_backward && to >= this.children_count())
-      ) {
-        return DeleteEventResult.skip;
-      }
-
-      // 尝试合并前后两个子区域
-      let prev_child: Block | undefined;
-      let child: Block | undefined;
-      if (to_backward) {
-        prev_child = this.get_child(to - 1);
-        child = this.get_child(to);
+      if (event.type === "specified") {
+        const children = this.editor.blocks.get();
+        children.splice(to, 1);
+        this.editor.blocks.set(children);
+        return DeleteEventResult.done(to);
       } else {
-        prev_child = this.get_child(to);
-        child = this.get_child(to + 1);
-      }
+        const to_backward = event.type === "backward";
 
-      this.editor.selection.combine_areas(
-        child,
-        prev_child,
-        to_backward ? ToEnd : 0
-      );
+        // 跳过越界删除
+        if (
+          (to_backward && to === 0) ||
+          (!to_backward && to >= this.children_count())
+        ) {
+          return DeleteEventResult.skip;
+        }
+
+        // 尝试合并前后两个子区域
+        let prev_child: Block | undefined;
+        let child: Block | undefined;
+        if (to_backward) {
+          prev_child = this.get_child(to - 1);
+          child = this.get_child(to);
+        } else {
+          prev_child = this.get_child(to);
+          child = this.get_child(to + 1);
+        }
+
+        const result = await this.editor.selection.combine_areas(
+          child,
+          prev_child,
+          to_backward ? ToEnd : 0
+        );
+
+        if (result) {
+          // 如果合并了子区域，则需要删除在后面的子区域
+          await this.editor.selection.handle_delete_event_result(
+            DeleteEventResult.self_delete_required,
+            child,
+            "backward",
+            false
+          );
+          return DeleteEventResult.done(-1);
+        } else {
+          return DeleteEventResult.enter_child(to_backward ? to - 1 : to);
+        }
+      }
     }
   }
   constructor(public editor: MixEditor) {}

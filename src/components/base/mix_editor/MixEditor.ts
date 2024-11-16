@@ -8,10 +8,7 @@ import {
   UnknownBlockRenderer,
   UnknownInlineRenderer,
 } from "./renderer/MixEditorRenderer";
-import {
-  LoaderMapRecord,
-  Saver
-} from "./save";
+import { LoaderMapRecord, Saver } from "./save";
 import { Selection } from "./selection";
 import { CaretMoveEnterEventResult } from "./event/CaretMoveEnter";
 import { RootArea } from "./root";
@@ -36,7 +33,9 @@ export class MixEditor<
 > {
   selection = new Selection(this);
   /** 块。 */
-  blocks = createSignal<TBlock[]>([]);
+  blocks = createSignal<TBlock[]>([], {
+    equals: false,
+  });
   /** 元数据。 */
   metadata = createSignal<Metadata | undefined>(undefined);
 
@@ -79,7 +78,6 @@ export class MixEditor<
   constructor(config: Config) {
     this.area_context.set(this.root_area, this.root_context);
 
-
     const plugin_keys = ["renderer", "loader"] as const;
     const that = this;
 
@@ -89,7 +87,9 @@ export class MixEditor<
       const maps_record_of_this = that[plugin_key] as any;
       const maps_record_of_plugin = plugin[plugin_key];
       if (!maps_record_of_plugin) return;
-      for (const [record_type, record] of Object.entries(maps_record_of_plugin)) {
+      for (const [record_type, record] of Object.entries(
+        maps_record_of_plugin
+      )) {
         if (!record) continue;
         for (const [key, value] of Object.entries(record)) {
           maps_record_of_this[record_type as keyof LoaderMapRecord].set(

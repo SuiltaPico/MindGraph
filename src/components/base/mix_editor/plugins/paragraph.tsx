@@ -17,6 +17,8 @@ import { ToEnd } from "../selection";
 import { MixEditorMouseEvent } from "../utils/area";
 import { find_ancestor_below, find_index_of_parent } from "@/common/dom";
 import { DeleteEventResult } from "../event/Delete";
+import { CombineEventResult } from "../event/Combine";
+import { InputEventResult } from "../event/Input";
 
 export type ParagraphBlockSavedData = {
   inlines: InlineSavedData[];
@@ -73,7 +75,11 @@ export class ParagraphBlock<TInline extends Inline<any, any>>
         return CaretMoveEnterEventResult.enter_child(actual_to);
       }
     } else if (event.event_type === "delete") {
-      const to = event.to;
+      let to = event.to;
+      if (to === ToEnd) {
+        to = this.children_count();
+      }
+
       if (event.type === "backward") {
         if (to === 0) {
           return DeleteEventResult.skip;
@@ -91,6 +97,19 @@ export class ParagraphBlock<TInline extends Inline<any, any>>
         this.data.inlines.set(new_children);
         return DeleteEventResult.done(from + 1);
       }
+    } else if (event.event_type === "combine") {
+      let { to, area } = event;
+      if (to === ToEnd) {
+        to = this.children_count();
+      }
+      if (area.type !== "paragraph") return;
+      this.data.inlines.set([
+        ...this.data.inlines.get(),
+        ...area.data.inlines.get(),
+      ]);
+      return CombineEventResult.done(to);
+    } else if (event.event_type === "input") {
+      return InputEventResult.enter_child(event.to - 1);
     }
   }
   constructor(public data: { inlines: WrappedSignal<TInline[]> }) {}

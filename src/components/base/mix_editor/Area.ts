@@ -19,7 +19,7 @@ export interface BaseArea {
   /** 处理事件。 */
   handle_event?<TEventPair extends EventPair>(
     event: TEventPair["event"]
-  ): TEventPair["result"] | void;
+  ): MaybePromise<TEventPair["result"] | void>;
 }
 
 /** 块区域。 */

@@ -9,6 +9,11 @@ export type InputEventResult =
     }
   | {
       type: "skip";
+    }
+  | {
+      type: "enter_child";
+      /** 输入的结束位置。 */
+      to: number;
     };
 
 export const InputEventResult = {
@@ -16,6 +21,9 @@ export const InputEventResult = {
   skip: { type: "skip" } satisfies InputEventResult,
   /** 接受输入，并把光标移动到指定位置。 */
   done: (to: number) => ({ type: "done", to } satisfies InputEventResult),
+  /** 接受输入，并把光标移动到指定位置。 */
+  enter_child: (to: number) =>
+    ({ type: "enter_child", to } satisfies InputEventResult),
 };
 
 /** 输入事件。 */
