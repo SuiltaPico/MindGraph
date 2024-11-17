@@ -64,10 +64,14 @@ export class TextInline
       }
     } else if (event.event_type === "input") {
       const curr_value = this.data.value.get();
+      let to = event.to;
+      if (to === ToEnd) {
+        to = curr_value.length;
+      }
       this.data.value.set(
-        curr_value.slice(0, event.to) + event.value + curr_value.slice(event.to)
+        curr_value.slice(0, to) + event.value + curr_value.slice(to)
       );
-      return InputEventResult.done(event.to + event.value.length);
+      return InputEventResult.done(to + event.value.length);
     } else if (event.event_type === "delete") {
       const curr_value = this.data.value.get();
       let to = event.to;
@@ -75,6 +79,9 @@ export class TextInline
         to = curr_value.length;
       }
       if (event.type === "backward") {
+        if (to <= 0) {
+          return DeleteEventResult.skip;
+        }
         const new_value = curr_value.slice(0, to - 1) + curr_value.slice(to);
 
         if (new_value.length === 0) {
@@ -83,6 +90,9 @@ export class TextInline
         this.data.value.set(new_value);
         return DeleteEventResult.done(to - 1);
       } else if (event.type === "forward") {
+        if (to >= curr_value.length) {
+          return DeleteEventResult.skip;
+        }
         const new_value = curr_value.slice(0, to) + curr_value.slice(to + 1);
 
         if (new_value.length === 0) {

@@ -133,19 +133,37 @@ export class Selection {
     const editor_mode = this.editor.mode.get();
     if (!selected || editor_mode !== "edit") return;
     if (selected?.type === "collapsed") {
-      const result = await selected.start.area.handle_event?.<InputEventPair>({
+      let current_area = selected.start.area;
+      let result = await current_area.handle_event?.<InputEventPair>({
         event_type: "input",
         value,
         to: selected.start.child_path,
         dataTransfer,
       });
 
-      if (result?.type === "done") {
-        this.collapsed_select({
-          area: selected.start.area,
-          child_path: result.to,
-        });
-        return true;
+      console.log(`input_to_selection`, current_area, value, result);
+
+      while (true) {
+        if (result?.type === "done") {
+          this.collapsed_select({
+            area: current_area,
+            child_path: result.to,
+          });
+          return true;
+        } else if (result?.type === "enter_child") {
+          const child = selected.start.area.get_child(result.to);
+          if (!child) return;
+
+          current_area = child;
+          result = await current_area.handle_event?.<InputEventPair>({
+            event_type: "input",
+            value,
+            to: ToEnd,
+            dataTransfer,
+          });
+        } else {
+          break;
+        }
       }
     }
   }
