@@ -29,7 +29,7 @@ export const CaretMoveEnterEventResult = {
 export interface CaretMoveEnterEvent extends BaseEvent {
   event_type: "caret_move_enter";
   /** 移动方向。 */
-  direction: "left" | "right";
+  direction: "backward" | "forward";
   /** 希望进入的目标索引。 */
   to: number;
   /** 是否从子节点进入。 */

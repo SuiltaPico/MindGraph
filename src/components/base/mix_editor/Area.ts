@@ -4,6 +4,7 @@ import { EventPair } from "./event";
 import { MaybeArea } from "./MixEditor";
 import { BlockSavedData, InlineSavedData, InlineTagSavedData } from "./save";
 import { WrappedSignal } from "@/common/signal";
+import { CombineDataTransfer } from "./event/Combine";
 
 export interface BaseArea {
   /** 生成保存数据。 */
@@ -20,6 +21,9 @@ export interface BaseArea {
   handle_event?<TEventPair extends EventPair>(
     event: TEventPair["event"]
   ): MaybePromise<TEventPair["result"] | void>;
+
+  /** 获取合并数据。 */
+  get_combine_data?(): MaybePromise<CombineDataTransfer | void>;
 }
 
 /** 块区域。 */

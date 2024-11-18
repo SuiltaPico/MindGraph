@@ -13,6 +13,7 @@ import {
   MixEditorRendererState,
   MixEditorRendererStateContext,
 } from "./MixEditorRenderer";
+import { input_to_selection } from "../event/Input";
 
 export type CaretRendererType = (props: { editor: MixEditor<any, any> }) => any;
 
@@ -32,13 +33,12 @@ export const CaretRenderer: CaretRendererType = (props) => {
       on(selection.selected.get, (selected) => {
         console.log("[光标渲染器] 选区变化。", selected);
 
-        setTimeout(() => {
-          input?.blur();
-          input?.focus({
-            preventScroll: true,
-          });
-          console.log(document.activeElement);
-        }, 50);
+        // setTimeout(() => {
+        // input?.blur();
+        input?.focus({
+          preventScroll: true,
+        });
+        // });
 
         if (!selected) {
           console.log("[光标渲染器] 没有选区，光标不显示。");
@@ -68,10 +68,24 @@ export const CaretRenderer: CaretRendererType = (props) => {
     );
   });
 
-  function handle_inputer_input(e: InputEvent) {
+  async function handle_inputer_composition_end(e: CompositionEvent) {
+    console.log("handle_inputer_composition_end", e);
     if (!e.data) return;
-    (e.target as HTMLDivElement).innerText = "";
-    selection.input_to_selection(e.data, e.dataTransfer ?? undefined);
+    await input_to_selection(selection, {
+      text: e.data,
+      dataTransfer: undefined,
+    });
+    e.preventDefault();
+  }
+
+  async function handle_inputer_input(e: InputEvent) {
+    console.log("handle_inputer_input", e);
+    if (!e.data || e.isComposing) return;
+    await input_to_selection(selection, {
+      text: e.data,
+      dataTransfer: e.dataTransfer ?? undefined,
+    });
+    e.preventDefault();
   }
 
   return (
@@ -96,7 +110,8 @@ export const CaretRenderer: CaretRendererType = (props) => {
             class="__inputer"
             contentEditable
             ref={(it) => (console.log("new inputer", it), (input = it))}
-            onInput={handle_inputer_input}
+            onCompositionEnd={handle_inputer_composition_end}
+            onBeforeInput={handle_inputer_input}
             onPointerDown={(e) => {
               e.preventDefault();
             }}

@@ -60,7 +60,7 @@ export class Selection {
     return this.selected.get();
   }
 
-  private async move(direction: "left" | "right") {
+  private async move(direction: "backward" | "forward") {
     const selected = this.selected.get();
     if (!selected) return;
 
@@ -68,7 +68,7 @@ export class Selection {
 
     let current_area = start_info.area;
     // 根据方向设置初始 to 值
-    let to = start_info.child_path + (direction === "left" ? -1 : 1);
+    let to = start_info.child_path + (direction === "backward" ? -1 : 1);
     let from_child = false;
 
     while (true) {
@@ -99,7 +99,7 @@ export class Selection {
 
         current_area = parent;
         // 根据方向调整父区域的 to 值
-        to = index_in_parent + (direction === "left" ? 0 : 1);
+        to = index_in_parent + (direction === "backward" ? 0 : 1);
         from_child = true;
       } else if (command.type === "enter") {
         this.collapsed_select({
@@ -113,59 +113,18 @@ export class Selection {
 
         current_area = child;
         // 根据方向设置子区域的 to 值
-        to = direction === "left" ? ToEnd : 0;
+        to = direction === "backward" ? ToEnd : 0;
         from_child = false;
       }
     }
   }
 
   async move_left() {
-    return this.move("left");
+    return this.move("backward");
   }
 
   async move_right() {
-    return this.move("right");
-  }
-
-  /** 输入到选区。 */
-  async input_to_selection(value: string, dataTransfer?: DataTransfer) {
-    const selected = this.selected.get();
-    const editor_mode = this.editor.mode.get();
-    if (!selected || editor_mode !== "edit") return;
-    if (selected?.type === "collapsed") {
-      let current_area = selected.start.area;
-      let result = await current_area.handle_event?.<InputEventPair>({
-        event_type: "input",
-        value,
-        to: selected.start.child_path,
-        dataTransfer,
-      });
-
-      console.log(`input_to_selection`, current_area, value, result);
-
-      while (true) {
-        if (result?.type === "done") {
-          this.collapsed_select({
-            area: current_area,
-            child_path: result.to,
-          });
-          return true;
-        } else if (result?.type === "enter_child") {
-          const child = selected.start.area.get_child(result.to);
-          if (!child) return;
-
-          current_area = child;
-          result = await current_area.handle_event?.<InputEventPair>({
-            event_type: "input",
-            value,
-            to: ToEnd,
-            dataTransfer,
-          });
-        } else {
-          break;
-        }
-      }
-    }
+    return this.move("forward");
   }
 
   async handle_delete_event_result(
@@ -193,7 +152,7 @@ export class Selection {
         if (!parent) return;
 
         let index = find_index_in_parent_area(current_area, parent);
-        if (direction === "backward") {
+        if (direction === "forward") {
           index -= 1;
         }
 

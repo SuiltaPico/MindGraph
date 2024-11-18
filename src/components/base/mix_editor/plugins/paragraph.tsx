@@ -1,8 +1,21 @@
+import { find_ancestor_below, find_index_of_parent } from "@/common/dom";
 import { Position } from "@/common/math";
 import { createSignal, WrappedSignal } from "@/common/signal";
 import { onMount } from "solid-js";
-import { MixEditor } from "../MixEditor";
 import { Block, Inline } from "../Area";
+import { EventPair } from "../event";
+import {
+  CaretMoveEnterEvent,
+  CaretMoveEnterEventResult,
+} from "../event/CaretMoveEnter";
+import {
+  CombineDataTransfer,
+  CombineEvent,
+  CombineEventResult,
+} from "../event/Combine";
+import { DeleteEvent, DeleteEventResult } from "../event/Delete";
+import { InputEvent, InputEventResult } from "../event/Input";
+import { MixEditor } from "../MixEditor";
 import { PluginFactory } from "../plugin";
 import { InlinesRenderer } from "../renderer/MixEditorRenderer";
 import {
@@ -11,14 +24,110 @@ import {
   InlineSavedData,
   save_inlines,
 } from "../save";
-import { EventPair } from "../event";
-import { CaretMoveEnterEventResult } from "../event/CaretMoveEnter";
 import { ToEnd } from "../selection";
 import { MixEditorMouseEvent } from "../utils/area";
-import { find_ancestor_below, find_index_of_parent } from "@/common/dom";
-import { DeleteEventResult } from "../event/Delete";
-import { CombineEventResult } from "../event/Combine";
-import { InputEventResult } from "../event/Input";
+import { TextInline } from "./text";
+import "./Paragraph.css";
+
+export function handle_caret_move_enter(
+  this: ParagraphBlock<any>,
+  event: CaretMoveEnterEvent
+) {
+  const to = event.to;
+  const to_backward = event.direction === "backward";
+  if ((to_backward && to > this.children_count()) || (!to_backward && to < 0)) {
+    // 进入，但是超出该方向的首边界时，跳转至首边界
+    return CaretMoveEnterEventResult.enter(
+      to_backward ? this.children_count() : 0
+    );
+  } else if (event.from_child) {
+    // 从子区域跳入，跳转至指定索引
+    return CaretMoveEnterEventResult.enter(to);
+  } else {
+    // 从自身索引移动，跳入子区域
+    if (
+      (to_backward && to < 0) ||
+      (!to_backward && to > this.children_count())
+    ) {
+      // 超出该方向的尾边界，则跳过
+      return CaretMoveEnterEventResult.skip;
+    }
+
+    // 跳入子区域
+    const actual_to = to_backward ? to : to - 1;
+    return CaretMoveEnterEventResult.enter_child(actual_to);
+  }
+}
+
+export function handle_delete(this: ParagraphBlock<any>, event: DeleteEvent) {
+  let to = event.to;
+  if (to === ToEnd) {
+    to = this.children_count();
+  }
+
+  if (event.type === "backward") {
+    if (to === 0) {
+      return DeleteEventResult.skip;
+    }
+    return DeleteEventResult.enter_child(to - 1);
+  } else if (event.type === "forward") {
+    if (to >= this.children_count()) {
+      return DeleteEventResult.skip;
+    }
+    return DeleteEventResult.enter_child(to);
+  } else if (event.type === "specified") {
+    // 删除指定范围的子区域
+    const from = event.from;
+    const curr_children = this.data.inlines.get();
+    curr_children.splice(from, to - from);
+    const new_children = curr_children;
+    console.log("handle_delete", from, to, new_children);
+    this.data.inlines.set(new_children);
+    return DeleteEventResult.done(from);
+  }
+}
+
+export async function handle_combine(
+  this: ParagraphBlock<any>,
+  event: CombineEvent
+) {
+  let to = event.to;
+  if (to === ToEnd) {
+    to = this.children_count();
+  }
+  const combine_data = await event.area.get_combine_data?.();
+  if (!combine_data || combine_data.type !== "inline") return;
+  this.data.inlines.set([...this.data.inlines.get(), ...combine_data.value]);
+  return CombineEventResult.done(to);
+}
+
+export function handle_input(this: ParagraphBlock<any>, event: InputEvent) {
+  const children_count = this.children_count();
+  let to = event.to;
+  if (to > children_count) {
+    to = this.children_count();
+  }
+
+  if (to <= 0) {
+    // 尝试让第一个元素接受输入
+    if (children_count === 0) {
+      const new_child = new TextInline(
+        {
+          value: "",
+        },
+        this.editor
+      );
+      this.editor.area_context.set(new_child, {
+        area: new_child,
+        parent: this,
+      });
+      this.data.inlines.set([new_child]);
+      return InputEventResult.enter_child(0, 0);
+    }
+    return InputEventResult.enter_child(0, 0);
+  }
+  return InputEventResult.enter_child(to - 1, ToEnd);
+}
 
 export type ParagraphBlockSavedData = {
   inlines: InlineSavedData[];
@@ -49,70 +158,27 @@ export class ParagraphBlock<TInline extends Inline<any, any>>
   handle_event<TEventPair extends EventPair>(
     event: TEventPair["event"]
   ): TEventPair["result"] | void {
-    if (event.event_type === "caret_move_enter") {
-      const to = event.to;
-      const to_left = event.direction === "left";
-      if ((to_left && to === ToEnd) || (!to_left && to === 0)) {
-        // 顺方向前边界进入
-        return CaretMoveEnterEventResult.enter(
-          to_left ? this.children_count() : 0
-        );
-      } else if (event.from_child) {
-        // 从子区域跳入
-        return CaretMoveEnterEventResult.enter(to);
-      } else {
-        // 从自身索引移动
+    const map: Partial<
+      Record<EventPair["event"]["event_type"], (event: any) => any>
+    > = {
+      caret_move_enter: handle_caret_move_enter,
+      delete: handle_delete,
+      input: handle_input,
+      combine: handle_combine,
+    } as const;
 
-        if ((to_left && to < 0) || (!to_left && to > this.children_count())) {
-          // 越界则跳过
-          return CaretMoveEnterEventResult.skip;
-        }
-
-        // 跳入子区域
-        const actual_to = to_left ? to : to - 1;
-        const child = this.get_child(actual_to);
-        if (!child) return CaretMoveEnterEventResult.skip;
-        return CaretMoveEnterEventResult.enter_child(actual_to);
-      }
-    } else if (event.event_type === "delete") {
-      let to = event.to;
-      if (to === ToEnd) {
-        to = this.children_count();
-      }
-
-      if (event.type === "backward") {
-        if (to === 0) {
-          return DeleteEventResult.skip;
-        }
-        return DeleteEventResult.enter_child(to - 1);
-      } else if (event.type === "forward") {
-        if (to > this.children_count()) {
-          return DeleteEventResult.skip;
-        }
-        return DeleteEventResult.enter_child(to);
-      } else if (event.type === "specified") {
-        const from = event.from;
-        const curr_children = this.data.inlines.get();
-        const new_children = curr_children.splice(from, to - from);
-        this.data.inlines.set(new_children);
-        return DeleteEventResult.done(from + 1);
-      }
-    } else if (event.event_type === "combine") {
-      let { to, area } = event;
-      if (to === ToEnd) {
-        to = this.children_count();
-      }
-      if (area.type !== "paragraph") return;
-      this.data.inlines.set([
-        ...this.data.inlines.get(),
-        ...area.data.inlines.get(),
-      ]);
-      return CombineEventResult.done(to);
-    } else if (event.event_type === "input") {
-      return InputEventResult.enter_child(event.to - 1);
-    }
+    return map[event.event_type]?.call(this, event);
   }
-  constructor(public data: { inlines: WrappedSignal<TInline[]> }) {}
+  get_combine_data() {
+    return {
+      type: "inline",
+      value: this.data.inlines.get(),
+    } satisfies CombineDataTransfer;
+  }
+  constructor(
+    public data: { inlines: WrappedSignal<TInline[]> },
+    public editor: MixEditor<any, any>
+  ) {}
 }
 
 export const Paragraph = (() => {
@@ -120,9 +186,12 @@ export const Paragraph = (() => {
     block,
     editor
   ) => {
-    const result = new ParagraphBlock({
-      inlines: createSignal<Inline[]>([], { equals: false }),
-    });
+    const result = new ParagraphBlock(
+      {
+        inlines: createSignal<Inline[]>([], { equals: false }),
+      },
+      editor
+    );
     const inlines = await editor.saver.load_areas(
       "inline",
       block.data.inlines,
@@ -142,7 +211,15 @@ export const Paragraph = (() => {
 
     onMount(() => {
       block.get_child_position = (index) => {
-        if (index === block.children_count()) {
+        const children_count = block.children_count();
+        if (index === 0) {
+          const rect = container!.getBoundingClientRect();
+          return {
+            x: rect.left,
+            y: rect.top,
+          };
+        }
+        if (index === children_count) {
           const rect = container?.children[index - 1].getBoundingClientRect();
           if (!rect) return undefined;
           return {

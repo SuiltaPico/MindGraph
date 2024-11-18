@@ -1,6 +1,6 @@
 import { MaybePromise } from "@/common/async";
 import { BaseEvent } from "../event";
-import { Area } from "../Area";
+import { Area, Inline } from "../Area";
 
 export type CombineEventResult =
   | {
@@ -17,6 +17,12 @@ export const CombineEventResult = {
   skip: { type: "skip" } satisfies CombineEventResult,
   /** 接受合并，并把光标移动到指定位置。 */
   done: (to: number) => ({ type: "done", to } satisfies CombineEventResult),
+};
+
+export type CombineDataTransfer = {
+  type: "inline";
+  /** 要合并的区域。 */
+  value: Inline[];
 };
 
 /** 合并事件。 */

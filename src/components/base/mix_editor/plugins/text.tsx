@@ -1,19 +1,101 @@
-import { clear_dom_selection, get_caret_position_for_text } from "@/common/dom";
+import { get_caret_position_for_text } from "@/common/dom";
 import { Position } from "@/common/math";
 import { createSignal, WrappedSignal } from "@/common/signal";
 import { onMount } from "solid-js";
 import { Inline, InlineTag } from "../Area";
 import { EventPair } from "../event";
-import { CaretMoveEnterEventResult } from "../event/CaretMoveEnter";
+import {
+  CaretMoveEnterEvent,
+  CaretMoveEnterEventResult,
+} from "../event/CaretMoveEnter";
+import { DeleteEvent, DeleteEventResult } from "../event/Delete";
+import { InputEvent, InputEventResult } from "../event/Input";
 import { MaybeArea, MixEditor } from "../MixEditor";
 import { Plugin } from "../plugin";
 import { create_InlineSaveData, InlineLoader } from "../save";
 import { ToEnd } from "../selection";
 import { MixEditorMouseEvent } from "../utils/area";
-import { InputEventResult } from "../event/Input";
-import { DeleteEventResult } from "../event/Delete";
 
 export type TextInlineSavedData = { value: string };
+
+export function handle_caret_move_enter(
+  this: TextInline,
+  event: CaretMoveEnterEvent
+) {
+  let to = event.to;
+  if (to === ToEnd) {
+    to = this.children_count();
+  }
+  const to_left = event.direction === "backward";
+
+  if ((to_left && to >= this.children_count()) || (!to_left && to <= 0)) {
+    // 顺方向前边界进入
+    return CaretMoveEnterEventResult.enter(
+      to_left ? this.children_count() - 1 : 1
+    );
+  } else if (
+    (to_left && to <= 0) ||
+    (!to_left && to >= this.children_count())
+  ) {
+    // 顺方向后边界跳过
+    return CaretMoveEnterEventResult.skip;
+  } else {
+    return CaretMoveEnterEventResult.enter(to);
+  }
+}
+
+export function handle_delete(this: TextInline, event: DeleteEvent) {
+  let to = event.to;
+  if (to === ToEnd) {
+    to = this.children_count();
+  }
+
+  const curr_value = this.data.value.get();
+
+  if (event.type === "backward") {
+    if (to <= 0) {
+      return DeleteEventResult.skip;
+    }
+    const new_value = curr_value.slice(0, to - 1) + curr_value.slice(to);
+
+    if (new_value.length === 0) {
+      return DeleteEventResult.self_delete_required;
+    }
+    this.data.value.set(new_value);
+    return DeleteEventResult.done(to - 1);
+  } else if (event.type === "forward") {
+    if (to >= curr_value.length) {
+      return DeleteEventResult.skip;
+    }
+    const new_value = curr_value.slice(0, to) + curr_value.slice(to + 1);
+
+    if (new_value.length === 0) {
+      return DeleteEventResult.self_delete_required;
+    }
+    this.data.value.set(new_value);
+    return DeleteEventResult.done(to);
+  } else if (event.type === "specified") {
+    const new_value = curr_value.slice(0, event.from) + curr_value.slice(to);
+
+    if (new_value.length === 0) {
+      return DeleteEventResult.self_delete_required;
+    }
+    this.data.value.set(new_value);
+    return DeleteEventResult.done(to);
+  }
+}
+
+export function handle_input(this: TextInline, event: InputEvent) {
+  const curr_value = this.data.value.get();
+  let to = event.to;
+  if (to === ToEnd) {
+    to = curr_value.length;
+  }
+  this.data.value.set(
+    curr_value.slice(0, to) + event.value.text + curr_value.slice(to)
+  );
+  return InputEventResult.done(to + event.value.text.length);
+}
 
 export class TextInline
   implements
@@ -44,76 +126,18 @@ export class TextInline
   handle_event<TEventPair extends EventPair>(
     event: TEventPair["event"]
   ): TEventPair["result"] | void {
-    if (event.event_type === "caret_move_enter") {
-      const to = event.to;
-      const to_left = event.direction === "left";
+    const map: Partial<
+      Record<EventPair["event"]["event_type"], (event: any) => any>
+    > = {
+      caret_move_enter: handle_caret_move_enter,
+      delete: handle_delete,
+      input: handle_input,
+    } as const;
 
-      if ((to_left && to >= this.children_count()) || (!to_left && to <= 0)) {
-        // 顺方向前边界进入
-        return CaretMoveEnterEventResult.enter(
-          to_left ? this.children_count() - 1 : 1
-        );
-      } else if (
-        (to_left && to <= 0) ||
-        (!to_left && to >= this.children_count())
-      ) {
-        // 顺方向后边界跳过
-        return CaretMoveEnterEventResult.skip;
-      } else {
-        return CaretMoveEnterEventResult.enter(to);
-      }
-    } else if (event.event_type === "input") {
-      const curr_value = this.data.value.get();
-      let to = event.to;
-      if (to === ToEnd) {
-        to = curr_value.length;
-      }
-      this.data.value.set(
-        curr_value.slice(0, to) + event.value + curr_value.slice(to)
-      );
-      return InputEventResult.done(to + event.value.length);
-    } else if (event.event_type === "delete") {
-      const curr_value = this.data.value.get();
-      let to = event.to;
-      if (to === ToEnd) {
-        to = curr_value.length;
-      }
-      if (event.type === "backward") {
-        if (to <= 0) {
-          return DeleteEventResult.skip;
-        }
-        const new_value = curr_value.slice(0, to - 1) + curr_value.slice(to);
-
-        if (new_value.length === 0) {
-          return DeleteEventResult.self_delete_required;
-        }
-        this.data.value.set(new_value);
-        return DeleteEventResult.done(to - 1);
-      } else if (event.type === "forward") {
-        if (to >= curr_value.length) {
-          return DeleteEventResult.skip;
-        }
-        const new_value = curr_value.slice(0, to) + curr_value.slice(to + 1);
-
-        if (new_value.length === 0) {
-          return DeleteEventResult.self_delete_required;
-        }
-        this.data.value.set(new_value);
-        return DeleteEventResult.done(to);
-      } else if (event.type === "specified") {
-        const new_value =
-          curr_value.slice(0, event.from) + curr_value.slice(to);
-
-        if (new_value.length === 0) {
-          return DeleteEventResult.self_delete_required;
-        }
-        this.data.value.set(new_value);
-        return DeleteEventResult.done(to);
-      }
-    }
+    return map[event.event_type]?.call(this, event);
   }
 
-  constructor(data: { value: string }, private editor: MixEditor) {
+  constructor(data: { value: string }, public editor: MixEditor<any, any>) {
     this.data = {
       value: createSignal(data.value),
       tags: createSignal<InlineTag[]>([]),

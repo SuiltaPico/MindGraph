@@ -1,0 +1,5 @@
+._m_mix_editor {
+  & .__paragraph {
+    @apply m-0 min-h-1em;
+  }
+}
