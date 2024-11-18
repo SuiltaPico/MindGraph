@@ -90,6 +90,7 @@ export async function handle_delete(this: RootArea, event: DeleteEvent) {
 
 /** 根区域。是无界的块区域。 */
 export class RootArea implements Block<"root", {}> {
+  area_type = "block" as const;
   type = "root" as const;
   data = {};
   save() {

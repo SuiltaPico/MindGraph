@@ -104,6 +104,7 @@ export class TextInline
       { value: WrappedSignal<string>; tags: WrappedSignal<InlineTag[]> }
     >
 {
+  area_type = "inline" as const;
   type = "text" as const;
   data: { value: WrappedSignal<string>; tags: WrappedSignal<InlineTag[]> };
   async save() {

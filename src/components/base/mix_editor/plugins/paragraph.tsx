@@ -8,11 +8,7 @@ import {
   CaretMoveEnterEvent,
   CaretMoveEnterEventResult,
 } from "../event/CaretMoveEnter";
-import {
-  CombineDataTransfer,
-  CombineEvent,
-  CombineEventResult,
-} from "../event/Combine";
+import { CombineEvent, CombineEventResult } from "../event/Combine";
 import { DeleteEvent, DeleteEventResult } from "../event/Delete";
 import { InputEvent, InputEventResult } from "../event/Input";
 import { MixEditor } from "../MixEditor";
@@ -25,7 +21,7 @@ import {
   save_inlines,
 } from "../save";
 import { ToEnd } from "../selection";
-import { MixEditorMouseEvent } from "../utils/area";
+import { for_each_area_children, MixEditorMouseEvent } from "../utils/area";
 import { TextInline } from "./text";
 import "./Paragraph.css";
 
@@ -95,9 +91,12 @@ export async function handle_combine(
   if (to === ToEnd) {
     to = this.children_count();
   }
-  const combine_data = await event.area.get_combine_data?.();
-  if (!combine_data || combine_data.type !== "inline") return;
-  this.data.inlines.set([...this.data.inlines.get(), ...combine_data.value]);
+  const new_inlines: Inline[] = this.data.inlines.get().slice();
+  for_each_area_children(event.area, (child) => {
+    if (!child || child.area_type !== "inline") return;
+    new_inlines.push(child);
+  });
+  this.data.inlines.set(new_inlines);
   return CombineEventResult.done(to);
 }
 
@@ -142,6 +141,7 @@ export class ParagraphBlock<TInline extends Inline<any, any>>
       }
     >
 {
+  area_type = "block" as const;
   type = "paragraph" as const;
   async save() {
     return create_BlockSaveData(this.type, {
@@ -169,17 +169,13 @@ export class ParagraphBlock<TInline extends Inline<any, any>>
 
     return map[event.event_type]?.call(this, event);
   }
-  get_combine_data() {
-    return {
-      type: "inline",
-      value: this.data.inlines.get(),
-    } satisfies CombineDataTransfer;
-  }
   constructor(
     public data: { inlines: WrappedSignal<TInline[]> },
     public editor: MixEditor<any, any>
   ) {}
 }
+// @ts-ignore
+ParagraphBlock.prototype.area_type = "block";
 
 export const Paragraph = (() => {
   const loader: BlockLoader<ParagraphBlockSavedData> = async (
@@ -192,6 +188,8 @@ export const Paragraph = (() => {
       },
       editor
     );
+    console.log(result.area_type);
+
     const inlines = await editor.saver.load_areas(
       "inline",
       block.data.inlines,

@@ -1,18 +1,14 @@
 import { createSignal } from "@/common/signal";
-import { MixEditor } from "./MixEditor";
 import { Area } from "./Area";
 import {
   CaretMoveEnterEventPair,
   CaretMoveEnterEventResult,
 } from "./event/CaretMoveEnter";
-import { InputEventPair } from "./event/Input";
-import {
-  DeleteEvent,
-  DeleteEventPair,
-  DeleteEventResult,
-} from "./event/Delete";
-import { find_index_in_parent_area } from "./utils/area";
 import { CombineEventPair } from "./event/Combine";
+import { DeleteEventPair, DeleteEventResult } from "./event/Delete";
+import { EnterEventPair, handle_enter_result } from "./event/Enter";
+import { MixEditor } from "./MixEditor";
+import { find_index_in_parent_area } from "./utils/area";
 
 export type SelectedAreaInfo = {
   area: Area;
@@ -58,6 +54,15 @@ export class Selection {
   }
   get() {
     return this.selected.get();
+  }
+
+  async enter(area: Area, to: number) {
+    const result = await area.handle_event?.<EnterEventPair>({
+      event_type: "enter",
+      to,
+    });
+
+    return await handle_enter_result(this, result, area, to);
   }
 
   private async move(direction: "backward" | "forward") {

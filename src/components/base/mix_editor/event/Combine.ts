@@ -19,12 +19,6 @@ export const CombineEventResult = {
   done: (to: number) => ({ type: "done", to } satisfies CombineEventResult),
 };
 
-export type CombineDataTransfer = {
-  type: "inline";
-  /** 要合并的区域。 */
-  value: Inline[];
-};
-
 /** 合并事件。 */
 export interface CombineEvent extends BaseEvent {
   event_type: "combine";
