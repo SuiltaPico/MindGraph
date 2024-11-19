@@ -3,7 +3,7 @@ import { Area } from "../Area";
 import { BaseEvent } from "../event";
 import { Selection } from "../selection";
 
-export type BreakLineEventResult =
+export type BreakLineEventCommand =
   | {
       type: "break";
       /** 输入的结束位置。 */
@@ -13,11 +13,11 @@ export type BreakLineEventResult =
       type: "no_break";
     };
 
-export const BreakLineEventResult = {
+export const BreakLineEventCommand = {
   /** 不接受断行。 */
-  no_break: { type: "no_break" } satisfies BreakLineEventResult,
+  no_break: { type: "no_break" } satisfies BreakLineEventCommand,
   /** 接受断行，并把光标移动到指定位置。 */
-  break: (to: number) => ({ type: "break", to } satisfies BreakLineEventResult),
+  break: (to: number) => ({ type: "break", to } satisfies BreakLineEventCommand),
 };
 
 /** 输入事件。 */
@@ -29,5 +29,5 @@ export interface BreakLineEvent extends BaseEvent {
 
 export type BreakLineEventPair = {
   event: BreakLineEvent;
-  result: MaybePromise<BreakLineEventResult>;
+  result: MaybePromise<BreakLineEventCommand>;
 };

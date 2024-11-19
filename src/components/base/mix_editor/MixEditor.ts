@@ -10,7 +10,7 @@ import {
 } from "./renderer/MixEditorRenderer";
 import { LoaderMapRecord, Saver } from "./save";
 import { Selection } from "./selection";
-import { CaretMoveEnterEventResult } from "./event/CaretMoveEnter";
+import { CaretMoveEnterEventCommand } from "./event/CaretMoveEnter";
 import { RootArea } from "./root";
 
 export type MaybeArea = Area | undefined;

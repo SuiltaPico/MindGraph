@@ -6,10 +6,10 @@ import { Inline, InlineTag } from "../Area";
 import { EventPair } from "../event";
 import {
   CaretMoveEnterEvent,
-  CaretMoveEnterEventResult,
+  CaretMoveEnterEventCommand,
 } from "../event/CaretMoveEnter";
-import { DeleteEvent, DeleteEventResult } from "../event/Delete";
-import { InputEvent, InputEventResult } from "../event/Input";
+import { DeleteEvent, DeleteEventCommand } from "../event/Delete";
+import { InputEvent, InputEventCommand } from "../event/Input";
 import { MaybeArea, MixEditor } from "../MixEditor";
 import { Plugin } from "../plugin";
 import { create_InlineSaveData, InlineLoader } from "../save";
@@ -30,7 +30,7 @@ export function handle_caret_move_enter(
 
   if ((to_left && to >= this.children_count()) || (!to_left && to <= 0)) {
     // 顺方向前边界进入
-    return CaretMoveEnterEventResult.enter(
+    return CaretMoveEnterEventCommand.enter(
       to_left ? this.children_count() - 1 : 1
     );
   } else if (
@@ -38,9 +38,9 @@ export function handle_caret_move_enter(
     (!to_left && to >= this.children_count())
   ) {
     // 顺方向后边界跳过
-    return CaretMoveEnterEventResult.skip;
+    return CaretMoveEnterEventCommand.skip;
   } else {
-    return CaretMoveEnterEventResult.enter(to);
+    return CaretMoveEnterEventCommand.enter(to);
   }
 }
 
@@ -54,34 +54,34 @@ export function handle_delete(this: TextInline, event: DeleteEvent) {
 
   if (event.type === "backward") {
     if (to <= 0) {
-      return DeleteEventResult.skip;
+      return DeleteEventCommand.skip;
     }
     const new_value = curr_value.slice(0, to - 1) + curr_value.slice(to);
 
     if (new_value.length === 0) {
-      return DeleteEventResult.self_delete_required;
+      return DeleteEventCommand.self_delete_required;
     }
     this.data.value.set(new_value);
-    return DeleteEventResult.done(to - 1);
+    return DeleteEventCommand.done(CaretMoveEnterEventCommand.enter(to - 1));
   } else if (event.type === "forward") {
     if (to >= curr_value.length) {
-      return DeleteEventResult.skip;
+      return DeleteEventCommand.skip;
     }
     const new_value = curr_value.slice(0, to) + curr_value.slice(to + 1);
 
     if (new_value.length === 0) {
-      return DeleteEventResult.self_delete_required;
+      return DeleteEventCommand.self_delete_required;
     }
     this.data.value.set(new_value);
-    return DeleteEventResult.done(to);
+    return DeleteEventCommand.done(CaretMoveEnterEventCommand.enter(to));
   } else if (event.type === "specified") {
     const new_value = curr_value.slice(0, event.from) + curr_value.slice(to);
 
     if (new_value.length === 0) {
-      return DeleteEventResult.self_delete_required;
+      return DeleteEventCommand.self_delete_required;
     }
     this.data.value.set(new_value);
-    return DeleteEventResult.done(to);
+    return DeleteEventCommand.done(CaretMoveEnterEventCommand.enter(to));
   }
 }
 
@@ -94,7 +94,7 @@ export function handle_input(this: TextInline, event: InputEvent) {
   this.data.value.set(
     curr_value.slice(0, to) + event.value.text + curr_value.slice(to)
   );
-  return InputEventResult.done(to + event.value.text.length);
+  return InputEventCommand.done(to + event.value.text.length);
 }
 
 export class TextInline

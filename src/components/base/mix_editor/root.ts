@@ -3,11 +3,16 @@ import { Block } from "./Area";
 import { MixEditorEvent } from "./event";
 import {
   CaretMoveEnterEvent,
-  CaretMoveEnterEventResult,
+  CaretMoveEnterEventCommand,
 } from "./event/CaretMoveEnter";
-import { DeleteEvent, DeleteEventResult } from "./event/Delete";
+import {
+  DeleteEvent,
+  DeleteEventCommand,
+  handle_delete_event_command,
+} from "./event/Delete";
 import { MixEditor } from "./MixEditor";
 import { ToEnd } from "./selection";
+import { combine_areas } from "./event/Combine";
 
 export function handle_caret_move_enter(
   this: RootArea,
@@ -22,10 +27,10 @@ export function handle_caret_move_enter(
   if (event.from_child) {
     if ((to_left && to === 0) || (!to_left && to >= this.children_count())) {
       // 顺方向越后边界，则跳过
-      return CaretMoveEnterEventResult.skip;
+      return CaretMoveEnterEventCommand.skip;
     }
     // 否则进入下一个子区域
-    return CaretMoveEnterEventResult.enter_child(to_left ? to - 1 : to);
+    return CaretMoveEnterEventCommand.enter_child(to_left ? to - 1 : to);
   } else {
     throw new Error(
       "根区域顶层索引约定为无界，所以不可能从根区域顶层索引进入。这可能是插件直接设置了选区导致的错误选择了根区域的索引。"
@@ -44,7 +49,9 @@ export async function handle_delete(this: RootArea, event: DeleteEvent) {
     const children = this.editor.blocks.get();
     children.splice(event.from, to - event.from);
     this.editor.blocks.set(children);
-    return DeleteEventResult.done(event.from);
+    return DeleteEventCommand.done(
+      CaretMoveEnterEventCommand.enter(event.from)
+    );
   } else {
     const to_backward = event.type === "backward";
 
@@ -53,7 +60,7 @@ export async function handle_delete(this: RootArea, event: DeleteEvent) {
       (to_backward && to === 0) ||
       (!to_backward && to >= this.children_count())
     ) {
-      return DeleteEventResult.skip;
+      return DeleteEventCommand.skip;
     }
 
     // 尝试合并前后两个子区域
@@ -67,7 +74,8 @@ export async function handle_delete(this: RootArea, event: DeleteEvent) {
       child = this.get_child(to + 1);
     }
 
-    const result = await this.editor.selection.combine_areas(
+    const result = await combine_areas(
+      this.editor.selection,
       child,
       prev_child,
       to_backward ? ToEnd : 0
@@ -75,15 +83,16 @@ export async function handle_delete(this: RootArea, event: DeleteEvent) {
 
     if (result) {
       // 如果合并了子区域，则需要删除在后面的子区域
-      await this.editor.selection.handle_delete_event_result(
-        DeleteEventResult.self_delete_required,
+      await handle_delete_event_command(
+        this.editor.selection,
+        DeleteEventCommand.self_delete_required,
         child,
         "backward",
         false
       );
-      return DeleteEventResult.done(-1);
+      return DeleteEventCommand.done();
     } else {
-      return DeleteEventResult.enter_child(to_backward ? to - 1 : to);
+      return DeleteEventCommand.enter_child(to_backward ? to - 1 : to);
     }
   }
 }

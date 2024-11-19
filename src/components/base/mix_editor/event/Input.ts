@@ -3,7 +3,7 @@ import { Area } from "../Area";
 import { BaseEvent } from "../event";
 import { Selection } from "../selection";
 
-export type InputEventResult =
+export type InputEventCommand =
   | {
       type: "done";
       /** 输入的结束位置。 */
@@ -19,14 +19,14 @@ export type InputEventResult =
       to: number;
     };
 
-export const InputEventResult = {
+export const InputEventCommand = {
   /** 不接受输入，跳过当前节点。 */
-  skip: { type: "skip" } satisfies InputEventResult,
+  skip: { type: "skip" } satisfies InputEventCommand,
   /** 接受输入，并把光标移动到指定位置。 */
-  done: (to: number) => ({ type: "done", to } satisfies InputEventResult),
+  done: (to: number) => ({ type: "done", to } satisfies InputEventCommand),
   /** 接受输入，并把光标移动到指定位置。 */
   enter_child: (index: number, to: number) =>
-    ({ type: "enter_child", index, to } satisfies InputEventResult),
+    ({ type: "enter_child", index, to } satisfies InputEventCommand),
 };
 
 export interface InputValue {
@@ -46,7 +46,7 @@ export interface InputEvent extends BaseEvent {
 
 export type InputEventPair = {
   event: InputEvent;
-  result: MaybePromise<InputEventResult>;
+  result: MaybePromise<InputEventCommand>;
 };
 
 export async function input_enter_child(
@@ -67,35 +67,35 @@ export async function input_enter_child(
   return { result, area: child };
 }
 
-export async function handle_input_result(
+export async function handle_input_event_command(
   selection: Selection,
-  event_result: void | InputEventResult | undefined,
+  command: void | InputEventCommand | undefined,
   area: Area,
   value: InputValue
 ) {
   while (true) {
-    if (!event_result || event_result.type === "skip") break;
+    if (!command || command.type === "skip") break;
 
-    console.log(`handle_input_result`, event_result, area, value);
+    console.log(`handle_input_result`, command, area, value);
 
-    if (event_result.type === "done") {
+    if (command.type === "done") {
       selection.collapsed_select({
         area,
-        child_path: event_result.to,
+        child_path: command.to,
       });
       return true;
-    } else if (event_result.type === "enter_child") {
+    } else if (command.type === "enter_child") {
       const result = await input_enter_child(
         area,
-        event_result.index,
-        event_result.to,
+        command.index,
+        command.to,
         value
       );
       if (!result) {
-        event_result = undefined;
+        command = undefined;
       } else {
         area = result.area;
-        event_result = result.result;
+        command = result.result;
       }
     }
   }
@@ -117,6 +117,6 @@ export async function input_to_selection(
       to: selected.start.child_path,
     });
 
-    return await handle_input_result(selection, result, current_area, value);
+    return await handle_input_event_command(selection, result, current_area, value);
   }
 }

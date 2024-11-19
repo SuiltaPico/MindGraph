@@ -6,11 +6,11 @@ import { Block, Inline } from "../Area";
 import { EventPair } from "../event";
 import {
   CaretMoveEnterEvent,
-  CaretMoveEnterEventResult,
+  CaretMoveEnterEventCommand,
 } from "../event/CaretMoveEnter";
-import { CombineEvent, CombineEventResult } from "../event/Combine";
-import { DeleteEvent, DeleteEventResult } from "../event/Delete";
-import { InputEvent, InputEventResult } from "../event/Input";
+import { CombineEvent, CombineEventCommand } from "../event/Combine";
+import { DeleteEvent, DeleteEventCommand } from "../event/Delete";
+import { InputEvent, InputEventCommand } from "../event/Input";
 import { MixEditor } from "../MixEditor";
 import { PluginFactory } from "../plugin";
 import { InlinesRenderer } from "../renderer/MixEditorRenderer";
@@ -33,12 +33,22 @@ export function handle_caret_move_enter(
   const to_backward = event.direction === "backward";
   if ((to_backward && to > this.children_count()) || (!to_backward && to < 0)) {
     // 进入，但是超出该方向的首边界时，跳转至首边界
-    return CaretMoveEnterEventResult.enter(
+    return CaretMoveEnterEventCommand.enter(
       to_backward ? this.children_count() : 0
     );
   } else if (event.from_child) {
     // 从子区域跳入，跳转至指定索引
-    return CaretMoveEnterEventResult.enter(to);
+    return CaretMoveEnterEventCommand.enter(to);
+  } else if (event.from_parent) {
+    // 从父区域跳入
+    if (
+      (to_backward && to < 0) ||
+      (!to_backward && to > this.children_count())
+    ) {
+      // 超出该方向的尾边界，则跳过
+      return CaretMoveEnterEventCommand.skip;
+    }
+    return CaretMoveEnterEventCommand.enter(to);
   } else {
     // 从自身索引移动，跳入子区域
     if (
@@ -46,12 +56,12 @@ export function handle_caret_move_enter(
       (!to_backward && to > this.children_count())
     ) {
       // 超出该方向的尾边界，则跳过
-      return CaretMoveEnterEventResult.skip;
+      return CaretMoveEnterEventCommand.skip;
     }
 
     // 跳入子区域
     const actual_to = to_backward ? to : to - 1;
-    return CaretMoveEnterEventResult.enter_child(actual_to);
+    return CaretMoveEnterEventCommand.enter_child(actual_to);
   }
 }
 
@@ -63,14 +73,14 @@ export function handle_delete(this: ParagraphBlock<any>, event: DeleteEvent) {
 
   if (event.type === "backward") {
     if (to === 0) {
-      return DeleteEventResult.skip;
+      return DeleteEventCommand.skip;
     }
-    return DeleteEventResult.enter_child(to - 1);
+    return DeleteEventCommand.enter_child(to - 1);
   } else if (event.type === "forward") {
     if (to >= this.children_count()) {
-      return DeleteEventResult.skip;
+      return DeleteEventCommand.skip;
     }
-    return DeleteEventResult.enter_child(to);
+    return DeleteEventCommand.enter_child(to);
   } else if (event.type === "specified") {
     // 删除指定范围的子区域
     const from = event.from;
@@ -79,7 +89,7 @@ export function handle_delete(this: ParagraphBlock<any>, event: DeleteEvent) {
     const new_children = curr_children;
     console.log("handle_delete", from, to, new_children);
     this.data.inlines.set(new_children);
-    return DeleteEventResult.done(from);
+    return DeleteEventCommand.done(CaretMoveEnterEventCommand.enter(from));
   }
 }
 
@@ -94,10 +104,12 @@ export async function handle_combine(
   const new_inlines: Inline[] = this.data.inlines.get().slice();
   for_each_area_children(event.area, (child) => {
     if (!child || child.area_type !== "inline") return;
+    const child_context = this.editor.get_context(child)!;
+    child_context.parent = this;
     new_inlines.push(child);
   });
   this.data.inlines.set(new_inlines);
-  return CombineEventResult.done(to);
+  return CombineEventCommand.done(to);
 }
 
 export function handle_input(this: ParagraphBlock<any>, event: InputEvent) {
@@ -121,11 +133,11 @@ export function handle_input(this: ParagraphBlock<any>, event: InputEvent) {
         parent: this,
       });
       this.data.inlines.set([new_child]);
-      return InputEventResult.enter_child(0, 0);
+      return InputEventCommand.enter_child(0, 0);
     }
-    return InputEventResult.enter_child(0, 0);
+    return InputEventCommand.enter_child(0, 0);
   }
-  return InputEventResult.enter_child(to - 1, ToEnd);
+  return InputEventCommand.enter_child(to - 1, ToEnd);
 }
 
 export type ParagraphBlockSavedData = {

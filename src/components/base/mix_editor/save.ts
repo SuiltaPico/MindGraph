@@ -99,6 +99,7 @@ export class LoadingErrorBlock
       }
     >
 {
+  area_type = "block" as const;
   type = "loading_error" as const;
   save() {
     return this.data.original;
@@ -126,6 +127,7 @@ export class LoadingErrorInline
       }
     >
 {
+  area_type = "inline" as const;
   type = "loading_error" as const;
   save() {
     return this.data.original;
