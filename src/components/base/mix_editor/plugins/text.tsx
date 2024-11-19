@@ -107,6 +107,12 @@ export class TextInline
   area_type = "inline" as const;
   type = "text" as const;
   data: { value: WrappedSignal<string>; tags: WrappedSignal<InlineTag[]> };
+  slice(from: number, to: number) {
+    return new TextInline(
+      { value: this.data.value.get().slice(from, to) },
+      this.editor
+    ) as this;
+  }
   async save() {
     return create_InlineSaveData(
       this.type,

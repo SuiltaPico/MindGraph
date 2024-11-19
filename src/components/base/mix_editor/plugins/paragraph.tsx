@@ -155,6 +155,16 @@ export class ParagraphBlock<TInline extends Inline<any, any>>
 {
   area_type = "block" as const;
   type = "paragraph" as const;
+  slice(from: number, to: number): this {
+    return new ParagraphBlock(
+      {
+        inlines: createSignal(this.data.inlines.get().slice(from, to), {
+          equals: false,
+        }),
+      },
+      this.editor
+    ) as this;
+  }
   async save() {
     return create_BlockSaveData(this.type, {
       inlines: await save_inlines(this.data.inlines.get()),

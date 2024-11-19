@@ -6,8 +6,10 @@ import { BlockSavedData, InlineSavedData, InlineTagSavedData } from "./save";
 import { WrappedSignal } from "@/common/signal";
 
 export interface BaseArea {
+  /** 切割当前区域。 */
+  slice(from: number, to: number): MaybePromise<this>;
   /** 生成保存数据。 */
-  save: () => MaybePromise<any>;
+  save(): MaybePromise<any>;
 
   /** 获取子区域数量。 */
   children_count(): number;

@@ -102,6 +102,9 @@ export class RootArea implements Block<"root", {}> {
   area_type = "block" as const;
   type = "root" as const;
   data = {};
+  slice(from: number, to: number): this {
+    throw new Error("根区域的切割未实现。");
+  }
   save() {
     return {
       type: "root",

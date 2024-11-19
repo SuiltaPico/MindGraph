@@ -5,12 +5,10 @@ import {
   CaretMoveEnterEventPair,
   handle_caret_move_enter_event_command
 } from "./event/CaretMoveEnter";
-import { CombineEventPair } from "./event/Combine";
 import {
   DeleteEventPair,
   handle_delete_event_command
 } from "./event/Delete";
-import { EnterEventPair, handle_enter_result } from "./event/Enter";
 import { MixEditor } from "./MixEditor";
 
 export type SelectedAreaInfo = {
@@ -57,15 +55,6 @@ export class Selection {
   }
   get() {
     return this.selected.get();
-  }
-
-  async enter(area: Area, to: number) {
-    const result = await area.handle_event?.<EnterEventPair>({
-      event_type: "enter",
-      to,
-    });
-
-    return await handle_enter_result(this, result, area, to);
   }
 
   private async move(direction: "backward" | "forward") {

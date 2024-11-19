@@ -101,6 +101,9 @@ export class LoadingErrorBlock
 {
   area_type = "block" as const;
   type = "loading_error" as const;
+  slice(from: number, to: number) {
+    return new LoadingErrorBlock(this.data) as this;
+  }
   save() {
     return this.data.original;
   }
@@ -129,6 +132,9 @@ export class LoadingErrorInline
 {
   area_type = "inline" as const;
   type = "loading_error" as const;
+  slice(from: number, to: number) {
+    return new LoadingErrorInline(this.data) as this;
+  }
   save() {
     return this.data.original;
   }

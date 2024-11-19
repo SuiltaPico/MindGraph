@@ -1,4 +1,9 @@
-import { Accessor, Setter, Signal, createSignal as solid_createSignal } from "solid-js";
+import {
+  Accessor,
+  Setter,
+  Signal,
+  createSignal as solid_createSignal,
+} from "solid-js";
 
 export class WrappedSignal<T> {
   get: Accessor<T>;
